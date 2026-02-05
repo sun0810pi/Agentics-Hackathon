@@ -1,249 +1,94 @@
 import streamlit as st
-import pandas as pd
-import random
+import boto3
+import json
 import time
-import requests
 
+#giao diện web app
+st.set_page_config(page_title="Fintech AI Agent", page_icon="🤖", layout="wide")
 
-# ================= CONFIG =================
+#KẾT NỐI AWS (Lấy từ Secrets của Streamlit)
+try:
+    sfn = boto3.client(
+        'stepfunctions',
+        region_name='ap_southeast_1', # Đổi nếu bạn dùng region khác
+        aws_access_key_id=st.secrets["AWS_ACCESS_KEY"],
+        aws_secret_access_key=st.secrets["AWS_SECRET_KEY"]
+    )
+    # ARN của Step Function (Lấy từ Secrets luôn cho bảo mật)
+    SFN_ARN = st.secrets["SFN_ARN"]
+except:
+    st.warning("⚠️ Chưa cấu hình AWS Secrets. Web đang chạy chế độ Offline.")
 
-st.set_page_config(
-    page_title="AI Risk Dashboard",
-    layout="wide"
-)
+# --- GIAO DIỆN CHÍNH ---
+st.title("🤖 HỆ THỐNG KIỂM TOÁN TỰ ĐỘNG (AI AGENT)")
+st.markdown("### 🚀 Luồng xử lý: Data Masking -> AI Phân tích -> Blockchain Log")
 
+col1, col2 = st.columns(2)
 
-# ================= SECRETS =================
+with col1:
+    st.subheader("1️⃣ Nhập thông tin giao dịch")
+    with st.form("input_form"):
+        invoice_amt = st.number_input("Số tiền trên Hóa đơn (Invoice)", value=50000000)
+        po_amt = st.number_input("Số tiền trên Đơn hàng (PO)", value=50000000)
+        supplier = st.text_input("Tên Nhà cung cấp", value="VinFast Trading")
+        email = st.text_input("Email liên hệ (Sẽ được che)", value="ketoan@vinfast.vn")
+        tax_id = st.text_input("Mã số thuế", value="0312345678")
+        note = st.text_area("Ghi chú", value="Thanh toán đợt 1")
+        
+        submitted = st.form_submit_button("🚀 Kích hoạt Agent Kiểm toán")
 
-ADMIN_USER = st.secrets["ADMIN_USER"]
-ADMIN_PASS = st.secrets["ADMIN_PASS"]
+with col2:
+    st.subheader("2️⃣ Trạng thái Xử lý (Real-time)")
+    status_box = st.empty() # Khung để hiện loading
+    result_box = st.container() # Khung hiện kết quả
 
-SLACK_TOKEN = st.secrets["SLACK_TOKEN"]
-SLACK_CHANNEL = st.secrets["SLACK_CHANNEL"]
-
-
-# ================= SESSION =================
-
-if "step" not in st.session_state:
-    st.session_state.step = 1
-
-if "auth" not in st.session_state:
-    st.session_state.auth = False
-
-if "otp" not in st.session_state:
-    st.session_state.otp = None
-
-if "otp_time" not in st.session_state:
-    st.session_state.otp_time = None
-
-
-# ================= SLACK =================
-
-def send_otp(otp):
-
-    url = "https://slack.com/api/chat.postMessage"
-
-    headers = {
-        "Authorization": f"Bearer {SLACK_TOKEN}",
-        "Content-Type": "application/json"
+if submitted:
+    # 1. Chuẩn bị Input
+    input_payload = {
+        "invoice_amount": invoice_amt,
+        "po_amount": po_amt,
+        "supplier": supplier,
+        "email": email,
+        "tax_id": tax_id,
+        "note": note
     }
-
-    data = {
-        "channel": SLACK_CHANNEL,
-        "text": f"🔐 OTP: *{otp}* (30s valid)"
-    }
-
-    requests.post(url, headers=headers, json=data)
-
-
-
-# ================= LOGIN =================
-
-def login():
-
-    st.title("🔐 Secure Login")
-
-
-    # Step 1
-    if st.session_state.step == 1:
-
-        st.subheader("Account Login")
-
-        u = st.text_input("Username")
-        p = st.text_input("Password", type="password")
-
-        if st.button("Login"):
-
-            if u == ADMIN_USER and p == ADMIN_PASS:
-
-                st.session_state.step = 2
-                st.success("Account verified")
-                st.rerun()
-
-            else:
-                st.error("Wrong credentials")
-
-
-    # Step 2
-    elif st.session_state.step == 2:
-
-        st.subheader("Slack Token")
-
-        token = st.text_input("Enter Token", type="password")
-
-        if st.button("Verify"):
-
-            if token == SLACK_TOKEN:
-
-                otp = random.randint(100000, 999999)
-
-                st.session_state.otp = str(otp)
-                st.session_state.otp_time = time.time()
-
-                send_otp(otp)
-
-                st.session_state.step = 3
-
-                st.success("OTP sent")
-                st.rerun()
-
-            else:
-                st.error("Invalid token")
-
-
-    # Step 3
-    elif st.session_state.step == 3:
-
-        st.subheader("OTP Verification")
-
-        code = st.text_input("Enter OTP", type="password")
-
-        now = time.time()
-
-        if st.session_state.otp_time:
-
-            remain = 30 - int(now - st.session_state.otp_time)
-
-            if remain > 0:
-                st.info(f"Expires in {remain}s")
-
-            else:
-                st.error("OTP expired")
-                st.session_state.step = 2
-                st.rerun()
-
-
-        if st.button("Confirm"):
-
-            if now - st.session_state.otp_time > 30:
-
-                st.error("OTP expired")
-                st.session_state.step = 2
-                st.rerun()
-
-
-            elif code == st.session_state.otp:
-
-                st.session_state.auth = True
-                st.session_state.otp = None
-
-                st.success("Access granted")
-                st.rerun()
-
-
-            else:
-                st.error("Wrong OTP")
-
-
-
-# ================= DASHBOARD =================
-
-def dashboard():
-
-    st.title("🛡 AI Risk Dashboard")
-    st.caption("Human-in-the-Loop System")
-
-
-    if st.button("Logout"):
-
-        st.session_state.step = 1
-        st.session_state.auth = False
-        st.rerun()
-
-
-    if "data" not in st.session_state:
-        st.session_state.data = []
-
-
-    def gen():
-
-        return {
-            "txn_id": f"TXN{random.randint(1000,9999)}",
-            "risk": random.choice(["Low","Medium","High","Critical"]),
-            "status": "PENDING",
-            "time": time.strftime("%H:%M:%S")
-        }
-
-
-    if st.button("➕ New Case"):
-        st.session_state.data.append(gen())
-
-
-    df = pd.DataFrame(st.session_state.data)
-
-
-    # KPI
-    c1,c2,c3,c4 = st.columns(4)
-
-    c1.metric("Total", len(df))
-
-    if not df.empty and "status" in df.columns:
-
-        c2.metric("Pending", len(df[df["status"]=="PENDING"]))
-        c3.metric("Approved", len(df[df["status"]=="APPROVED"]))
-        c4.metric("Rejected", len(df[df["status"]=="REJECTED"]))
-
-    else:
-
-        c2.metric("Pending",0)
-        c3.metric("Approved",0)
-        c4.metric("Rejected",0)
-
-
-    st.divider()
-
-
-    st.subheader("Cases")
-
-    if not df.empty:
-
-        st.dataframe(df,use_container_width=True)
-
-        selected = st.selectbox("Select TXN", df["txn_id"])
-
-        colA,colB = st.columns(2)
-
-        if colA.button("Approve"):
-
-            df.loc[df["txn_id"]==selected,"status"]="APPROVED"
-            st.session_state.data = df.to_dict("records")
-
-        if colB.button("Reject"):
-
-            df.loc[df["txn_id"]==selected,"status"]="REJECTED"
-            st.session_state.data = df.to_dict("records")
-
-    else:
-        st.info("No data")
-
-
-
-# ================= MAIN =================
-
-if not st.session_state.auth:
-
-    login()
-
-else:
-
-    dashboard()
+    
+    # 2. Gọi AWS Step Functions
+    try:
+        status_box.info("🔄 Đang gửi lệnh tới AWS Cloud...")
+        
+        response = sfn.start_execution(
+            stateMachineArn=SFN_ARN,
+            input=json.dumps(input_payload)
+        )
+        execution_arn = response['executionArn']
+        
+        # 3. Vòng lặp chờ kết quả (Polling)
+        with st.spinner('Các Agent đang chạy đua vũ trang...'):
+            while True:
+                status = sfn.describe_execution(executionArn=execution_arn)
+                state = status['status']
+                
+                if state == 'SUCCEEDED':
+                    status_box.success("✅ QUY TRÌNH HOÀN TẤT!")
+                    
+                    # Lấy output cuối cùng
+                    output_str = status['output']
+                    output_json = json.loads(output_str)
+                    
+                    # Hiển thị đẹp
+                    with result_box:
+                        st.markdown("---")
+                        st.metric(label="Trạng thái cuối cùng", value="APPROVED ✅")
+                        st.json(output_json) # Hiện cục JSON cuối cùng từ Agent 5
+                    break
+                    
+                elif state in ['FAILED', 'TIMED_OUT', 'ABORTED']:
+                    status_box.error(f"❌ Quy trình thất bại: {state}")
+                    break
+                
+                # Chờ 2 giây rồi check lại
+                time.sleep(2)
+                
+    except Exception as e:
+        status_box.error(f"Lỗi hệ thống: {str(e)}")

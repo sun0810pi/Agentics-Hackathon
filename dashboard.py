@@ -3,15 +3,15 @@ import boto3
 import json
 import time
 import pandas as pd
-import random
+import io
 from datetime import datetime
 
 # --- 1. CẤU HÌNH & STATE ---
 st.set_page_config(
-    page_title="Audit Buddy AI",
-    page_icon="⚡",
+    page_title="Audit Core V3",
+    page_icon="💎",
     layout="wide",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="expanded"
 )
 
 # KẾT NỐI AWS
@@ -29,33 +29,32 @@ except:
 
 # Init State
 if 'logged_in' not in st.session_state: st.session_state.logged_in = False
-if 'messages' not in st.session_state: st.session_state.messages = [{"role": "assistant", "content": "SYSTEM ONLINE. Awaiting Audit Files..."}]
+if 'messages' not in st.session_state: st.session_state.messages = [{"role": "assistant", "content": "SYSTEM ONLINE. Ready for audit..."}]
 if 'lang' not in st.session_state: st.session_state.lang = 'vi'
-if 'theme' not in st.session_state: st.session_state.theme = 'dark' # Mặc định là Cyberpunk
+if 'theme' not in st.session_state: st.session_state.theme = 'dark' # Mặc định ngầu
 
-# --- 2. LOGIC XỬ LÝ DỮ LIỆU (THÔNG MINH NHẤT) ---
+# --- 2. LOGIC XỬ LÝ DỮ LIỆU (SMART ENGINE) ---
 def process_and_send(df):
     """Đọc DataFrame -> Tìm cột thông minh -> Gửi JSON"""
-    # 1. Clean header
     df.columns = df.columns.str.lower().str.strip()
     payloads = []
     
     for _, row in df.iterrows():
-        # 2. Auto-map columns
+        # Auto-map columns
         inv = next((c for c in df.columns if 'invoice' in c or 'hóa đơn' in c or 'amount' in c), None)
         po = next((c for c in df.columns if 'po' in c or 'đơn hàng' in c), None)
         sup = next((c for c in df.columns if 'supplier' in c or 'nhà cung cấp' in c), None)
         email = next((c for c in df.columns if 'email' in c or 'liên hệ' in c), None)
         
-        # 3. Logic tìm TÀI KHOẢN NGÂN HÀNG
+        # Logic tìm TÀI KHOẢN NGÂN HÀNG
         acc = next((c for c in df.columns if 'account' in c or 'stk' in c or 'bank' in c or 'tài khoản' in c), None)
         
         item = {
             "invoice_amount": float(row[inv]) if inv else 0.0,
             "po_amount": float(row[po]) if po else 0.0,
-            "supplier": str(row[sup]) if sup else "UNKNOWN-ENTITY",
+            "supplier": str(row[sup]) if sup else "UNKNOWN",
             "email": str(row[email]) if email else "N/A",
-            "bank_account": str(row[acc]) if acc else "000000" # <-- Quan trọng
+            "bank_account": str(row[acc]) if acc else "000000"
         }
         payloads.append(item)
     return payloads
@@ -68,225 +67,268 @@ def load_gsheet(url):
             return pd.read_csv(csv_url)
     except: return None
 
-# --- 3. SIÊU CSS (CHUYỂN ĐỔI 2 PHONG CÁCH) ---
+# --- 3. CSS CAO CẤP (GLASSMORPHISM) ---
 def inject_css():
-    # A. PHONG CÁCH CYBERPUNK (DARK)
+    # A. DARK MODE (CYBERPUNK)
     if st.session_state.theme == 'dark':
-        css = """
-        <style>
-            @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;800&display=swap');
-            
-            .stApp { background-color: #050505; color: #00FF41; font-family: 'JetBrains Mono', monospace; }
-            h1, h2, h3 { color: #fff !important; text-shadow: 0 0 10px #00FF41; }
-            
-            /* Sidebar Matrix */
-            [data-testid="stSidebar"] { background-color: #0a0a0a !important; border-right: 1px solid #00FF41; }
-            [data-testid="stSidebar"] * { color: #00FF41 !important; font-family: 'JetBrains Mono'; }
-            
-            /* Card Hacker */
-            .cute-card {
-                background: #000; border: 1px solid #333; border-left: 3px solid #00FF41;
-                padding: 20px; box-shadow: 0 0 15px rgba(0, 255, 65, 0.1); margin-bottom: 20px;
-            }
-            
-            /* Input & Button */
-            .stTextInput input { background: #111; color: #00FF41; border: 1px solid #333; border-radius: 0px; }
-            .stButton button {
-                background: transparent; border: 1px solid #00FF41; color: #00FF41;
-                border-radius: 0px; font-weight: bold; transition: 0.3s;
-            }
-            .stButton button:hover { background: #00FF41; color: #000; box-shadow: 0 0 20px #00FF41; }
-            
-            /* Log Terminal Style */
-            .log-entry { font-family: 'Courier New'; font-size: 0.9rem; border-bottom: 1px solid #111; padding: 2px 0; }
-        </style>
+        bg_url = "https://img.freepik.com/free-photo/abstract-digital-grid-black-background_53876-97647.jpg"
+        text_color = "#00FFC2" # Xanh Neon
+        card_bg = "rgba(0, 0, 0, 0.7)" # Đen mờ
+        sidebar_bg = "rgba(10, 10, 10, 0.9)"
+        input_bg = "#111"
+        border_color = "#00FFC2"
+        
+        # CSS Upload file cho nền tối
+        upload_fix = """
+        [data-testid="stFileUploader"] { background-color: #0a0a0a; border: 1px dashed #00FFC2; }
+        [data-testid="stFileUploader"] section > div { color: #fff !important; }
+        [data-testid="stFileUploader"] small { color: #888 !important; }
         """
         
-    # B. PHONG CÁCH PASTEL (LIGHT)
+    # B. LIGHT MODE (PROFESSIONAL CLEAN)
     else:
-        css = """
-        <style>
-            .stApp { 
-                background-image: url("https://img.freepik.com/free-vector/hand-painted-watercolor-pastel-sky-background_23-2148902771.jpg");
-                background-size: cover; font-family: sans-serif;
-            }
-            h1, h2, h3, p, span, label { color: #333 !important; }
-            
-            /* Sidebar Cute */
-            [data-testid="stSidebar"] { background-color: rgba(255,255,255,0.95) !important; }
-            
-            /* Card Glassmorphism */
-            .cute-card {
-                background: rgba(255,255,255,0.85); padding: 25px; border-radius: 20px;
-                box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1); backdrop-filter: blur(10px);
-                margin-bottom: 20px; border: 1px solid rgba(255, 255, 255, 0.18);
-            }
-            
-            /* Input & Button */
-            .stTextInput input { border-radius: 15px; border: 1px solid #ddd; }
-            .stButton button {
-                background: #E91E63; color: white; border-radius: 25px; border: none;
-                box-shadow: 0 4px 10px rgba(233, 30, 99, 0.3); transition: 0.3s;
-            }
-            .stButton button:hover { transform: translateY(-3px); }
-            
-            /* Fix Uploader Text */
-            [data-testid="stFileUploader"] span { color: #000 !important; font-weight: bold; }
-        </style>
+        bg_url = "https://img.freepik.com/free-vector/white-abstract-background-design_23-2148825582.jpg"
+        text_color = "#1f2937" # Xám đậm
+        card_bg = "rgba(255, 255, 255, 0.75)" # Trắng mờ
+        sidebar_bg = "rgba(255, 255, 255, 0.95)"
+        input_bg = "#f9fafb"
+        border_color = "#3b82f6" # Xanh dương
+        
+        # CSS Upload file cho nền sáng (FIX LỖI MỜ)
+        upload_fix = """
+        [data-testid="stFileUploader"] { background-color: #f0f9ff; border: 2px dashed #3b82f6; }
+        [data-testid="stFileUploader"] section > div, [data-testid="stFileUploader"] div { color: #000000 !important; font-weight: 600; }
+        [data-testid="stFileUploader"] small { color: #333 !important; opacity: 1 !important; }
         """
-    st.markdown(css, unsafe_allow_html=True)
+
+    st.markdown(f"""
+    <style>
+        /* Import Font xịn */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+        
+        .stApp {{
+            background-image: url("{bg_url}");
+            background-size: cover;
+            background-attachment: fixed;
+            font-family: 'Inter', sans-serif;
+        }}
+        
+        h1, h2, h3, p, span, label, div {{ color: {text_color} !important; }}
+        
+        /* Sidebar sang trọng */
+        [data-testid="stSidebar"] {{ 
+            background-color: {sidebar_bg} !important; 
+            border-right: 1px solid rgba(255,255,255,0.1); 
+            backdrop-filter: blur(10px);
+        }}
+        
+        /* Card hiệu ứng kính mờ (Glassmorphism) */
+        .glass-card {{
+            background: {card_bg};
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            margin-bottom: 20px;
+        }}
+        
+        /* Input Field đẹp */
+        .stTextInput input {{
+            background-color: {input_bg} !important;
+            color: {text_color} !important;
+            border: 1px solid {border_color};
+            border-radius: 8px;
+        }}
+        
+        /* Nút bấm */
+        .stButton button {{
+            background: linear-gradient(45deg, {border_color}, #8b5cf6);
+            color: white !important;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }}
+        .stButton button:hover {{
+            transform: scale(1.02);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }}
+        
+        /* Expander (Menu xổ xuống) */
+        .streamlit-expanderHeader {{
+            background-color: transparent;
+            border-radius: 8px;
+            color: {text_color} !important;
+            font-weight: 600;
+        }}
+        
+        {upload_fix}
+    </style>
+    """, unsafe_allow_html=True)
 
 # --- 4. DASHBOARD CHÍNH ---
 def main_dashboard():
     
-    # === A. SIDEBAR CÀI ĐẶT ===
+    # --- A. SIDEBAR ---
     with st.sidebar:
-        st.title("⚙️ SYSTEM CONFIG")
+        st.title("⚙️ CONTROL PANEL")
         
-        # 1. Theme & Lang Logic
-        def update_settings():
+        # 1. Settings (Callback để đổi ngay lập tức)
+        def update_ui():
             st.session_state.lang = 'vi' if "Việt" in st.session_state.lang_sel else 'en'
             st.session_state.theme = 'light' if "Light" in st.session_state.theme_sel else 'dark'
 
-        st.radio("Language / Ngôn ngữ", ["Tiếng Việt 🇻🇳", "English 🇬🇧"], key="lang_sel", on_change=update_settings, index=0 if st.session_state.lang=='vi' else 1)
-        st.radio("Interface / Giao diện", ["Dark (Cyberpunk) ⚡", "Light (Pastel) 🌸"], key="theme_sel", on_change=update_settings, index=0 if st.session_state.theme=='dark' else 1)
+        st.caption("Configuration")
+        st.radio("Language", ["Tiếng Việt 🇻🇳", "English 🇬🇧"], key="lang_sel", on_change=update_ui, index=0 if st.session_state.lang=='vi' else 1)
+        st.radio("Theme", ["Dark (Cyber) ⚡", "Light (Clean) ☀️"], key="theme_sel", on_change=update_ui, index=0 if st.session_state.theme=='dark' else 1)
         
         st.divider()
         
-        # 2. Integrations (Bot Config)
-        st.subheader("🔗 API Connectors")
+        # 2. Integrations (Fix lỗi không hiện ô nhập)
+        st.caption("Bot Connections")
         
-        with st.expander("🔵 Telegram Bot"):
-            if st.toggle("Activate Telegram"):
-                st.text_input("Bot Token", type="password", placeholder="1234:ABC...")
-                st.text_input("Chat ID", placeholder="-100...")
+        # Telegram
+        with st.expander("🔵 Telegram"):
+            tele_active = st.toggle("Enable Telegram")
+            if tele_active:
+                st.text_input("API Token", type="password", placeholder="1234:ABC...", help="Lấy từ BotFather")
+                st.text_input("Chat ID", placeholder="-9988...", help="ID nhóm chat")
         
+        # Zalo
         with st.expander("🔵 Zalo OA"):
-            if st.toggle("Activate Zalo"):
-                st.text_input("OA ID", placeholder="Ex: 4628...")
+            zalo_active = st.toggle("Enable Zalo")
+            if zalo_active:
+                st.text_input("OA ID", placeholder="4628...")
                 st.text_input("Secret Key", type="password")
-                
-        with st.expander("🟣 Slack"):
-            if st.toggle("Activate Slack"):
-                st.text_input("Webhook URL", type="password")
 
-        # 3. Guides
+        # Slack
+        with st.expander("🟣 Slack"):
+            slack_active = st.toggle("Enable Slack")
+            if slack_active:
+                st.text_input("Webhook URL", type="password", placeholder="https://hooks.slack.com/...")
+
         st.divider()
-        st.subheader("📚 Documentation")
-        guide = st.selectbox("Select Guide:", ["-- Select --", "Get Tele Token", "Get Zalo ID"])
-        if guide == "Get Tele Token": st.info("Chat @BotFather -> /newbot")
         
-        if st.button("🔴 LOGOUT SYSTEM"):
+        # 3. Guides (Dùng Expander thay vì Selectbox -> UX tốt hơn)
+        st.caption("Documentation")
+        with st.expander("📖 Cách lấy Token Telegram"):
+            st.markdown("1. Chat **@BotFather** -> `/newbot`.\n2. Copy Token.\n3. Chat **@userinfobot** lấy ID.")
+        
+        with st.expander("📖 Cách lấy Zalo Key"):
+            st.markdown("1. Vào **oa.zalo.me** lấy OA ID.\n2. Vào **developers.zalo.me** lấy Secret Key.")
+
+        if st.button("🔴 LOGOUT"):
             st.session_state.logged_in = False
             st.rerun()
 
     inject_css()
     
-    # === B. MAIN UI ===
+    # --- B. MAIN UI ---
     
-    # Tiêu đề thay đổi theo Theme
+    # Header động
     if st.session_state.theme == 'dark':
-        st.markdown('<div style="text-align: center; font-size: 3rem; font-weight: 800; color: #fff; text-shadow: 0 0 20px #00FF41; margin-bottom: 20px;">/// AUDIT CORE V3 ///</div>', unsafe_allow_html=True)
+        st.markdown('<h1 style="text-align: center; text-shadow: 0 0 20px #00FFC2;">/// AUDIT CORE V4 ///</h1>', unsafe_allow_html=True)
     else:
-        st.markdown('<h1 style="text-align: center; color: #E91E63;">✿ TRUNG TÂM KIỂM TOÁN AI ✿</h1>', unsafe_allow_html=True)
+        st.markdown('<h1 style="text-align: center; color: #1e3a8a !important;">✿ FINANCIAL AUDIT HUB ✿</h1>', unsafe_allow_html=True)
 
-    col_L, col_R = st.columns([1.2, 1.8], gap="large")
+    col_L, col_R = st.columns([1.2, 1.8], gap="medium")
 
-    # === CỘT TRÁI: DATA INGESTION ===
+    # === CỘT TRÁI: DATA INPUT ===
     with col_L:
-        st.markdown('<div class="cute-card">', unsafe_allow_html=True)
-        tabs = st.tabs(["📂 UPLOAD", "☁️ GSHEET", "🔗 ONLINE"])
+        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+        st.subheader("📂 DATA SOURCE")
         
+        tabs = st.tabs(["UPLOAD FILE", "GOOGLE SHEET", "DIRECT LINK"])
         payloads = []
         
-        # TAB 1
+        # Tab 1: Upload
         with tabs[0]:
-            f = st.file_uploader("Drop .xlsx / .csv", type=['xlsx', 'csv'])
+            f = st.file_uploader("Excel / CSV", type=['xlsx', 'csv'])
             if f:
                 try:
                     df = pd.read_csv(f) if f.name.endswith('.csv') else pd.read_excel(f)
-                    st.dataframe(df.head(3), height=100)
-                    if st.button(">> EXECUTE BATCH", key="b1", type="primary"):
+                    st.dataframe(df.head(3), use_container_width=True)
+                    if st.button("🚀 EXECUTE BATCH", key="b1"):
                         payloads = process_and_send(df)
                 except Exception as e: st.error(f"Error: {e}")
 
-        # TAB 2
+        # Tab 2: GSheet
         with tabs[1]:
-            url = st.text_input("Google Sheet URL:")
-            if url and st.button(">> SYNC DATA", key="b2"):
+            url = st.text_input("Sheet URL (Public):")
+            if url and st.button("🚀 SYNC DATA", key="b2"):
                 df = load_gsheet(url)
                 if df is not None:
-                    st.dataframe(df.head(3), height=100)
+                    st.dataframe(df.head(3), use_container_width=True)
                     payloads = process_and_send(df)
-                else: st.error("Link Error")
+                else: st.error("Invalid Link")
         
-        # TAB 3
+        # Tab 3: Online Link (Đã fix Coming Soon)
         with tabs[2]:
-            onl = st.text_input("Direct Excel Link:")
-            if onl and st.button(">> FETCH URL", key="b3"):
+            onl = st.text_input("Direct .xlsx Link:")
+            if onl and st.button("🚀 FETCH", key="b3"):
                 try:
                     df = pd.read_excel(onl)
-                    st.dataframe(df.head(3), height=100)
+                    st.dataframe(df.head(3), use_container_width=True)
                     payloads = process_and_send(df)
-                except: st.error("Fetch Error")
+                except: st.error("Fetch Failed")
 
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # === CỘT PHẢI: TERMINAL / CHATBOT ===
+    # === CỘT PHẢI: CONSOLE / CHAT ===
     with col_R:
-        # Giao diện hiển thị (Terminal nếu Dark, Chatbox nếu Light)
-        st.markdown('<div class="cute-card" style="height: 600px; overflow-y: auto;">', unsafe_allow_html=True)
+        st.markdown('<div class="glass-card" style="height: 650px; overflow-y: auto;">', unsafe_allow_html=True)
         
-        # LOGIC CHẠY REAL-TIME
+        # MODE 1: ĐANG CHẠY (LOGS)
         if payloads:
-            st.subheader("🚀 PROCESS EXECUTION")
-            
-            terminal_placeholder = st.empty()
+            st.subheader("⚡ PROCESSING LOGS")
+            log_container = st.empty()
             logs = []
-            progress = st.progress(0)
+            bar = st.progress(0)
             
             for i, p in enumerate(payloads):
-                # 1. Hiển thị Log chi tiết
                 ts = datetime.now().strftime("%H:%M:%S")
-                # Lấy số TK đã tìm được để show
                 bk = p.get('bank_account', 'N/A')
+                logs.append(f"[{ts}] TXN #{i+1} | SUP: {p['supplier']} | BANK: {bk} -> SENT")
                 
-                log_line = f"[{ts}] TXN #{i+1} | SUP: {p['supplier']} | BANK: {bk} -> SENDING..."
-                logs.append(log_line)
-                
-                # Render Log (Màu mè theo theme)
+                # Hiển thị log đẹp
                 if st.session_state.theme == 'dark':
-                    log_html = "<br>".join([f"<span class='log-entry' style='color: #00FF41'>{l}</span>" for l in logs[-15:]])
+                    log_html = "<br>".join([f"<span style='color:#00FFC2; font-family:monospace'>{l}</span>" for l in logs[-12:]])
                 else:
-                    log_html = "<br>".join([f"<div style='border-bottom:1px solid #eee; padding:5px;'>{l}</div>" for l in logs[-15:]])
+                    log_html = "<br>".join([f"<div style='border-bottom:1px solid #eee; padding:4px;'>{l}</div>" for l in logs[-12:]])
                 
-                terminal_placeholder.markdown(log_html, unsafe_allow_html=True)
+                log_container.markdown(log_html, unsafe_allow_html=True)
                 
-                # 2. GỌI AWS THẬT
+                # Gửi AWS
                 if not DEMO_MODE:
-                    try:
-                        sfn.start_execution(stateMachineArn=SFN_ARN, input=json.dumps(p))
+                    try: sfn.start_execution(stateMachineArn=SFN_ARN, input=json.dumps(p))
                     except: pass
-                else: time.sleep(0.1) # Demo delay
+                else: time.sleep(0.15)
                 
-                progress.progress((i+1)/len(payloads))
+                bar.progress((i+1)/len(payloads))
             
-            st.success("✅ BATCH COMPLETED. ALL AGENTS ACTIVE.")
+            st.success("✅ BATCH COMPLETED. AGENTS ARE WORKING.")
             st.balloons()
             
+        # MODE 2: CHATBOT (KHI RẢNH)
         else:
-            # CHẾ ĐỘ CHỜ (IDLE) - Hiện Chatbot
             st.subheader("💬 AI ASSISTANT")
             
-            # Chat UI
-            chat_box = st.container()
-            with chat_box:
+            chat_con = st.container()
+            with chat_con:
                 for msg in st.session_state.messages:
-                    role_icon = "🤖" if msg["role"] == "assistant" else "👤"
-                    st.markdown(f"**{role_icon}:** {msg['content']}")
-                    st.markdown("---")
+                    align = "right" if msg["role"] == "user" else "left"
+                    bg = "#3b82f6" if msg["role"] == "user" else "rgba(128,128,128,0.2)"
+                    st.markdown(f"""
+                    <div style="text-align: {align}; margin: 10px 0;">
+                        <span style="background: {bg}; padding: 10px 15px; border-radius: 15px; display: inline-block; color: white !important;">
+                            {msg['content']}
+                        </span>
+                    </div>
+                    """, unsafe_allow_html=True)
             
-            if prompt := st.chat_input("Command Input..."):
+            if prompt := st.chat_input("Ask about transactions..."):
                 st.session_state.messages.append({"role": "user", "content": prompt})
                 st.rerun()
 
@@ -294,31 +336,35 @@ def main_dashboard():
 
 # --- 5. LOGIN SCREEN ---
 def login_screen():
-    # Login Style
+    # Style riêng cho Login
     if st.session_state.theme == 'dark':
-        st.markdown("""<style>.stApp { background-color: #000; color: #00FF41; }</style>""", unsafe_allow_html=True)
-        box_style = "border: 2px solid #00FF41; background: #000; color: #00FF41;"
-        btn_type = "primary" # Sẽ ăn theo theme dark
+        st.markdown("""<style>.stApp { background-color: #000; }</style>""", unsafe_allow_html=True)
+        box_bg = "rgba(0,0,0,0.8)"
+        border = "1px solid #00FFC2"
+        title_col = "#00FFC2"
     else:
-        st.markdown("""<style>.stApp { background-image: url("https://img.freepik.com/free-vector/hand-painted-watercolor-pastel-sky-background_23-2148902771.jpg"); background-size: cover; }</style>""", unsafe_allow_html=True)
-        box_style = "background: rgba(255,255,255,0.9); box-shadow: 0 10px 30px rgba(0,0,0,0.1);"
-        btn_type = "primary"
+        st.markdown("""<style>.stApp { background-image: url("https://img.freepik.com/free-vector/white-abstract-background-design_23-2148825582.jpg"); background-size: cover; }</style>""", unsafe_allow_html=True)
+        box_bg = "rgba(255,255,255,0.9)"
+        border = "1px solid #ddd"
+        title_col = "#333"
 
     c1, c2, c3 = st.columns([1, 1.5, 1])
     with c2:
         st.markdown("<br><br><br>", unsafe_allow_html=True)
-        st.markdown(f'<div style="padding: 40px; border-radius: 20px; text-align: center; {box_style}">', unsafe_allow_html=True)
-        st.markdown("<h1>ACCESS CONTROL</h1>", unsafe_allow_html=True)
+        st.markdown(f"""
+        <div style="background: {box_bg}; padding: 40px; border-radius: 20px; text-align: center; border: {border}; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+            <h1 style="color: {title_col} !important; font-family: sans-serif;">🔒 SECURE LOGIN</h1>
+        </div>
+        """, unsafe_allow_html=True)
         
-        user = st.text_input("IDENTITY", placeholder="admin")
-        pwd = st.text_input("PASSCODE", type="password", placeholder="123")
+        user = st.text_input("Identity", placeholder="admin")
+        pwd = st.text_input("Passcode", type="password", placeholder="123")
         
-        if st.button(">> INITIALIZE LINK", type=btn_type, use_container_width=True):
+        if st.button("AUTHENTICATE", type="primary", use_container_width=True):
             if user == "admin" and pwd == "123":
                 st.session_state.logged_in = True
                 st.rerun()
-            else: st.error("ACCESS DENIED")
-        st.markdown('</div>', unsafe_allow_html=True)
+            else: st.error("Access Denied")
 
 # ENTRY POINT
 if st.session_state.logged_in:

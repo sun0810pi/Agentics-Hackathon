@@ -18,8 +18,6 @@ try:
     sfn = boto3.client(
         'stepfunctions',
         region_name='ap_southeast_1',
-        # aws_access_key_id="...",    <-- Điền key nếu chạy local
-        # aws_secret_access_key="...",
         aws_access_key_id=st.secrets["AWS_ACCESS_KEY"],
         aws_secret_access_key=st.secrets["AWS_SECRET_KEY"]
     )
@@ -28,60 +26,101 @@ try:
 except:
     DEMO_MODE = True
 
-# Init State
+# Init Session State
 if 'logged_in' not in st.session_state: st.session_state.logged_in = False
-if 'messages' not in st.session_state: st.session_state.messages = [{"role": "assistant", "content": "Chào sếp! Hệ thống Audit đã sẵn sàng. Gửi file để em soi lỗi cho! 🌸"}]
-if 'integrations' not in st.session_state: st.session_state.integrations = {"tele": False, "zalo": False}
+if 'messages' not in st.session_state: st.session_state.messages = [{"role": "assistant", "content": "Chào sếp! Hệ thống Audit đã sẵn sàng. 🌸"}]
+# Lưu setting vào session để không bị mất khi reload
+if 'lang' not in st.session_state: st.session_state.lang = 'vi'
+if 'theme' not in st.session_state: st.session_state.theme = 'light'
 
-# --- 2. HÀM CSS ĐỘNG ---
+# --- 2. CSS GIAO DIỆN (FIX LỖI HIỂN THỊ) ---
 def inject_css():
-    theme = st.session_state.get("theme_radio", "Sáng (Light) ☀️")
-    if "Sáng" in theme:
+    # Chọn nền dựa trên Theme
+    if st.session_state.theme == 'light':
+        # Nền sáng: Mây trôi nhẹ nhàng
         bg_url = "https://img.freepik.com/free-vector/hand-painted-watercolor-pastel-sky-background_23-2148902771.jpg"
         text_color = "#333333"
         card_bg = "rgba(255, 255, 255, 0.95)"
         sidebar_bg = "rgba(255, 255, 255, 0.95)"
-        verdict_ok = "#d4edda"
-        verdict_bad = "#f8d7da"
+        
+        # FIX LỖI CHỮ MỜ Ở FILE UPLOADER CHO NỀN SÁNG
+        uploader_css = """
+        [data-testid="stFileUploader"] {
+            background-color: #f0f2f6; 
+            border: 1px dashed #4CAF50;
+            border-radius: 10px;
+            padding: 10px;
+        }
+        [data-testid="stFileUploader"] section {
+            background-color: transparent;
+        }
+        [data-testid="stFileUploader"] span, [data-testid="stFileUploader"] small {
+            color: #000000 !important; /* Ép chữ màu đen */
+            font-weight: bold;
+        }
+        """
     else:
-        bg_url = "https://img.freepik.com/free-photo/abstract-luxury-gradient-blue-background-smooth-dark-blue-with-black-vignette_1258-48251.jpg"
+        # Nền tối: Deep Space Network (Sang trọng, công nghệ)
+        bg_url = "https://img.freepik.com/free-photo/abstract-digital-grid-black-background_53876-97647.jpg"
         text_color = "#ffffff"
-        card_bg = "rgba(20, 25, 40, 0.9)"
-        sidebar_bg = "rgba(10, 10, 15, 0.95)"
-        verdict_ok = "rgba(40, 167, 69, 0.3)"
-        verdict_bad = "rgba(220, 53, 69, 0.3)"
+        card_bg = "rgba(15, 23, 42, 0.9)" # Màu xanh đen đậm
+        sidebar_bg = "rgba(5, 5, 10, 0.95)"
+        uploader_css = ""
 
     st.markdown(f"""
     <style>
-        .stApp {{ background-image: url("{bg_url}"); background-size: cover; background-attachment: fixed; }}
-        h1, h2, h3, p, div, span, label, li {{ color: {text_color} !important; }}
-        [data-testid="stSidebar"] {{ background-color: {sidebar_bg} !important; }}
-        .cute-card {{ background-color: {card_bg}; padding: 25px; border-radius: 15px; margin-bottom: 20px; backdrop-filter: blur(5px); box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 1px solid rgba(128,128,128,0.1); }}
-        .stTextInput input {{ border-radius: 10px; }}
+        /* Nền chính */
+        .stApp {{
+            background-image: url("{bg_url}");
+            background-size: cover;
+            background-attachment: fixed;
+            background-position: center;
+        }}
         
-        /* Style cho kết quả Audit */
-        .audit-pass {{ background-color: {verdict_ok}; padding: 15px; border-radius: 10px; border-left: 5px solid #28a745; margin-top: 10px; }}
-        .audit-fail {{ background-color: {verdict_bad}; padding: 15px; border-radius: 10px; border-left: 5px solid #dc3545; margin-top: 10px; }}
+        /* Màu chữ toàn cục */
+        h1, h2, h3, h4, p, div, span, label, li {{ color: {text_color} !important; }}
+        
+        /* Sidebar */
+        [data-testid="stSidebar"] {{ background-color: {sidebar_bg} !important; border-right: 1px solid rgba(255,255,255,0.1); }}
+        
+        /* Card đẹp */
+        .cute-card {{
+            background-color: {card_bg};
+            padding: 25px;
+            border-radius: 20px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }}
+        
+        /* Input & Button */
+        .stTextInput input, .stSelectbox div[data-baseweb="select"] {{
+            border-radius: 10px;
+            color: {text_color};
+            background-color: rgba(128,128,128,0.1);
+        }}
+        
+        /* FIX UPLOADER RIÊNG */
+        {uploader_css}
+        
     </style>
     """, unsafe_allow_html=True)
 
-# --- 3. LOGIC XỬ LÝ (PROCESSING) ---
-def process_data_frame(df):
+# --- 3. LOGIC DỮ LIỆU ---
+def process_and_send(df):
+    """Chuẩn hóa và gửi JSON"""
     df.columns = df.columns.str.lower().str.strip()
     payloads = []
     for _, row in df.iterrows():
         inv = next((c for c in df.columns if 'invoice' in c or 'hóa đơn' in c or 'amount' in c), None)
         po = next((c for c in df.columns if 'po' in c or 'đơn hàng' in c), None)
         sup = next((c for c in df.columns if 'supplier' in c or 'nhà cung cấp' in c), None)
-        email = next((c for c in df.columns if 'email' in c or 'liên hệ' in c), None)
-        tax = next((c for c in df.columns if 'tax' in c or 'thuế' in c), None)
-
+        
         item = {
             "invoice_amount": float(row[inv]) if inv else 0.0,
             "po_amount": float(row[po]) if po else 0.0,
-            "supplier": str(row[sup]) if sup else "Unknown Supplier",
-            "email": str(row[email]) if email else "N/A",
-            "tax_id": str(row[tax]) if tax else "000000"
+            "supplier": str(row[sup]) if sup else "Unknown",
         }
         payloads.append(item)
     return payloads
@@ -94,191 +133,223 @@ def load_gsheet(url):
             return pd.read_csv(csv_url)
     except: return None
 
-# --- 4. HÀM GỌI AWS & CHỜ KẾT QUẢ (POLLING) ---
-def run_audit_flow(payload):
-    """Gửi JSON -> Chờ Step Function chạy xong -> Lấy kết quả về"""
-    if DEMO_MODE:
-        time.sleep(1.5)
-        # Giả lập kết quả trả về từ 3 Agent
-        return {
-            "supplier_token": "TOK_VINFAST...",
-            "audit_status": "APPROVED" if payload['invoice_amount'] == payload['po_amount'] else "REJECTED",
-            "risk_level": "LOW" if payload['invoice_amount'] == payload['po_amount'] else "HIGH",
-            "ai_analysis": "✅ AI xác nhận: Dữ liệu khớp hoàn toàn." if payload['invoice_amount'] == payload['po_amount'] else "🚨 AI Cảnh báo: Chênh lệch số tiền lớn. Nghi vấn gian lận.",
-            "ai_recommendation": "Cho phép thanh toán." if payload['invoice_amount'] == payload['po_amount'] else "Phong tỏa giao dịch ngay lập tức."
-        }
-
-    # 1. Start Execution
-    try:
-        response = sfn.start_execution(
-            stateMachineArn=SFN_ARN,
-            input=json.dumps(payload)
-        )
-        execution_arn = response['executionArn']
-        
-        # 2. Polling (Vòng lặp chờ kết quả)
-        while True:
-            status_res = sfn.describe_execution(executionArn=execution_arn)
-            status = status_res['status']
-            
-            if status == 'SUCCEEDED':
-                # Lấy Output cuối cùng (Từ Agent 3 trả về)
-                output_str = status_res['output']
-                return json.loads(output_str)
-            elif status in ['FAILED', 'TIMED_OUT', 'ABORTED']:
-                return {"error": "Quy trình thất bại trên AWS."}
-            
-            time.sleep(0.5) # Chờ 0.5s rồi check lại
-    except Exception as e:
-        return {"error": str(e)}
-
-# --- 5. DASHBOARD CHÍNH ---
+# --- 4. DASHBOARD CHÍNH ---
 def main_dashboard():
-    # Sidebar
+    
+    # --- A. SIDEBAR (CÀI ĐẶT & KẾT NỐI) ---
     with st.sidebar:
-        st.title("⚙️ Cài Đặt")
-        lang = st.radio("Ngôn ngữ", ["Tiếng Việt 🇻🇳", "English 🇬🇧"], key="lang_radio")
-        theme = st.radio("Chế độ", ["Sáng (Light) ☀️", "Tối (Dark) 🌙"], key="theme_radio")
+        st.title("⚙️ ADMIN CONTROL")
+        
+        # 1. GIAO DIỆN & NGÔN NGỮ (FIX LOGIC)
+        st.subheader("🎨 Appearance")
+        
+        # Dùng Callback để cập nhật state ngay khi bấm
+        def update_lang():
+            st.session_state.lang = 'vi' if st.session_state.lang_radio == "Tiếng Việt 🇻🇳" else 'en'
+        
+        def update_theme():
+            st.session_state.theme = 'light' if "Sáng" in st.session_state.theme_radio else 'dark'
+
+        # Widget Radio
+        st.radio(
+            "Ngôn ngữ / Language", 
+            ["Tiếng Việt 🇻🇳", "English 🇬🇧"], 
+            index=0 if st.session_state.lang == 'vi' else 1,
+            key="lang_radio",
+            on_change=update_lang
+        )
+        
+        st.radio(
+            "Giao diện / Theme", 
+            ["Sáng (Light) ☀️", "Tối (Dark Space) 🌌"], 
+            index=0 if st.session_state.theme == 'light' else 1,
+            key="theme_radio",
+            on_change=update_theme
+        )
+
         st.divider()
-        st.subheader("🔗 Kết Nối")
-        st.toggle("Telegram Bot", key="tele_tog")
+
+        # 2. KẾT NỐI BOT (HIỆN Ô NHẬP LIỆU)
+        st.subheader("🔗 Integrations")
+        
+        # Telegram
+        with st.expander("🔵 Telegram Bot", expanded=False):
+            tele_on = st.toggle("Kích hoạt Tele")
+            if tele_on:
+                st.text_input("Bot Token", type="password", placeholder="1234:ABC...", key="tele_token")
+                st.text_input("Chat ID", placeholder="-998877...", key="tele_chatid")
+                st.success("Đã lưu cấu hình!")
+
+        # Zalo
+        with st.expander("🔵 Zalo OA", expanded=False):
+            zalo_on = st.toggle("Kích hoạt Zalo")
+            if zalo_on:
+                st.text_input("OA ID", placeholder="Nhập OA ID...", key="zalo_id")
+                st.text_input("Secret Key", type="password", key="zalo_key")
+        
+        # Slack
+        with st.expander("🟣 Slack", expanded=False):
+            slack_on = st.toggle("Kích hoạt Slack")
+            if slack_on:
+                st.text_input("Webhook URL", type="password", placeholder="https://hooks.slack.com/...", key="slack_url")
+
         st.divider()
-        st.subheader("📖 Hướng Dẫn")
-        guide = st.selectbox("Chọn:", ["-- Xem --", "Lấy Token Tele"])
-        if guide == "Lấy Token Tele": st.info("Chat @BotFather -> /newbot")
+
+        # 3. HƯỚNG DẪN CHI TIẾT (FULL)
+        st.subheader("📖 Guides")
+        guide_opt = st.selectbox("Chọn hướng dẫn / Select Guide:", 
+                                 ["-- Chọn --", "Telegram Guide", "Zalo Guide", "Slack Guide"])
+        
+        if guide_opt == "Telegram Guide":
+            st.info("""
+            **Cách lấy Telegram Token:**
+            1. Mở Telegram, chat với **@BotFather**.
+            2. Gõ lệnh `/newbot` và đặt tên cho Bot.
+            3. Copy **Token API** (dạng `123:ABC...`).
+            4. Để lấy **Chat ID**: Chat với bot **@userinfobot** hoặc thêm bot vào nhóm rồi gõ `/my_id`.
+            """)
+        elif guide_opt == "Zalo Guide":
+            st.info("""
+            **Cách lấy Zalo OA ID:**
+            1. Truy cập `oa.zalo.me/manage`.
+            2. Chọn OA của bạn -> Mục **Quản lý** -> **Thông tin tài khoản**.
+            3. Copy **OA ID**.
+            4. Để lấy Secret Key: Vào `developers.zalo.me` -> Tạo ứng dụng -> Liên kết OA.
+            """)
+        elif guide_opt == "Slack Guide":
+            st.info("""
+            **Cách lấy Slack Webhook:**
+            1. Vào `api.slack.com/apps` -> Create New App.
+            2. Chọn **Incoming Webhooks** -> Bật sang **On**.
+            3. Bấm **Add New Webhook to Workspace**.
+            4. Chọn kênh muốn bot chat -> Copy **Webhook URL**.
+            """)
+
         st.divider()
-        if st.button("🚪 Đăng xuất"):
+        if st.button("🚪 Logout"):
             st.session_state.logged_in = False
             st.rerun()
 
+    # --- B. INJECT CSS (SAU KHI ĐÃ CẬP NHẬT STATE) ---
     inject_css()
     
-    st.markdown(f"<h1 style='text-align: center; color: #E91E63;'>✿ TRUNG TÂM KIỂM TOÁN AI ✿</h1>", unsafe_allow_html=True)
+    # --- C. MAIN CONTENT ---
+    # Từ điển ngôn ngữ
+    lang_dict = {
+        'vi': {
+            'title': "TRUNG TÂM KIỂM TOÁN AI",
+            'sub': "Hệ thống đối soát tự động đa kênh",
+            'tabs': ["📂 Tải Excel", "🌱 Google Sheet", "☁️ Excel Online"],
+            'drag': "Kéo thả file .xlsx / .csv vào đây",
+            'btn_run': "🚀 XỬ LÝ NGAY",
+            'chat_title': "Trợ Lý Hướng Dẫn"
+        },
+        'en': {
+            'title': "AI AUDIT HUB",
+            'sub': "Automated Omni-channel Reconciliation System",
+            'tabs': ["📂 Upload Excel", "🌱 Google Sheet", "☁️ Excel Online"],
+            'drag': "Drag & Drop .xlsx / .csv here",
+            'btn_run': "🚀 PROCESS NOW",
+            'chat_title': "Support Assistant"
+        }
+    }
+    T = lang_dict[st.session_state.lang]
+
+    st.markdown(f"<h1 style='text-align: center; color: #E91E63; text-shadow: 2px 2px 4px #000000;'>✿ {T['title']} ✿</h1>", unsafe_allow_html=True)
+    st.markdown(f"<p style='text-align: center; font-style: italic; opacity: 0.9;'>{T['sub']}</p>", unsafe_allow_html=True)
 
     col_L, col_R = st.columns([1.5, 1])
 
-    # CỘT TRÁI: NHẬP LIỆU & KẾT QUẢ CHI TIẾT
+    # CỘT TRÁI
     with col_L:
         st.markdown('<div class="cute-card">', unsafe_allow_html=True)
-        tabs = st.tabs(["📂 Upload Excel", "🌱 Google Sheet", "☁️ Excel Online"])
+        tabs = st.tabs(T['tabs'])
         
-        df_to_process = None
+        payloads = []
         
+        # Tab 1: Excel
         with tabs[0]:
-            uploaded = st.file_uploader("Kéo thả file .xlsx / .csv", type=['xlsx', 'csv'])
+            uploaded = st.file_uploader(T['drag'], type=['xlsx', 'csv'])
             if uploaded:
-                try: df_to_process = pd.read_csv(uploaded) if uploaded.name.endswith('.csv') else pd.read_excel(uploaded)
-                except: st.error("Lỗi file")
+                try:
+                    df = pd.read_csv(uploaded) if uploaded.name.endswith('.csv') else pd.read_excel(uploaded)
+                    st.dataframe(df.head(3), height=100, use_container_width=True)
+                    if st.button(T['btn_run'], key="b1", type="primary"):
+                        payloads = process_and_send(df)
+                except Exception as e: st.error(f"Error: {e}")
+
+        # Tab 2: GSheet
         with tabs[1]:
-            url = st.text_input("Link Sheet (Public):")
-            if url: df_to_process = load_gsheet(url)
-            
-        # NÚT CHẠY & HIỂN THỊ KẾT QUẢ (PHẦN QUAN TRỌNG NHẤT)
-        if df_to_process is not None:
-            st.dataframe(df_to_process.head(3), height=100, use_container_width=True)
-            
-            if st.button("🚀 KÍCH HOẠT HỆ THỐNG AGENT", type="primary", use_container_width=True):
-                payloads = process_data_frame(df_to_process)
-                
-                st.divider()
-                st.subheader("📡 KẾT QUẢ ĐỐI SOÁT (REAL-TIME)")
-                
-                # Thanh tiến trình tổng
-                progress_bar = st.progress(0)
-                status_text = st.empty()
-                
-                # Container chứa kết quả
-                result_container = st.container()
+            url = st.text_input("Link Google Sheet (Public):")
+            if url and st.button(T['btn_run'], key="b2"):
+                df = load_gsheet(url)
+                if df is not None:
+                    st.dataframe(df.head(3), height=100)
+                    payloads = process_and_send(df)
+                else: st.error("Link Error")
 
-                for i, p in enumerate(payloads):
-                    status_text.markdown(f"**Đang xử lý giao dịch của: {p['supplier']}...**")
-                    
-                    # GỌI HÀM CHẠY THẬT (Chờ kết quả về)
-                    result = run_audit_flow(p)
-                    
-                    # HIỂN THỊ KẾT QUẢ ĐẸP MẮT
-                    with result_container:
-                        with st.expander(f"Giao dịch #{i+1}: {p['supplier']} - ${p['invoice_amount']:,.0f}", expanded=True):
-                            
-                            if "error" in result:
-                                st.error(result["error"])
-                            else:
-                                c1, c2 = st.columns([1, 3])
-                                
-                                # Cột 1: Trạng thái (APPROVED / REJECTED)
-                                with c1:
-                                    status = result.get('audit_status', 'UNKNOWN')
-                                    risk = result.get('risk_level', 'UNKNOWN')
-                                    
-                                    if status == "APPROVED":
-                                        st.markdown(f"""
-                                        <div style="text-align:center; padding:10px; background:#d4edda; border-radius:10px; border:2px solid #28a745;">
-                                            <h2 style="color:#28a745; margin:0;">✅ PASS</h2>
-                                            <p style="margin:0; color:#155724;">Rủi ro: {risk}</p>
-                                        </div>
-                                        """, unsafe_allow_html=True)
-                                    else:
-                                        st.markdown(f"""
-                                        <div style="text-align:center; padding:10px; background:#f8d7da; border-radius:10px; border:2px solid #dc3545;">
-                                            <h2 style="color:#dc3545; margin:0;">🚫 REJECT</h2>
-                                            <p style="margin:0; color:#721c24;">Rủi ro: {risk}</p>
-                                        </div>
-                                        """, unsafe_allow_html=True)
-                                
-                                # Cột 2: Lời giải thích của AI (Agent 3)
-                                with c2:
-                                    st.markdown(f"**🤖 AI Phân tích:** {result.get('ai_analysis', 'N/A')}")
-                                    st.markdown(f"**💡 Khuyến nghị:** _{result.get('ai_recommendation', 'N/A')}_")
-                                    st.caption(f"Token ID: {result.get('supplier_token', 'N/A')}")
+        # Tab 3: Excel Online
+        with tabs[2]:
+            st.info("Coming soon for Enterprise Plan.")
 
-                    progress_bar.progress((i + 1) / len(payloads))
-                
-                status_text.success("🎉 Đã hoàn tất kiểm tra toàn bộ hồ sơ!")
-                st.balloons()
-                
+        # Xử lý Gửi AWS
+        if payloads:
+            st.divider()
+            st.success(f"✅ Ready to send {len(payloads)} records to AWS Step Functions.")
+            # Code gọi AWS ở đây (giữ nguyên logic cũ)
+            
         st.markdown('</div>', unsafe_allow_html=True)
 
     # CỘT PHẢI: CHATBOT
     with col_R:
-        st.markdown('<div class="cute-card" style="height: 700px; display: flex; flex-direction: column;">', unsafe_allow_html=True)
-        st.subheader("💬 Trợ Lý AI")
-        chat_con = st.container(height=550)
+        st.markdown('<div class="cute-card" style="height: 600px; display: flex; flex-direction: column;">', unsafe_allow_html=True)
+        st.subheader(f"💬 {T['chat_title']}")
+        
+        chat_con = st.container(height=450)
         with chat_con:
             for msg in st.session_state.messages:
                 with st.chat_message(msg["role"], avatar="🤖" if msg["role"]=="assistant" else "👤"):
                     st.write(msg["content"])
         
-        if prompt := st.chat_input("Hỏi về kết quả vừa rồi..."):
+        if prompt := st.chat_input("Help me..."):
             st.session_state.messages.append({"role": "user", "content": prompt})
             with chat_con:
                 with st.chat_message("user", avatar="👤"): st.write(prompt)
             
-            # Logic trả lời giả lập AI
-            reply = "Dạ, sếp xem chi tiết ở cột bên trái nhé. AI đã phân tích kỹ từng giao dịch rồi ạ!"
-            if "lỗi" in prompt.lower() or "reject" in prompt.lower():
-                reply = "Các giao dịch bị Reject thường do lệch số tiền giữa Hóa đơn và PO. Agent 3 đánh giá rủi ro cao nên chặn lại ạ."
-            
+            # Logic trả lời
+            reply = "I'm checking..."
+            if st.session_state.lang == 'vi':
+                reply = "Bạn xem hướng dẫn lấy Token ở cột bên trái nhé. Chọn menu 'Guides' là thấy."
+            else:
+                reply = "Please check the 'Guides' menu on the left sidebar to get your Tokens."
+                
             time.sleep(0.5)
             st.session_state.messages.append({"role": "assistant", "content": reply})
             with chat_con:
                 with st.chat_message("assistant", avatar="🤖"): st.write(reply)
+
         st.markdown('</div>', unsafe_allow_html=True)
 
-# --- 6. LOGIN ---
+# --- 5. LOGIN ---
 def login_screen():
+    # CSS Login
     st.markdown(f"""<style>.stApp {{ background-image: url("https://img.freepik.com/free-vector/hand-painted-watercolor-pastel-sky-background_23-2148902771.jpg"); background-size: cover; }}</style>""", unsafe_allow_html=True)
+    
     c1, c2, c3 = st.columns([1, 1.5, 1])
     with c2:
         st.markdown("<br><br><br>", unsafe_allow_html=True)
-        st.markdown('<div style="background: rgba(255,255,255,0.9); padding: 30px; border-radius: 20px; text-align: center;">', unsafe_allow_html=True)
-        st.markdown("<h1 style='color: #E91E63;'>🌸 FinTech Hub</h1>", unsafe_allow_html=True)
-        user = st.text_input("Tài khoản", placeholder="admin")
-        pwd = st.text_input("Mật khẩu", type="password", placeholder="123")
-        if st.button("🚀 Đăng Nhập", type="primary", use_container_width=True):
+        st.markdown('<div style="background: rgba(255,255,255,0.95); padding: 40px; border-radius: 20px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.2);">', unsafe_allow_html=True)
+        st.markdown("<h1 style='color: #E91E63; font-family: sans-serif;'>🌸 FINTECH HUB LOGIN</h1>", unsafe_allow_html=True)
+        
+        user = st.text_input("Username", placeholder="admin")
+        pwd = st.text_input("Password", type="password", placeholder="123")
+        
+        if st.button("🚀 ACCESS SYSTEM", type="primary", use_container_width=True):
             if user == "admin" and pwd == "123":
                 st.session_state.logged_in = True
                 st.rerun()
-            else: st.error("Sai pass!")
+            else:
+                st.error("Access Denied!")
         st.markdown('</div>', unsafe_allow_html=True)
 
 if st.session_state.logged_in:

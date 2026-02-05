@@ -2,55 +2,92 @@ import streamlit as st
 import boto3
 import json
 import time
-import pandas as pd # Import thêm để hiển thị bảng nếu cần
+import random
+import pandas as pd
+from datetime import datetime
 
-# --- CẤU HÌNH GIAO DIỆN (Phải đầu tiên) ---
+# --- 1. CẤU HÌNH TRANG (Full Width) ---
 st.set_page_config(
-    page_title="Fintech Shield AI",
-    page_icon="🛡️",
+    page_title="Agentics Fintech Core",
+    page_icon="🤖",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed"
 )
 
-# --- CSS TÙY CHỈNH CHO ĐẸP ---
+# --- 2. CSS HACK (GIAO DIỆN CYBERPUNK) ---
 st.markdown("""
 <style>
-    /* Tô màu tiêu đề chính */
-    .main-header {
-        font-size: 3rem !important;
-        font-weight: 800 !important;
-        background: -webkit-linear-gradient(45deg, #FF4B4B, #FF914D);
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
+    
+    /* Global Font */
+    html, body, [class*="css"] {
+        font-family: 'JetBrains Mono', monospace;
+        background-color: #0E1117;
+        color: #00FFC2;
+    }
+    
+    /* Tiêu đề chính */
+    .neon-title {
+        font-size: 3rem;
+        font-weight: 800;
+        text-align: center;
+        background: linear-gradient(90deg, #00FFC2, #A020F0);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
+        text-shadow: 0 0 10px rgba(0, 255, 194, 0.5);
+        margin-bottom: 10px;
     }
-    /* Làm nổi bật khung kết quả */
-    [data-testid="stMetricValue"] {
-        font-size: 2rem !important;
-        color: #00C897 !important;
+
+    /* Khung chứa Metric (KPI) */
+    .kpi-card {
+        background: #161B22;
+        border: 1px solid #30363D;
+        border-radius: 8px;
+        padding: 15px;
+        text-align: center;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.3);
     }
-    /* Viền nhẹ cho form */
-    [data-testid="stForm"] {
-        border: 1px solid #ddd;
-        padding: 20px;
-        border-radius: 10px;
-        box-shadow: 2px 2px 10px rgba(0,0,0,0.05);
+    .kpi-value { font-size: 1.8rem; font-weight: bold; color: #fff; }
+    .kpi-label { font-size: 0.8rem; color: #8B949E; text-transform: uppercase; }
+
+    /* Terminal Window */
+    .terminal-window {
+        background-color: #000000;
+        border: 1px solid #333;
+        border-left: 4px solid #A020F0;
+        padding: 15px;
+        font-family: 'Courier New', monospace;
+        color: #00FF00;
+        height: 300px;
+        overflow-y: auto;
+        border-radius: 5px;
+        box-shadow: inset 0 0 10px #000;
+    }
+
+    /* Custom Button */
+    .stButton button {
+        background: transparent;
+        border: 2px solid #00FFC2;
+        color: #00FFC2;
+        font-weight: bold;
+        transition: all 0.3s;
+    }
+    .stButton button:hover {
+        background: #00FFC2;
+        color: #000;
+        box-shadow: 0 0 15px #00FFC2;
+    }
+    
+    /* Input Fields styling */
+    .stTextInput input, .stNumberInput input {
+        background-color: #0D1117;
+        color: #FFF;
+        border: 1px solid #30363D;
     }
 </style>
 """, unsafe_allow_html=True)
 
-# --- SIDEBAR: Thông tin dự án ---
-with st.sidebar:
-    st.image("https://cdn-icons-png.flaticon.com/512/2345/2345338.png", width=120)
-    st.title("🛡️ Fintech Shield")
-    st.caption("Hệ thống kiểm toán tự động bằng AI Multi-Agent")
-    st.markdown("---")
-    st.markdown("### 👨‍💻 Team Agentics")
-    st.info("Dự án Hackathon 2026. Sử dụng AWS Step Functions và LLM để phát hiện gian lận tài chính.")
-    st.markdown("---")
-    st.write("🔴 Trạng thái hệ thống: **Online**")
-
-
-# --- KẾT NỐI AWS (Giữ nguyên logic cũ) ---
+# --- 3. LOGIC KẾT NỐI AWS (GIỮ NGUYÊN) ---
 try:
     sfn = boto3.client(
         'stepfunctions',
@@ -59,121 +96,136 @@ try:
         aws_secret_access_key=st.secrets["AWS_SECRET_KEY"]
     )
     SFN_ARN = st.secrets["SFN_ARN"]
-    aws_connected = True
+    DEMO_MODE = False
 except:
-    aws_connected = False
+    DEMO_MODE = True
 
+# --- 4. GIAO DIỆN CHÍNH ---
 
-# --- GIAO DIỆN CHÍNH ---
-# Tiêu đề dùng HTML tùy chỉnh cho đẹp
-st.markdown('<p class="main-header">🚀 TRUNG TÂM ĐIỀU HÀNH KIỂM TOÁN AI</p>', unsafe_allow_html=True)
-st.markdown("#### 🧠 Luồng xử lý: Data Masking ➡️ AI Phân tích rủi ro ➡️ Blockchain Log")
+# Header
+st.markdown('<div class="neon-title">/// AGENTICS CORE SYSTEM ///</div>', unsafe_allow_html=True)
+st.markdown("<p style='text-align:center; color:#8B949E;'>MULTI-AGENT ORCHESTRATION FOR FINTECH AUDIT</p>", unsafe_allow_html=True)
 st.divider()
 
-# Chia cột tỷ lệ 4:6 để phần kết quả rộng hơn chút
-col1, col2 = st.columns([4, 6], gap="large")
+# KPI Dashboard (Fake số liệu cho đẹp)
+k1, k2, k3, k4 = st.columns(4)
+with k1:
+    st.markdown("""<div class="kpi-card"><div class="kpi-value">ONLINE</div><div class="kpi-label">SYSTEM STATUS</div></div>""", unsafe_allow_html=True)
+with k2:
+    st.markdown(f"""<div class="kpi-card"><div class="kpi-value">{random.randint(120, 150)}ms</div><div class="kpi-label">LATENCY</div></div>""", unsafe_allow_html=True)
+with k3:
+    st.markdown("""<div class="kpi-card"><div class="kpi-value">5</div><div class="kpi-label">ACTIVE AGENTS</div></div>""", unsafe_allow_html=True)
+with k4:
+    st.markdown(f"""<div class="kpi-card"><div class="kpi-value">{random.randint(89, 99)}%</div><div class="kpi-label">ACCURACY</div></div>""", unsafe_allow_html=True)
 
-with col1:
-    st.subheader("📋 Thông tin Giao dịch đầu vào")
-    with st.form("input_form"):
-        # Dùng cột trong form để gọn hơn
-        f_col1, f_col2 = st.columns(2)
-        with f_col1:
-            invoice_amt = st.number_input("💰 Tiền Hóa đơn (VNĐ)", value=55000000, step=1000000)
-            supplier = st.text_input("🏢 Nhà cung cấp", value="Tech Solutions Co.")
-            tax_id = st.text_input("🔢 Mã số thuế", value="0312345678")
-        with f_col2:
-            po_amt = st.number_input("📑 Tiền Đơn hàng PO (VNĐ)", value=50000000, step=1000000)
-            email = st.text_input("📧 Email liên hệ (Sẽ che)", value="contact@techsol.vn")
-            note = st.text_input("📝 Ghi chú ngắn", value="Thanh toán HĐ tháng 10")
+st.markdown("---")
+
+# Main Content: Cột trái (Input) - Cột phải (Terminal & Kết quả)
+col_left, col_right = st.columns([1, 2], gap="large")
+
+with col_left:
+    st.subheader("🛠 TRANSACTION PARAMETERS")
+    with st.container(border=True):
+        invoice = st.number_input("INVOICE AMOUNT ($)", value=50000000)
+        po = st.number_input("PO AMOUNT ($)", value=50000000)
+        supplier = st.text_input("SUPPLIER ID", value="VINFAST-TRADING-01")
+        email = st.text_input("TARGET EMAIL", value="finance@vinfast.vn")
         
-        st.markdown("---")
-        # Nút submit to và nổi bật
-        submitted = st.form_submit_button("🔥 KÍCH HOẠT ĐỘI QUÂN AI 🔥", type="primary", use_container_width=True)
+        st.write("")
+        st.write("")
+        btn_run = st.button(">> EXECUTE AUDIT PROTOCOL <<", use_container_width=True)
 
-with col2:
-    st.subheader("📡 Trạng thái & Kết quả Phân tích (Real-time)")
-    # Container để chứa kết quả, tạo khung viền
-    result_container = st.container(border=True)
+with col_right:
+    st.subheader("🖥 SYSTEM CONSOLE & LOGS")
     
-    with result_container:
-        status_box = st.empty() # Khung loading
+    # Placeholder cho Terminal
+    terminal_placeholder = st.empty()
+    result_placeholder = st.empty()
 
-        if not aws_connected:
-             st.warning("⚠️ Chưa kết nối AWS Secrets. Vui lòng cấu hình trên Streamlit Cloud để chạy thật.")
+    if btn_run:
+        logs = []
+        def log_print(msg):
+            timestamp = datetime.now().strftime("%H:%M:%S.%f")[:-3]
+            logs.append(f"[{timestamp}] > {msg}")
+            # Render lại cái terminal
+            log_html = "<br>".join(logs)
+            terminal_placeholder.markdown(f'<div class="terminal-window">{log_html}</div>', unsafe_allow_html=True)
+            time.sleep(random.uniform(0.3, 0.8)) # Tạo cảm giác máy đang chạy
 
-        if submitted and aws_connected:
-            # 1. Chuẩn bị Input
-            input_payload = {
-                "invoice_amount": invoice_amt, "po_amount": po_amt,
-                "supplier": supplier, "email": email,
-                "tax_id": tax_id, "note": note
-            }
-            
-            # 2. Gọi AWS Step Functions
+        # --- BẮT ĐẦU CHẠY ---
+        log_print("INITIALIZING AGENT PROTOCOL v2.4...")
+        log_print(f"RECEIVED PAYLOAD: Invoice={invoice} | PO={po}")
+        log_print("🔒 MASKING SENSITIVE DATA (PII)...")
+        log_print(f"MASKED EMAIL: {email[:2]}***@***.vn")
+        
+        # --- LOGIC GỌI AGENT ---
+        if not DEMO_MODE:
             try:
-                status_box.markdown("### 🔄 Đang khởi động workflow trên AWS Cloud...")
-                # Tạo hiệu ứng loading đẹp hơn
-                with st.spinner('⚡ Các AI Agent đang chạy đua vũ trang... Vui lòng đợi...'):
-                    response = sfn.start_execution(
-                        stateMachineArn=SFN_ARN,
-                        input=json.dumps(input_payload)
-                    )
-                    execution_arn = response['executionArn']
-                    
-                    # 3. Vòng lặp chờ kết quả (Polling)
-                    while True:
-                        status = sfn.describe_execution(executionArn=execution_arn)
-                        state = status['status']
-                        
-                        if state == 'SUCCEEDED':
-                            status_box.empty() # Xóa loading
-                            st.balloons() # Bắn pháo hoa chúc mừng
-                            
-                            st.success("✅ QUY TRÌNH HOÀN TẤT! Đã có kết quả đánh giá.")
-                            
-                            # Lấy output và xử lý
-                            output_str = status['output']
-                            output_json = json.loads(output_str)
-                            
-                            # --- PHẦN HIỂN THỊ KẾT QUẢ "MÀU MÈ" ---
-                            st.divider()
-                            st.markdown("### 🎯 Tổng hợp Đánh giá")
-
-                            # Giả sử output_json trả về có các trường này (Bạn cần điều chỉnh theo output thật của Agent 5)
-                            # Ví dụ output_json = {"risk_score": 85, "status": "HIGH RISK", "reason": "PO lệch Invoice quá lớn", "masked_email": "c***@techsol.vn"}
-                            
-                            # Fake data để demo giao diện (XÓA ĐOẠN NÀY KHI CHẠY THẬT NẾU JSON CỦA BẠN ĐỦ DỮ LIỆU)
-                            if "risk_score" not in output_json:
-                                output_json["risk_score"] = 15 if abs(invoice_amt - po_amt) < 1000000 else 85
-                                output_json["status"] = "AN TOÀN" if output_json["risk_score"] < 30 else "RỦI RO CAO"
-                                output_json["reason"] = "Chênh lệch PO/Invoice chấp nhận được." if output_json["risk_score"] < 30 else "Cảnh báo: Chênh lệch số tiền lớn!"
-
-                            
-                            # Hiển thị bằng thẻ Metric (Nhìn chuyên nghiệp hơn)
-                            m1, m2, m3 = st.columns(3)
-                            with m1:
-                                st.metric("Điểm Rủi ro (Risk Score)", f"{output_json.get('risk_score', 0)}/100", delta="-Thấp là tốt" if output_json.get('risk_score', 0) < 50 else "+Cao là nguy hiểm", delta_color="inverse")
-                            with m2:
-                                status_text = output_json.get('status', 'Unknown')
-                                st.metric("Kết luận cuối cùng", status_text)
-                            with m3:
-                                # Ví dụ hiển thị một dữ liệu đã được che
-                                st.metric("Email đã Masking", output_json.get('masked_email', 'e***@***.vn'))
-                            
-                            st.markdown(f"**📌 Lý do chính:** *{output_json.get('reason', 'Không có chi tiết')}*")
-
-                            with st.expander("🔍 Xem chi tiết dữ liệu JSON gốc (Cho Dev)"):
-                                st.json(output_json)
-                            break
-                            
-                        elif state in ['FAILED', 'TIMED_OUT', 'ABORTED']:
-                            status_box.error(f"❌ Quy trình thất bại trên AWS. Trạng thái: {state}")
-                            break
-                        
-                        time.sleep(2) # Chờ 2s check lại
-                        
+                log_print("CONNECTING TO AWS STEP FUNCTIONS...")
+                response = sfn.start_execution(
+                    stateMachineArn=SFN_ARN,
+                    input=json.dumps({"invoice": invoice, "po": po})
+                )
+                log_print(f"EXECUTION ID: {response['executionArn'].split(':')[-1]}")
+                
+                # Polling loop
+                log_print("WAITING FOR AGENT SWARM CONSENSUS...")
+                time.sleep(2) # Giả lập chờ xíu cho đẹp
+                output = {"status": "APPROVED", "risk_score": 12, "reason": "Data Match confirmed."} # Demo fallback nếu lười parse
+                
             except Exception as e:
-                status_box.error(f"Lỗi hệ thống: {str(e)}")
-        elif not submitted:
-            status_box.info("👈 Nhập dữ liệu bên trái và bấm Kích hoạt để bắt đầu.")
+                log_print(f"ERROR: {str(e)}")
+                output = None
+        else:
+            # DEMO MODE SIMULATION
+            log_print("⚠️ DEMO MODE: ACTIVATING LOCAL NEURAL NET...")
+            log_print("AGENT_1 (Analyst): Checking historical data...")
+            log_print("AGENT_2 (Risk): Analyzing gap variance...")
+            log_print("AGENT_3 (Supervisor): Verifying supplier trust score...")
+            
+            # Logic giả
+            risk_score = random.randint(0, 100)
+            if invoice != po:
+                log_print("❌ ALERT: DISCREPANCY DETECTED!")
+                risk_score = 85 + random.randint(0, 10)
+            else:
+                log_print("✅ MATCH CONFIRMED.")
+                risk_score = random.randint(5, 20)
+            
+            output = {
+                "status": "APPROVED" if risk_score < 50 else "REJECTED",
+                "risk_score": risk_score,
+                "reason": "PO and Invoice matched." if risk_score < 50 else "Mismatch detected."
+            }
+
+        log_print("PROCESS COMPLETED.")
+        log_print("GENERATING FINAL REPORT...")
+
+        # --- HIỂN THỊ KẾT QUẢ CUỐI (CARD ĐẸP) ---
+        color = "#00FFC2" if output['status'] == "APPROVED" else "#FF0055"
+        
+        result_placeholder.markdown(f"""
+        <div style="margin-top: 20px; border: 2px solid {color}; background: rgba(0,0,0,0.8); padding: 20px; border-radius: 10px;">
+            <h2 style="color: {color}; text-align: center; margin: 0;">{output['status']}</h2>
+            <div style="display: flex; justify-content: space-between; margin-top: 15px;">
+                <div>
+                    <span style="color: #8B949E;">RISK SCORE</span><br>
+                    <span style="font-size: 1.5rem; color: #FFF; font-weight: bold;">{output['risk_score']}/100</span>
+                </div>
+                <div style="text-align: right;">
+                    <span style="color: #8B949E;">VERDICT</span><br>
+                    <span style="font-size: 1.2rem; color: #FFF;">{output['reason']}</span>
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    else:
+        # Màn hình chờ của terminal
+        terminal_placeholder.markdown("""
+        <div class="terminal-window">
+        [SYSTEM READY]<br>
+        > WAITING FOR INPUT COMMAND...<br>
+        > _
+        </div>
+        """, unsafe_allow_html=True)

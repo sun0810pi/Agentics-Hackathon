@@ -1,13 +1,16 @@
+# FILE: app/main.py
 from fastapi import FastAPI
-from app.api.jobs import router as jobs_router
+from app.api import routes  # <-- Import file routes mình vừa tạo
 
 app = FastAPI(
-    title="Fintech Invoice Control Plane",
-    version="1.0.0"
+    title="Fintech Agent Control Plane",
+    version="2.0.0",
+    description="Hệ thống backend điều phối các Agent kiểm toán"
 )
 
-app.include_router(jobs_router, prefix="/jobs", tags=["Jobs"])
+# Gắn router vào (prefix giúp đường dẫn đẹp hơn: /api/v1/process-batch)
+app.include_router(routes.router, prefix="/api/v1", tags=["Audit Transactions"])
 
 @app.get("/")
 def healthcheck():
-    return {"status": "ok"}
+    return {"status": "System Operational", "service": "Control Plane"}

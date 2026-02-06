@@ -67,21 +67,15 @@ def process_and_send(df):
                 "supplier": str(row[sup_col]) if sup_col else "Unknown",
                 "row_index": index + 2 # Để dễ đối chiếu sau này
             }
-            valid_payloads.append(item)
-            
-        except ValueError:
-            error_logs.append(f"Dòng {index+2}: Dữ liệu tiền không phải là số (VD: {row[inv_col]}).")
-        except Exception as e:
-            error_logs.append(f"Dòng {index+2}: Lỗi không xác định - {str(e)}")
-
+        except:
+            error_logs.append(f"Dòng {index+2}: Lỗi định dạng số.")
     return valid_payloads, error_logs
 
 def load_gsheet(url):
     try:
-        if "docs.google.com" in url:
-            csv_url = url.replace('/edit#gid=', '/export?format=csv&gid=').replace('/edit?gid=', '/export?format=csv&gid=')
-            if "export" not in csv_url: csv_url += "/export?format=csv"
-            return pd.read_csv(csv_url)
+        csv_url = url.replace('/edit#gid=', '/export?format=csv&gid=').replace('/edit?gid=', '/export?format=csv&gid=')
+        if "export" not in csv_url: csv_url += "/export?format=csv"
+        return pd.read_csv(csv_url)
     except: return None
 
 # --- 3. CSS CAO CẤP (GLASSMORPHISM) ---

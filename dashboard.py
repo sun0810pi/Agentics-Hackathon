@@ -35,29 +35,46 @@ if 'theme' not in st.session_state: st.session_state.theme = 'dark' # Mặc đ�
 
 # --- 2. LOGIC XỬ LÝ DỮ LIỆU (SMART ENGINE) ---
 def process_and_send(df):
-    """Đọc DataFrame -> Tìm cột thông minh -> Gửi JSON"""
+    """Chuẩn hóa, kiểm tra lỗi và trả về danh sách hợp lệ + danh sách lỗi"""
     df.columns = df.columns.str.lower().str.strip()
-    payloads = []
+    valid_payloads = []
+    error_logs = []
     
-    for _, row in df.iterrows():
-        # Auto-map columns
-        inv = next((c for c in df.columns if 'invoice' in c or 'hóa đơn' in c or 'amount' in c), None)
-        po = next((c for c in df.columns if 'po' in c or 'đơn hàng' in c), None)
-        sup = next((c for c in df.columns if 'supplier' in c or 'nhà cung cấp' in c), None)
-        email = next((c for c in df.columns if 'email' in c or 'liên hệ' in c), None)
-        
-        # Logic tìm TÀI KHOẢN NGÂN HÀNG
-        acc = next((c for c in df.columns if 'account' in c or 'stk' in c or 'bank' in c or 'tài khoản' in c), None)
-        
-        item = {
-            "invoice_amount": float(row[inv]) if inv else 0.0,
-            "po_amount": float(row[po]) if po else 0.0,
-            "supplier": str(row[sup]) if sup else "UNKNOWN",
-            "email": str(row[email]) if email else "N/A",
-            "bank_account": str(row[acc]) if acc else "000000"
-        }
-        payloads.append(item)
-    return payloads
+    # Xác định các cột quan trọng
+    inv_col = next((c for c in df.columns if 'invoice' in c or 'hóa đơn' in c or 'amount' in c), None)
+    po_col = next((c for c in df.columns if 'po' in c or 'đơn hàng' in c), None)
+    sup_col = next((c for c in df.columns if 'supplier' in c or 'nhà cung cấp' in c), None)
+
+    if not inv_col or not po_col:
+        st.error("❌ Không tìm thấy cột 'Số tiền hóa đơn' hoặc 'Số tiền PO' trong file!")
+        return [], []
+
+    for index, row in df.iterrows():
+        try:
+            # 1. Ép kiểu số
+            inv_val = float(row[inv_col])
+            po_val = float(row[po_col])
+            
+            # 2. Kiểm tra số âm hoặc lỗi logic
+            if inv_val < 0 or po_val < 0:
+                error_logs.append(f"Dòng {index+2}: Số tiền không được âm.")
+                continue
+                
+            # 3. Nếu mọi thứ ổn, thêm vào danh sách gửi đi
+            item = {
+                "invoice_amount": inv_val,
+                "po_amount": po_val,
+                "supplier": str(row[sup_col]) if sup_col else "Unknown",
+                "row_index": index + 2 # Để dễ đối chiếu sau này
+            }
+            valid_payloads.append(item)
+            
+        except ValueError:
+            error_logs.append(f"Dòng {index+2}: Dữ liệu tiền không phải là số (VD: {row[inv_col]}).")
+        except Exception as e:
+            error_logs.append(f"Dòng {index+2}: Lỗi không xác định - {str(e)}")
+
+    return valid_payloads, error_logs
 
 def load_gsheet(url):
     try:
@@ -222,6 +239,18 @@ def main_dashboard():
         if st.button("🔴 LOGOUT"):
             st.session_state.logged_in = False
             st.rerun()
+            
+# Trong phần main_dashboard, sau khi gọi hàm validation:
+payloads, errors = process_and_send(df)
+
+if errors:
+    with st.expander(f"⚠️ Phát hiện {len(errors)} dòng lỗi (Bị loại bỏ)"):
+        for err in errors:
+            st.warning(err)
+
+if payloads:
+    st.success(f"✅ Đã làm sạch {len(payloads)} dòng dữ liệu sẵn sàng gửi AI.")
+    # Nút bấm xác nhận gửi lên AWS
 
     inject_css()
     

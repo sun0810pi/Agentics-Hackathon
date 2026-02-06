@@ -1,5 +1,7 @@
-fastapi
-uvicorn
-python-multipart
-boto3
-pydantic
+fastapi==0.115.12
+uvicorn[standard]==0.34.5
+pydantic==2.10.8
+pandas==2.2.3
+openpyxl==3.1.5
+python-multipart==0.0.20
+requests==2.32.3

@@ -40,33 +40,26 @@ def process_and_send(df):
     valid_payloads = []
     error_logs = []
     
-    # Xác định các cột quan trọng
     inv_col = next((c for c in df.columns if 'invoice' in c or 'hóa đơn' in c or 'amount' in c), None)
     po_col = next((c for c in df.columns if 'po' in c or 'đơn hàng' in c), None)
     sup_col = next((c for c in df.columns if 'supplier' in c or 'nhà cung cấp' in c), None)
 
     if not inv_col or not po_col:
-        st.error("❌ Không tìm thấy cột 'Số tiền hóa đơn' hoặc 'Số tiền PO' trong file!")
-        return [], []
+        return [], ["❌ Không tìm thấy cột 'Hóa đơn' hoặc 'PO'."]
 
     for index, row in df.iterrows():
         try:
-            # 1. Ép kiểu số
             inv_val = float(row[inv_col])
             po_val = float(row[po_col])
-            
-            # 2. Kiểm tra số âm hoặc lỗi logic
             if inv_val < 0 or po_val < 0:
                 error_logs.append(f"Dòng {index+2}: Số tiền không được âm.")
                 continue
-                
-            # 3. Nếu mọi thứ ổn, thêm vào danh sách gửi đi
-            item = {
+            valid_payloads.append({
                 "invoice_amount": inv_val,
                 "po_amount": po_val,
                 "supplier": str(row[sup_col]) if sup_col else "Unknown",
-                "row_index": index + 2 # Để dễ đối chiếu sau này
-            }
+                "row_index": index + 2
+            })
         except:
             error_logs.append(f"Dòng {index+2}: Lỗi định dạng số.")
     return valid_payloads, error_logs
@@ -183,18 +176,13 @@ def inject_css():
 def main_dashboard():
     
     # --- A. SIDEBAR ---
-    with st.sidebar:
+   with st.sidebar:
         st.title("⚙️ CONTROL PANEL")
-        
-        # 1. Settings (Callback để đổi ngay lập tức)
         def update_ui():
             st.session_state.lang = 'vi' if "Việt" in st.session_state.lang_sel else 'en'
             st.session_state.theme = 'light' if "Light" in st.session_state.theme_sel else 'dark'
-
-        st.caption("Configuration")
         st.radio("Language", ["Tiếng Việt 🇻🇳", "English 🇬🇧"], key="lang_sel", on_change=update_ui, index=0 if st.session_state.lang=='vi' else 1)
         st.radio("Theme", ["Dark (Cyber) ⚡", "Light (Clean) ☀️"], key="theme_sel", on_change=update_ui, index=0 if st.session_state.theme=='dark' else 1)
-        
         st.divider()
         
         # 2. Integrations (Fix lỗi không hiện ô nhập)
@@ -250,6 +238,44 @@ if payloads:
     
     # --- B. MAIN UI ---
     
+    
+    st.markdown('<h1 style="text-align: center;">AUDIT HUB V4</h1>', unsafe_allow_html=True)
+    col_L, col_R = st.columns([1.2, 1.8], gap="medium")
+
+    with col_L:
+        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+        st.subheader("📂 DATA SOURCE")
+        
+        f = st.file_uploader("Kéo thả Excel/CSV tại đây", type=['xlsx', 'csv'])
+        if f:
+            df = pd.read_csv(f) if f.name.endswith('.csv') else pd.read_excel(f)
+            st.dataframe(df.head(3), use_container_width=True)
+            
+            if st.button("🚀 BẮT ĐẦU ĐỐI SOÁT"):
+                # CHỈ GỌI KHI CÓ df VÀ BẤM NÚT
+                payloads, errors = process_and_send_v2(df)
+                
+                # Lưu vào session_state để cột bên phải hiển thị
+                st.session_state.valid_data = payloads
+                st.session_state.error_data = errors
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    with col_R:
+        st.markdown('<div class="glass-card" style="min-height: 500px;">', unsafe_allow_html=True)
+        
+        # Hiển thị lỗi nếu có
+        if 'error_data' in st.session_state and st.session_state.error_data:
+            with st.expander(f"⚠️ Phát hiện {len(st.session_state.error_data)} dòng lỗi"):
+                for err in st.session_state.error_data:
+                    st.warning(err)
+        
+        # Xử lý gửi AWS
+        if 'valid_data' in st.session_state and st.session_state.valid_data:
+            st.success(f"✅ Sẵn sàng xử lý {len(st.session_state.valid_data)} giao dịch.")
+            # Thực hiện vòng lặp gửi dữ liệu sfn.start_execution ở đây...
+        else:
+            st.info("Chờ dữ liệu từ cột bên trái...")
+        st.markdown('</div>', unsafe_allow_html=True)
     # Header động
     if st.session_state.theme == 'dark':
         st.markdown('<h1 style="text-align: center; text-shadow: 0 0 20px #00FFC2;">/// AUDIT CORE V4 ///</h1>', unsafe_allow_html=True)

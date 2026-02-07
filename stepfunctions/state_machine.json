@@ -1,0 +1,313 @@
+{
+  "Comment": "AI Agentic Fintech - Complete Workflow v2.0",
+  "StartAt": "Agent1_Preprocessing",
+  "States": {
+    "Agent1_Preprocessing": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:${AWS_REGION}:${AWS_ACCOUNT_ID}:function:${PROJECT_NAME}-agent1-preprocessing-${ENVIRONMENT}",
+      "ResultPath": "$",
+      "TimeoutSeconds": 300,
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 3,
+          "BackoffRate": 2.0
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "ResultPath": "$.error",
+          "Next": "ErrorHandler"
+        }
+      ],
+      "Next": "CheckAgent1Status"
+    },
+    "CheckAgent1Status": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.status",
+          "StringEquals": "VALIDATION_ERROR",
+          "Next": "ValidationErrorHandler"
+        },
+        {
+          "Variable": "$.status",
+          "StringEquals": "SUCCESS",
+          "Next": "Agent2_Matcher"
+        }
+      ],
+      "Default": "ErrorHandler"
+    },
+    "Agent2_Matcher": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:${AWS_REGION}:${AWS_ACCOUNT_ID}:function:${PROJECT_NAME}-agent2-matcher-${ENVIRONMENT}",
+      "ResultPath": "$",
+      "TimeoutSeconds": 300,
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 3,
+          "BackoffRate": 2.0
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "ResultPath": "$.error",
+          "Next": "ErrorHandler"
+        }
+      ],
+      "Next": "CheckMatchingResult"
+    },
+    "CheckMatchingResult": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.match_status",
+          "StringEquals": "MATCH",
+          "Next": "Agent4_py"
+        },
+        {
+          "Or": [
+            {
+              "Variable": "$.match_status",
+              "StringEquals": "MISMATCH_MINOR"
+            },
+            {
+              "Variable": "$.match_status",
+              "StringEquals": "MISMATCH_MAJOR"
+            }
+          ],
+          "Next": "Agent3_Analyze"
+        }
+      ],
+      "Default": "Agent3_Analyze"
+    },
+    "Agent3_Analyze": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:${AWS_REGION}:${AWS_ACCOUNT_ID}:function:${PROJECT_NAME}-agent3-analyze-${ENVIRONMENT}",
+      "ResultPath": "$",
+      "TimeoutSeconds": 60,
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 2,
+          "BackoffRate": 2.0
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "ResultPath": "$.error",
+          "Next": "Agent3Fallback"
+        }
+      ],
+      "Next": "CheckRiskLevel"
+    },
+    "Agent3Fallback": {
+      "Type": "Pass",
+      "Comment": "AI failed - use heuristic scoring",
+      "Result": {
+        "risk_score": 75,
+        "reasoning": "AI service unavailable - defaulting to manual review",
+        "recommended_action": "MANUAL_CHECK"
+      },
+      "ResultPath": "$.ai_fallback",
+      "Next": "SendSlackForApproval"
+    },
+    "CheckRiskLevel": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.risk_score",
+          "NumericGreaterThanEquals": 70,
+          "Next": "SendSlackForApproval"
+        },
+        {
+          "Variable": "$.recommended_action",
+          "StringEquals": "BLOCK",
+          "Next": "TransactionBlocked"
+        },
+        {
+          "Variable": "$.recommended_action",
+          "StringEquals": "APPROVE",
+          "Next": "Agent4_py"
+        }
+      ],
+      "Default": "SendSlackForApproval"
+    },
+    "SendSlackForApproval": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke.waitForTaskToken",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:${AWS_REGION}:${AWS_ACCOUNT_ID}:function:${PROJECT_NAME}-agent3-sendslack-${ENVIRONMENT}",
+        "Payload": {
+          "token.$": "$$.Task.Token",
+          "input_data.$": "$"
+        }
+      },
+      "TimeoutSeconds": 86400,
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.Timeout"
+          ],
+          "ResultPath": "$.error",
+          "Next": "ApprovalTimeout"
+        }
+      ],
+      "Next": "CheckApprovalDecision"
+    },
+    "CheckApprovalDecision": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.status",
+          "StringEquals": "APPROVED_BY_HUMAN",
+          "Next": "Agent4_py"
+        },
+        {
+          "Variable": "$.status",
+          "StringEquals": "REJECTED_BY_HUMAN",
+          "Next": "TransactionRejected"
+        }
+      ],
+      "Default": "Agent4_py"
+    },
+    "ApprovalTimeout": {
+      "Type": "Pass",
+      "Result": {
+        "status": "TIMEOUT",
+        "message": "No approval within 24h"
+      },
+      "ResultPath": "$.timeout_info",
+      "Next": "TransactionRejected"
+    },
+    "TransactionBlocked": {
+      "Type": "Pass",
+      "Result": {
+        "final_status": "BLOCKED",
+        "reason": "High risk transaction blocked by AI"
+      },
+      "ResultPath": "$.final_result",
+      "Next": "Agent_5"
+    },
+    "TransactionRejected": {
+      "Type": "Pass",
+      "Result": {
+        "final_status": "REJECTED",
+        "reason": "Rejected by human or timeout"
+      },
+      "ResultPath": "$.final_result",
+      "Next": "Agent_5"
+    },
+    "Agent4_py": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:${AWS_REGION}:${AWS_ACCOUNT_ID}:function:${PROJECT_NAME}-agent4-audit-${ENVIRONMENT}",
+      "ResultPath": "$",
+      "TimeoutSeconds": 300,
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 3,
+          "BackoffRate": 2.0
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "ResultPath": "$.error",
+          "Next": "ErrorHandler"
+        }
+      ],
+      "Next": "agent6"
+    },
+    "agent6": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:${AWS_REGION}:${AWS_ACCOUNT_ID}:function:${PROJECT_NAME}-agent6-dashboard-${ENVIRONMENT}",
+      "Comment": "Generate dashboard charts & reports",
+      "ResultPath": "$.dashboard_result",
+      "TimeoutSeconds": 300,
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "ResultPath": "$.dashboard_error",
+          "Next": "agent7_excel_sheets_updater"
+        }
+      ],
+      "Next": "agent7_excel_sheets_updater"
+    },
+    "agent7_excel_sheets_updater": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:${AWS_REGION}:${AWS_ACCOUNT_ID}:function:${PROJECT_NAME}-agent7-excel-updater-${ENVIRONMENT}",
+      "Comment": "Update Excel & Google Sheets",
+      "ResultPath": "$.excel_result",
+      "TimeoutSeconds": 300,
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "ResultPath": "$.excel_error",
+          "Next": "Agent_5"
+        }
+      ],
+      "Next": "Agent_5"
+    },
+    "Agent_5": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:${AWS_REGION}:${AWS_ACCOUNT_ID}:function:${PROJECT_NAME}-agent5-notification-${ENVIRONMENT}",
+      "ResultPath": "$",
+      "TimeoutSeconds": 300,
+      "Next": "SuccessState"
+    },
+    "ValidationErrorHandler": {
+      "Type": "Pass",
+      "Result": {
+        "workflow_status": "FAILED",
+        "failure_reason": "VALIDATION_ERROR"
+      },
+      "Next": "FailState"
+    },
+    "ErrorHandler": {
+      "Type": "Pass",
+      "Result": {
+        "workflow_status": "FAILED",
+        "failure_reason": "SYSTEM_ERROR"
+      },
+      "Next": "FailState"
+    },
+    "SuccessState": {
+      "Type": "Succeed"
+    },
+    "FailState": {
+      "Type": "Fail",
+      "Cause": "Workflow failed",
+      "Error": "WorkflowExecutionFailed"
+    }
+  }
+}

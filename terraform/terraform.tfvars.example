@@ -1,0 +1,48 @@
+# =================================================================
+# ⚠️ ĐÂY LÀ FILE MẪU (EXAMPLE). KHÔNG ĐIỀN KEY THẬT VÀO ĐÂY!
+# 1. Copy file này thành "terraform.tfvars"
+# 2. Điền thông tin thật vào file "terraform.tfvars"
+# 3. Đảm bảo file "terraform.tfvars" đã nằm trong .gitignore
+# =================================================================
+
+# --- 1. SECRETS (BẮT BUỘC SỬA) ---
+gemini_api_key    = "AIzaSyDl99wq41mGw-hBVXzFlNbe0mmJ3iHsmSU"
+slack_webhook_url = "https://hooks.slack.com/services/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" # Dùng cho Agent 3 & 5
+
+# --- 2. AWS CONFIG ---
+aws_region   = "ap-southeast-1"
+project_name = "apiflow-fintech"
+environment  = "dev"
+
+# --- 3. NETWORK (VPC/Subnet) ---
+# Lệnh lấy VPC ID mặc định: 
+# aws ec2 describe-vpcs --query 'Vpcs[?IsDefault==`true`].VpcId' --output text
+vpc_id = "vpc-xxxxxxxxx"
+
+# Lệnh lấy Subnet ID đầu tiên: 
+# aws ec2 describe-subnets --query 'Subnets[0].SubnetId' --output text
+subnet_id = "subnet-xxxxxxxxx"
+
+# --- 4. EC2 INSTANCE ---
+# Ubuntu 22.04 LTS AMI ID (Singapore)
+# aws ec2 describe-images --owners 099720109477 --filters "Name=name,Values=ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*" --query 'Images | sort_by(@, &CreationDate) | [-1].ImageId' --output text
+ec2_ami           = "ami-xxxxxxxxx" 
+ec2_instance_type = "t3.medium"
+
+# --- 5. SSH ACCESS ---
+# Tạo Key: aws ec2 create-key-pair --key-name fintech-web-key --query 'KeyMaterial' --output text > ~/.ssh/fintech-web-key.pem
+# Chmod: chmod 400 ~/.ssh/fintech-web-key.pem
+ssh_key_name = "fintech-web-key"
+
+# ⚠️ QUAN TRỌNG: Nên đổi thành IP nhà bạn (check ipinfo.io) để bảo mật
+# Ví dụ: ["113.161.x.x/32"]
+allowed_ssh_cidr = ["0.0.0.0/0"] 
+
+# --- 6. NOTIFICATION (Agent 5) ---
+sender_email    = "system@fintech.com" # Phải verify trong AWS SES
+recipient_email = "boss@fintech.com"   # Phải verify trong AWS SES
+
+# --- 7. OPTIONAL SETTINGS ---
+enable_dynamodb_backup = true
+lambda_memory_size     = 512
+lambda_timeout         = 300

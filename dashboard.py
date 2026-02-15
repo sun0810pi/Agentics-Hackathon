@@ -1395,20 +1395,6 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
 
-"""
-╔═══════════════════════════════════════════════════════════════════════════╗
-║           AGENTFLOW FINANCE GUARD - ULTIMATE - PART 2/2                   ║
-║                        ALL PAGES IMPLEMENTATION                           ║
-║                                                                           ║
-║  Pages: Overview, Upload, Fraud, ML, Security, Observability,           ║
-║         Merchant, Integrations, Settings                                  ║
-║                                                                           ║
-║  Lines: ~2500 (Total with Part 1: ~3900)                                ║
-╚═══════════════════════════════════════════════════════════════════════════╝
-
-APPEND THIS TO PART 1 FILE TO GET COMPLETE DASHBOARD
-"""
-
 # ═══════════════════════════════════════════════════════════════════════════
 # PAGE 1: OVERVIEW DASHBOARD
 # ═══════════════════════════════════════════════════════════════════════════

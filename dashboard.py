@@ -1,26 +1,3 @@
-"""
-╔═══════════════════════════════════════════════════════════════════════════╗
-║                    AGENTFLOW FINANCE GUARD - ULTIMATE                     ║
-║                  Multi-Agent AI Fraud Detection System                    ║
-║                      SWIN Hackathon 2026 - Final Version                  ║
-║                                                                           ║
-║  Features:                                                                ║
-║  ✓ AI Chatbot (Bedrock Claude)                                          ║
-║  ✓ Excel/Google Sheets Integration                                       ║
-║  ✓ Dark/Light Theme Toggle                                              ║
-║  ✓ English/Vietnamese I18N                                               ║
-║  ✓ Real-time Execution Logs                                             ║
-║  ✓ System Events Tracking                                               ║
-║  ✓ Integrations (Slack, Telegram, Zalo)                                 ║
-║  ✓ AWS Step Functions Integration                                       ║
-║  ✓ Beautiful Glassmorphism UI                                           ║
-║  ✓ Animated Components                                                  ║
-║  ✓ Production-Ready Error Handling                                      ║
-║                                                                           ║
-║  Total Lines: ~4500                                                      ║
-╚═══════════════════════════════════════════════════════════════════════════╝
-"""
-
 # ═══════════════════════════════════════════════════════════════════════════
 # IMPORTS
 # ═══════════════════════════════════════════════════════════════════════════

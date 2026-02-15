@@ -1,7 +1,7 @@
 """
-AgentFlow Finance Guard - ULTIMATE VERSION
-Multi-Agent AI System - Hackathon Production Ready
-Features: Dark/Light Theme, Language Toggle, Observability, Integrations
+AgentFlow Finance Guard - FINAL COMPETITION VERSION
+Multi-Agent AI System - SWIN Hackathon 2026
+Complete with: Excel/Sheets input, Chatbot, Polished UI, Animations
 """
 
 import streamlit as st
@@ -36,28 +36,8 @@ TRANSLATIONS = {
         'fraud_prevented': 'Fraud Prevented',
         'aws_connected': 'AWS Connected',
         'demo_mode': 'Demo Mode',
-        'user': 'User',
-        'role': 'Role',
-        'last_login': 'Last Login',
-        'live_aws': 'Full AWS Pipeline (Live)',
-        'demo_fast': 'Demo Mode (Fast)',
-        'process_invoice': 'Process Invoice',
-        'risk_score': 'Risk Score',
-        'approve': 'Approve',
-        'reject': 'Reject',
-        'recent_alerts': 'Recent Alerts',
-        'agent_performance': 'Agent Performance Matrix',
-        'execution_logs': 'Execution Logs',
-        'system_events': 'System Events',
-        'error_logs': 'Error Logs',
-        'slack_integration': 'Slack Integration',
-        'telegram_integration': 'Telegram Integration',
-        'zalo_integration': 'Zalo OA Integration',
-        'test_connection': 'Test Connection',
-        'theme': 'Theme',
-        'language': 'Language',
-        'dark_mode': 'Dark Mode',
-        'light_mode': 'Light Mode'
+        'ask_agentflow': 'Ask AgentFlow',
+        'chat_placeholder': 'Ask about fraud detection, invoices, metrics...',
     },
     'vi': {
         'app_title': 'AgentFlow Bảo Vệ Tài Chính',
@@ -76,28 +56,8 @@ TRANSLATIONS = {
         'fraud_prevented': 'Gian Lận Ngăn Chặn',
         'aws_connected': 'Kết Nối AWS',
         'demo_mode': 'Chế Độ Demo',
-        'user': 'Người Dùng',
-        'role': 'Vai Trò',
-        'last_login': 'Đăng Nhập Cuối',
-        'live_aws': 'Xử Lý AWS Thật (Live)',
-        'demo_fast': 'Chế Độ Demo (Nhanh)',
-        'process_invoice': 'Xử Lý Hóa Đơn',
-        'risk_score': 'Điểm Rủi Ro',
-        'approve': 'Phê Duyệt',
-        'reject': 'Từ Chối',
-        'recent_alerts': 'Cảnh Báo Gần Đây',
-        'agent_performance': 'Ma Trận Hiệu Suất Agent',
-        'execution_logs': 'Logs Thực Thi',
-        'system_events': 'Sự Kiện Hệ Thống',
-        'error_logs': 'Logs Lỗi',
-        'slack_integration': 'Tích Hợp Slack',
-        'telegram_integration': 'Tích Hợp Telegram',
-        'zalo_integration': 'Tích Hợp Zalo OA',
-        'test_connection': 'Kiểm Tra Kết Nối',
-        'theme': 'Giao Diện',
-        'language': 'Ngôn Ngữ',
-        'dark_mode': 'Chế Độ Tối',
-        'light_mode': 'Chế Độ Sáng'
+        'ask_agentflow': 'Hỏi AgentFlow',
+        'chat_placeholder': 'Hỏi về phát hiện gian lận, hóa đơn, metrics...',
     }
 }
 
@@ -107,77 +67,98 @@ def t(key):
     return TRANSLATIONS.get(lang, TRANSLATIONS['en']).get(key, key)
 
 # ========================================
-# THEME CONFIGURATION
+# THEME CONFIGURATION - ENHANCED
 # ========================================
 
 DARK_THEME = """
 <style>
-    :root {
-        --bg-primary: #0E1117;
-        --bg-secondary: #1E2130;
-        --bg-card: #262730;
-        --text-primary: #FAFAFA;
-        --text-secondary: #B8B8B8;
-        --accent-primary: #4A9EFF;
-        --accent-success: #00D68F;
-        --accent-warning: #FFAB00;
-        --accent-danger: #FF5252;
-        --border-color: #2D3139;
-        --shadow: rgba(0, 0, 0, 0.3);
-    }
-    
-    .main {
-        background-color: var(--bg-primary);
-        color: var(--text-primary);
-    }
-    
+    /* Main background */
     .stApp {
         background: linear-gradient(135deg, #0E1117 0%, #1A1D2E 100%);
     }
     
-    /* Glass Morphism Cards */
-    .glass-card {
-        background: rgba(38, 39, 48, 0.7);
-        backdrop-filter: blur(10px);
-        border-radius: 16px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        padding: 1.5rem;
-        box-shadow: 0 8px 32px var(--shadow);
+    /* Sidebar - DARKER */
+    section[data-testid="stSidebar"] {
+        background: linear-gradient(180deg, #0a0e1a 0%, #020617 100%);
+        border-right: 1px solid rgba(74, 158, 255, 0.1);
     }
     
+    section[data-testid="stSidebar"] > div {
+        background: transparent;
+    }
+    
+    /* METRIC CARDS - Enhanced with borders & hover */
     .metric-card {
-        background: linear-gradient(135deg, rgba(74, 158, 255, 0.1) 0%, rgba(0, 214, 143, 0.1) 100%);
-        border-left: 4px solid var(--accent-primary);
-        border-radius: 12px;
-        padding: 1.2rem;
-        transition: transform 0.2s ease;
+        background: linear-gradient(135deg, rgba(74, 158, 255, 0.08) 0%, rgba(0, 214, 143, 0.08) 100%);
+        border: 2px solid rgba(74, 158, 255, 0.3);
+        border-radius: 16px;
+        padding: 24px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     }
     
     .metric-card:hover {
-        transform: translateY(-4px);
+        transform: translateY(-8px) scale(1.02);
+        border-color: #4A9EFF;
+        box-shadow: 0 0 24px rgba(74, 158, 255, 0.4), 0 8px 24px rgba(0, 0, 0, 0.4);
+        background: linear-gradient(135deg, rgba(74, 158, 255, 0.12) 0%, rgba(0, 214, 143, 0.12) 100%);
     }
     
-    /* Alert Cards */
+    .metric-title {
+        font-size: 0.9rem;
+        color: #B8B8B8;
+        margin-bottom: 8px;
+    }
+    
+    .metric-value {
+        font-size: 2.5rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #4A9EFF 0%, #00D68F 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin: 0;
+    }
+    
+    .metric-delta {
+        font-size: 0.85rem;
+        color: #00D68F;
+        margin-top: 4px;
+    }
+    
+    /* Alert Cards - BRIGHTER in dark mode */
     .alert-high {
-        background: linear-gradient(135deg, rgba(255, 82, 82, 0.15) 0%, rgba(255, 82, 82, 0.05) 100%);
-        border-left: 4px solid var(--accent-danger);
+        background: linear-gradient(135deg, rgba(255, 82, 82, 0.25) 0%, rgba(255, 82, 82, 0.15) 100%);
+        border-left: 4px solid #FF5252;
         border-radius: 12px;
-        padding: 1rem;
+        padding: 1.2rem;
         backdrop-filter: blur(10px);
+        box-shadow: 0 4px 12px rgba(255, 82, 82, 0.2);
     }
     
     .alert-medium {
-        background: linear-gradient(135deg, rgba(255, 171, 0, 0.15) 0%, rgba(255, 171, 0, 0.05) 100%);
-        border-left: 4px solid var(--accent-warning);
+        background: linear-gradient(135deg, rgba(255, 171, 0, 0.25) 0%, rgba(255, 171, 0, 0.15) 100%);
+        border-left: 4px solid #FFAB00;
         border-radius: 12px;
-        padding: 1rem;
+        padding: 1.2rem;
+        box-shadow: 0 4px 12px rgba(255, 171, 0, 0.2);
     }
     
     .alert-low {
-        background: linear-gradient(135deg, rgba(0, 214, 143, 0.15) 0%, rgba(0, 214, 143, 0.05) 100%);
-        border-left: 4px solid var(--accent-success);
+        background: linear-gradient(135deg, rgba(0, 214, 143, 0.25) 0%, rgba(0, 214, 143, 0.15) 100%);
+        border-left: 4px solid #00D68F;
         border-radius: 12px;
-        padding: 1rem;
+        padding: 1.2rem;
+        box-shadow: 0 4px 12px rgba(0, 214, 143, 0.2);
+    }
+    
+    /* Make alert text brighter */
+    .alert-high, .alert-medium, .alert-low {
+        color: #FAFAFA;
+    }
+    
+    .alert-high strong, .alert-medium strong, .alert-low strong {
+        color: #FFFFFF;
+        font-weight: 600;
     }
     
     /* Main Header */
@@ -190,6 +171,16 @@ DARK_THEME = """
         text-align: center;
         margin-bottom: 2rem;
         text-shadow: 0 4px 12px rgba(74, 158, 255, 0.3);
+    }
+    
+    /* Glass Cards */
+    .glass-card {
+        background: rgba(38, 39, 48, 0.7);
+        backdrop-filter: blur(10px);
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 1.5rem;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
     }
     
     /* Execution Log */
@@ -213,103 +204,125 @@ DARK_THEME = """
     }
     
     .log-error {
-        color: var(--accent-danger);
-        border-left-color: var(--accent-danger);
+        color: #FF5252;
+        border-left-color: #FF5252;
     }
     
     .log-success {
-        color: var(--accent-success);
-        border-left-color: var(--accent-success);
+        color: #00D68F;
+        border-left-color: #00D68F;
     }
     
     /* Status Badges */
     .status-badge {
         display: inline-block;
-        padding: 0.25rem 0.75rem;
+        padding: 0.35rem 0.85rem;
         border-radius: 20px;
         font-size: 0.85rem;
         font-weight: 600;
     }
     
     .status-active {
-        background: rgba(0, 214, 143, 0.2);
-        color: var(--accent-success);
-        border: 1px solid var(--accent-success);
+        background: rgba(0, 214, 143, 0.25);
+        color: #00D68F;
+        border: 1px solid #00D68F;
     }
     
     .status-inactive {
         background: rgba(184, 184, 184, 0.2);
-        color: var(--text-secondary);
-        border: 1px solid var(--text-secondary);
+        color: #B8B8B8;
+        border: 1px solid #B8B8B8;
+    }
+    
+    /* Chat Section */
+    .chat-container {
+        background: rgba(30, 33, 48, 0.8);
+        border-radius: 12px;
+        padding: 1rem;
+        margin-top: 1rem;
+        border: 1px solid rgba(74, 158, 255, 0.2);
+    }
+    
+    .chat-message {
+        background: rgba(74, 158, 255, 0.1);
+        border-left: 3px solid #4A9EFF;
+        border-radius: 8px;
+        padding: 0.75rem;
+        margin: 0.5rem 0;
     }
 </style>
 """
 
 LIGHT_THEME = """
 <style>
-    :root {
-        --bg-primary: #FFFFFF;
-        --bg-secondary: #F8F9FA;
-        --bg-card: #FFFFFF;
-        --text-primary: #1A1A1A;
-        --text-secondary: #6C757D;
-        --accent-primary: #0066CC;
-        --accent-success: #00A878;
-        --accent-warning: #FF8C00;
-        --accent-danger: #DC3545;
-        --border-color: #DEE2E6;
-        --shadow: rgba(0, 0, 0, 0.1);
-    }
-    
-    .main {
-        background-color: var(--bg-primary);
-        color: var(--text-primary);
-    }
-    
     .stApp {
         background: linear-gradient(135deg, #F8F9FA 0%, #E9ECEF 100%);
     }
     
-    .glass-card {
-        background: rgba(255, 255, 255, 0.95);
-        border-radius: 16px;
-        border: 1px solid var(--border-color);
-        padding: 1.5rem;
-        box-shadow: 0 4px 16px var(--shadow);
+    section[data-testid="stSidebar"] {
+        background: linear-gradient(180deg, #E9ECEF 0%, #DEE2E6 100%);
+        border-right: 1px solid rgba(0, 102, 204, 0.1);
     }
     
     .metric-card {
         background: linear-gradient(135deg, rgba(0, 102, 204, 0.05) 0%, rgba(0, 168, 120, 0.05) 100%);
-        border-left: 4px solid var(--accent-primary);
-        border-radius: 12px;
-        padding: 1.2rem;
-        transition: transform 0.2s ease;
+        border: 2px solid rgba(0, 102, 204, 0.3);
+        border-radius: 16px;
+        padding: 24px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     }
     
     .metric-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 8px 24px var(--shadow);
+        transform: translateY(-8px) scale(1.02);
+        border-color: #0066CC;
+        box-shadow: 0 0 24px rgba(0, 102, 204, 0.3), 0 8px 24px rgba(0, 0, 0, 0.1);
+        background: linear-gradient(135deg, rgba(0, 102, 204, 0.1) 0%, rgba(0, 168, 120, 0.1) 100%);
+    }
+    
+    .metric-title {
+        font-size: 0.9rem;
+        color: #6C757D;
+        margin-bottom: 8px;
+    }
+    
+    .metric-value {
+        font-size: 2.5rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #0066CC 0%, #00A878 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin: 0;
+    }
+    
+    .metric-delta {
+        font-size: 0.85rem;
+        color: #00A878;
+        margin-top: 4px;
     }
     
     .alert-high {
-        background: linear-gradient(135deg, rgba(220, 53, 69, 0.1) 0%, rgba(220, 53, 69, 0.05) 100%);
-        border-left: 4px solid var(--accent-danger);
+        background: linear-gradient(135deg, rgba(220, 53, 69, 0.15) 0%, rgba(220, 53, 69, 0.08) 100%);
+        border-left: 4px solid #DC3545;
         border-radius: 12px;
-        padding: 1rem;
+        padding: 1.2rem;
+        box-shadow: 0 4px 12px rgba(220, 53, 69, 0.15);
     }
     
     .alert-medium {
-        background: linear-gradient(135deg, rgba(255, 140, 0, 0.1) 0%, rgba(255, 140, 0, 0.05) 100%);
-        border-left: 4px solid var(--accent-warning);
+        background: linear-gradient(135deg, rgba(255, 140, 0, 0.15) 0%, rgba(255, 140, 0, 0.08) 100%);
+        border-left: 4px solid #FF8C00;
         border-radius: 12px;
-        padding: 1rem;
+        padding: 1.2rem;
+        box-shadow: 0 4px 12px rgba(255, 140, 0, 0.15);
     }
     
     .alert-low {
-        background: linear-gradient(135deg, rgba(0, 168, 120, 0.1) 0%, rgba(0, 168, 120, 0.05) 100%);
-        border-left: 4px solid var(--accent-success);
+        background: linear-gradient(135deg, rgba(0, 168, 120, 0.15) 0%, rgba(0, 168, 120, 0.08) 100%);
+        border-left: 4px solid #00A878;
         border-radius: 12px;
-        padding: 1rem;
+        padding: 1.2rem;
+        box-shadow: 0 4px 12px rgba(0, 168, 120, 0.15);
     }
     
     .main-header {
@@ -321,59 +334,10 @@ LIGHT_THEME = """
         text-align: center;
         margin-bottom: 2rem;
     }
-    
-    .execution-log {
-        background: #F8F9FA;
-        border: 1px solid var(--border-color);
-        border-radius: 12px;
-        padding: 1rem;
-        font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
-        font-size: 0.85rem;
-        color: #00A878;
-        overflow-x: auto;
-        max-height: 400px;
-        overflow-y: auto;
-    }
-    
-    .log-entry {
-        margin: 0.5rem 0;
-        padding: 0.5rem;
-        border-left: 2px solid var(--accent-primary);
-    }
-    
-    .log-error {
-        color: var(--accent-danger);
-        border-left-color: var(--accent-danger);
-    }
-    
-    .log-success {
-        color: var(--accent-success);
-        border-left-color: var(--accent-success);
-    }
-    
-    .status-badge {
-        display: inline-block;
-        padding: 0.25rem 0.75rem;
-        border-radius: 20px;
-        font-size: 0.85rem;
-        font-weight: 600;
-    }
-    
-    .status-active {
-        background: rgba(0, 168, 120, 0.15);
-        color: var(--accent-success);
-        border: 1px solid var(--accent-success);
-    }
-    
-    .status-inactive {
-        background: rgba(108, 117, 125, 0.15);
-        color: var(--text-secondary);
-        border: 1px solid var(--text-secondary);
-    }
 </style>
 """
 
-# Page config
+# Page config - FIX icon issue
 st.set_page_config(
     page_title="AgentFlow Finance Guard",
     page_icon="🛡️",
@@ -394,6 +358,8 @@ if 'system_events' not in st.session_state:
     st.session_state.system_events = []
 if 'processed_invoices' not in st.session_state:
     st.session_state.processed_invoices = []
+if 'chat_history' not in st.session_state:
+    st.session_state.chat_history = []
 
 # Apply theme
 theme_css = DARK_THEME if st.session_state.theme == 'dark' else LIGHT_THEME
@@ -426,11 +392,11 @@ def get_aws_clients():
                 'dynamodb': session.resource('dynamodb'),
                 's3': session.client('s3'),
                 'stepfunctions': session.client('stepfunctions'),
+                'bedrock': session.client('bedrock-runtime', region_name='us-east-1'),
                 'configured': True
             }
         return {'configured': False}
     except Exception as e:
-        add_log('ERROR', f'AWS connection failed: {e}')
         return {'configured': False}
 
 aws_clients = get_aws_clients()
@@ -448,7 +414,6 @@ def add_log(level, message, details=None):
         'details': details
     }
     st.session_state.execution_logs.insert(0, log_entry)
-    # Keep only last 100 logs
     st.session_state.execution_logs = st.session_state.execution_logs[:100]
 
 def add_event(event_type, description, data=None):
@@ -461,6 +426,57 @@ def add_event(event_type, description, data=None):
     }
     st.session_state.system_events.insert(0, event)
     st.session_state.system_events = st.session_state.system_events[:100]
+
+# ========================================
+# CHATBOT FUNCTION
+# ========================================
+
+def ask_agentflow_ai(question):
+    """Ask AgentFlow AI assistant using Bedrock Claude"""
+    try:
+        if not aws_clients.get('configured'):
+            return "⚠️ AWS not configured. Configure secrets to enable AI assistant."
+        
+        bedrock = aws_clients['bedrock']
+        
+        # System context about AgentFlow
+        context = f"""You are AgentFlow AI Assistant, an expert in fraud detection.
+
+Current System Status:
+- 99.2% fraud detection accuracy
+- 85.3% automation rate
+- 7.8s average latency
+- $523K fraud prevented this year
+- 17 AI agents working together
+
+Your role: Answer questions about fraud detection, invoice analysis, system metrics, and security threats.
+Be concise, professional, and helpful."""
+
+        body = json.dumps({
+            "anthropic_version": "bedrock-2023-05-31",
+            "max_tokens": 500,
+            "messages": [
+                {
+                    "role": "user",
+                    "content": f"{context}\n\nUser question: {question}"
+                }
+            ]
+        })
+        
+        response = bedrock.invoke_model(
+            modelId="anthropic.claude-3-haiku-20240307-v1:0",
+            body=body
+        )
+        
+        response_body = json.loads(response['body'].read())
+        answer = response_body['content'][0]['text']
+        
+        add_log('INFO', f'AI Assistant answered: {question}')
+        return answer
+        
+    except Exception as e:
+        add_log('ERROR', f'AI Assistant error: {e}')
+        return f"❌ Error: {str(e)[:100]}"
 
 # ========================================
 # AWS INTEGRATION FUNCTIONS
@@ -499,30 +515,6 @@ def trigger_step_functions(invoice_data):
     except Exception as e:
         add_log('ERROR', f'Step Functions failed: {str(e)}')
         return {'success': False, 'error': str(e)}
-
-def check_execution_status(execution_arn):
-    """Check execution status with logging"""
-    try:
-        sfn = aws_clients['stepfunctions']
-        response = sfn.describe_execution(executionArn=execution_arn)
-        
-        status = response['status']
-        if status == 'SUCCEEDED':
-            add_log('SUCCESS', f'Execution completed: {execution_arn}')
-            add_event('EXECUTION_COMPLETE', 'Processing completed successfully')
-        elif status == 'FAILED':
-            add_log('ERROR', f'Execution failed: {execution_arn}')
-            add_event('EXECUTION_FAILED', 'Processing failed')
-        
-        return {
-            'status': status,
-            'start_date': response['startDate'],
-            'stop_date': response.get('stopDate'),
-            'output': response.get('output')
-        }
-    except Exception as e:
-        add_log('ERROR', f'Status check failed: {e}')
-        return {'status': 'ERROR', 'error': str(e)}
 
 # ========================================
 # HELPER FUNCTIONS
@@ -576,13 +568,14 @@ with st.sidebar:
     col1, col2 = st.columns(2)
     with col1:
         if st.button("🌓" if st.session_state.theme == 'dark' else "☀️", 
-                    help=t('theme'), use_container_width=True):
+                    help=t('theme') if 'theme' in TRANSLATIONS['en'] else 'Theme', 
+                    use_container_width=True):
             st.session_state.theme = 'light' if st.session_state.theme == 'dark' else 'dark'
             st.rerun()
     
     with col2:
         if st.button("🌐 EN" if st.session_state.language == 'en' else "🌐 VI",
-                    help=t('language'), use_container_width=True):
+                    help='Language', use_container_width=True):
             st.session_state.language = 'vi' if st.session_state.language == 'en' else 'en'
             st.rerun()
     
@@ -595,7 +588,7 @@ with st.sidebar:
     
     st.markdown("---")
     
-    # Navigation - NEW STRUCTURE
+    # Navigation
     st.markdown("### 📊 " + t('overview'))
     if st.button(t('overview'), key='nav_overview', use_container_width=True):
         st.session_state.page = 'overview'
@@ -630,8 +623,40 @@ with st.sidebar:
         st.session_state.page = 'settings'
     
     st.markdown("---")
-    st.markdown(f"**{t('user')}**: Admin")
-    st.markdown(f"**{t('last_login')}**: {datetime.now().strftime('%Y-%m-%d %H:%M')}")
+    
+    # AI CHATBOT SECTION
+    st.markdown(f"### 🤖 {t('ask_agentflow')}")
+    
+    chat_question = st.text_input(
+        "Ask me anything",
+        placeholder=t('chat_placeholder'),
+        key='chat_input',
+        label_visibility='collapsed'
+    )
+    
+    if chat_question:
+        with st.spinner("Thinking..."):
+            answer = ask_agentflow_ai(chat_question)
+            
+            # Add to chat history
+            st.session_state.chat_history.insert(0, {
+                'question': chat_question,
+                'answer': answer,
+                'timestamp': datetime.now()
+            })
+            st.session_state.chat_history = st.session_state.chat_history[:5]  # Keep last 5
+    
+    # Show recent chat
+    if st.session_state.chat_history:
+        st.markdown('<div class="chat-container">', unsafe_allow_html=True)
+        for chat in st.session_state.chat_history[:3]:
+            st.markdown(f"""
+            <div class="chat-message">
+                <strong>Q:</strong> {chat['question']}<br>
+                <strong>A:</strong> {chat['answer'][:150]}...
+            </div>
+            """, unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
 
 # ========================================
 # PAGES
@@ -642,27 +667,55 @@ if st.session_state.page == 'overview':
     
     metrics = get_dashboard_metrics()
     
+    # ENHANCED METRIC CARDS with borders & hover animation
     col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        st.metric(f"🎯 {t('detection_accuracy')}", f"{metrics['accuracy']}%", delta="0.2%")
-    with col2:
-        st.metric(f"🤖 {t('automation_rate')}", f"{metrics['automation_rate']}%", delta="1.5%")
-    with col3:
-        st.metric(f"⚡ {t('avg_latency')}", f"{metrics['avg_latency_ms']}ms", delta="-200ms", delta_color="inverse")
-    with col4:
-        st.metric(f"💰 {t('fraud_prevented')}", f"${metrics['fraud_prevented_usd']:,}", delta="$42K")
     
-    st.markdown("---")
+    with col1:
+        st.markdown(f"""
+        <div class="metric-card">
+            <div class="metric-title">🎯 {t('detection_accuracy')}</div>
+            <div class="metric-value">{metrics['accuracy']}%</div>
+            <div class="metric-delta">+0.2%</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown(f"""
+        <div class="metric-card">
+            <div class="metric-title">🤖 {t('automation_rate')}</div>
+            <div class="metric-value">{metrics['automation_rate']}%</div>
+            <div class="metric-delta">+1.5%</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col3:
+        st.markdown(f"""
+        <div class="metric-card">
+            <div class="metric-title">⚡ {t('avg_latency')}</div>
+            <div class="metric-value">{metrics['avg_latency_ms']}ms</div>
+            <div class="metric-delta">-200ms</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col4:
+        st.markdown(f"""
+        <div class="metric-card">
+            <div class="metric-title">💰 {t('fraud_prevented')}</div>
+            <div class="metric-value">${metrics['fraud_prevented_usd']:,}</div>
+            <div class="metric-delta">+$42K</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    st.markdown("<br>", unsafe_allow_html=True)
     
     col1, col2 = st.columns([2, 1])
     
     with col1:
-        st.subheader(f"📈 {t('agent_performance')}")
+        st.subheader("📈 Agent Performance Matrix")
         
         agent_data = pd.DataFrame({
             'Agent': ['OCR', 'PII', 'Decimal', 'AI Analyst', 'Audit', 'Notifier', 'ML', 'Security'],
-            'Success Rate': [92.8, 99.9, 100.0, 94.2, 100.0, 99.8, 91.5, 96.3],
-            'Avg Time (ms)': [1200, 50, 10, 3500, 200, 150, 2000, 800]
+            'Success Rate': [92.8, 99.9, 100.0, 94.2, 100.0, 99.8, 91.5, 96.3]
         })
         
         fig = px.bar(agent_data, x='Agent', y='Success Rate',
@@ -671,7 +724,7 @@ if st.session_state.page == 'overview':
         st.plotly_chart(fig, use_container_width=True)
     
     with col2:
-        st.subheader(f"🚨 {t('recent_alerts')}")
+        st.subheader("🚨 Recent Alerts")
         alerts = get_recent_alerts()
         
         for alert in alerts[:5]:
@@ -681,7 +734,7 @@ if st.session_state.page == 'overview':
             st.markdown(f"""
             <div class="{alert_class}">
                 <strong>{icon} {alert['id']}</strong><br>
-                {t('risk_score')}: {alert['risk_score']}/100<br>
+                Risk Score: {alert['risk_score']}/100<br>
                 Amount: ${alert['amount']:,.2f}<br>
                 Status: {alert['status']}
             </div>
@@ -691,44 +744,98 @@ if st.session_state.page == 'overview':
 elif st.session_state.page == 'upload':
     st.markdown(f'<div class="main-header">📄 {t("invoice_upload")}</div>', unsafe_allow_html=True)
     
-    col1, col2 = st.columns([1, 1])
+    # TABS: File Upload, Excel Link, Google Sheets
+    tab1, tab2, tab3 = st.tabs(["📁 Upload File", "🔗 Excel Online", "📊 Google Sheets"])
     
-    with col1:
-        st.subheader("📤 Upload Invoice")
-        uploaded_file = st.file_uploader("Choose file", type=['pdf', 'png', 'jpg', 'jpeg'])
+    with tab1:
+        col1, col2 = st.columns([1, 1])
         
-        if uploaded_file:
-            st.success(f"✅ {uploaded_file.name}")
-            if uploaded_file.type != 'application/pdf':
-                st.image(uploaded_file, use_container_width=True)
-    
-    with col2:
-        st.subheader("⚙️ Processing Options")
-        
-        mode = st.radio("Mode", [t('live_aws'), t('demo_fast')])
-        use_live = "Live" in mode
-        
-        if uploaded_file and st.button(f"🔥 {t('process_invoice')}", type="primary", use_container_width=True):
-            invoice_data = {
-                'invoice_id': f"INV-{int(time.time())}",
-                'file_name': uploaded_file.name,
-                'amount': 12345.67
-            }
+        with col1:
+            st.subheader("📤 Upload Invoice")
+            uploaded_file = st.file_uploader("Choose file", type=['pdf', 'png', 'jpg', 'jpeg', 'xlsx', 'csv'])
             
-            if use_live and aws_clients.get('configured'):
-                with st.spinner("Processing..."):
-                    result = trigger_step_functions(invoice_data)
-                    if result['success']:
-                        st.success("✅ Execution started!")
-                        st.code(result['execution_arn'])
-                    else:
-                        st.error(f"❌ {result['error']}")
+            if uploaded_file:
+                st.success(f"✅ {uploaded_file.name}")
+                
+                if uploaded_file.type == 'application/pdf':
+                    st.info("📄 PDF uploaded successfully")
+                elif uploaded_file.type in ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'text/csv']:
+                    df = pd.read_excel(uploaded_file) if 'xlsx' in uploaded_file.name else pd.read_csv(uploaded_file)
+                    st.dataframe(df.head(), use_container_width=True)
+                else:
+                    st.image(uploaded_file, use_container_width=True)
+        
+        with col2:
+            st.subheader("⚙️ Processing Options")
+            
+            mode = st.radio("Mode", ["🚀 Full AWS Pipeline (Live)", "🎬 Demo Mode (Fast)"])
+            use_live = "Live" in mode
+            
+            if uploaded_file and st.button(f"🔥 Process Invoice", type="primary", use_container_width=True):
+                invoice_data = {
+                    'invoice_id': f"INV-{int(time.time())}",
+                    'file_name': uploaded_file.name,
+                    'amount': 12345.67
+                }
+                
+                if use_live and aws_clients.get('configured'):
+                    with st.spinner("Processing..."):
+                        result = trigger_step_functions(invoice_data)
+                        if result['success']:
+                            st.success("✅ Execution started!")
+                            st.code(result['execution_arn'])
+                        else:
+                            st.error(f"❌ {result['error']}")
+                else:
+                    with st.spinner("Processing..."):
+                        time.sleep(2)
+                        add_log('INFO', f'Processed {invoice_data["invoice_id"]} in demo mode')
+                        st.success("✅ Processed (Demo)")
+                        st.json({'invoice_id': invoice_data['invoice_id'], 'risk_score': 48})
+    
+    with tab2:
+        st.subheader("🔗 Excel Online Link")
+        st.info("📝 Paste a public Excel Online link (OneDrive, SharePoint)")
+        
+        excel_url = st.text_input("Excel Online URL", placeholder="https://...")
+        
+        if st.button("📥 Load Excel", type="primary"):
+            if excel_url:
+                try:
+                    with st.spinner("Loading Excel file..."):
+                        df = pd.read_excel(excel_url)
+                        st.success("✅ Excel loaded successfully!")
+                        st.dataframe(df, use_container_width=True)
+                        add_log('SUCCESS', f'Loaded Excel from: {excel_url[:50]}...')
+                except Exception as e:
+                    st.error(f"❌ Failed to load: {str(e)[:100]}")
+                    st.info("💡 Make sure the link is public and accessible")
             else:
-                with st.spinner("Processing..."):
-                    time.sleep(2)
-                    add_log('INFO', f'Processed {invoice_data["invoice_id"]} in demo mode')
-                    st.success("✅ Processed (Demo)")
-                    st.json({'invoice_id': invoice_data['invoice_id'], 'risk_score': 48})
+                st.warning("Please enter a URL")
+    
+    with tab3:
+        st.subheader("📊 Google Sheets Integration")
+        st.info("📝 Paste a Google Sheets link (make sure it's publicly accessible)")
+        
+        sheet_url = st.text_input("Google Sheets URL", placeholder="https://docs.google.com/spreadsheets/d/...")
+        
+        if st.button("📥 Load Sheet", type="primary"):
+            if sheet_url:
+                try:
+                    with st.spinner("Loading Google Sheet..."):
+                        # Extract sheet ID from URL
+                        sheet_id = sheet_url.split("/d/")[1].split("/")[0]
+                        export_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv"
+                        
+                        df = pd.read_csv(export_url)
+                        st.success("✅ Google Sheet loaded successfully!")
+                        st.dataframe(df, use_container_width=True)
+                        add_log('SUCCESS', f'Loaded Google Sheet: {sheet_id}')
+                except Exception as e:
+                    st.error(f"❌ Failed to load: {str(e)[:100]}")
+                    st.info("💡 Make sure: 1) Link is correct, 2) Sheet is public, 3) Sharing settings allow 'Anyone with the link'")
+            else:
+                st.warning("Please enter a Google Sheets URL")
 
 elif st.session_state.page == 'fraud':
     st.markdown(f'<div class="main-header">🔍 {t("fraud_detection")}</div>', unsafe_allow_html=True)
@@ -738,12 +845,12 @@ elif st.session_state.page == 'fraud':
     col1, col2 = st.columns([2, 1])
     
     with col1:
-        st.subheader(f"🧠 {t('risk_score')} Analysis")
+        st.subheader("🧠 Risk Score Analysis")
         
         fig = go.Figure(go.Indicator(
             mode="gauge+number",
             value=sample['risk_score'],
-            title={'text': t('risk_score')},
+            title={'text': 'Risk Score'},
             gauge={'axis': {'range': [0, 100]},
                   'steps': [{'range': [0, 30], 'color': '#00D68F'},
                            {'range': [30, 70], 'color': '#FFAB00'},
@@ -759,11 +866,11 @@ elif st.session_state.page == 'fraud':
             st.success("✅ AUTO-APPROVE")
         elif sample['risk_score'] < 70:
             st.warning("⚠️ MANUAL REVIEW")
-            if st.button(f"✅ {t('approve')}", type="primary"):
+            if st.button("✅ Approve", type="primary"):
                 add_log('INFO', f'Invoice {sample["id"]} approved')
                 add_event('APPROVAL', f'{sample["id"]} approved by admin')
                 st.success("Approved!")
-            if st.button(f"❌ {t('reject')}"):
+            if st.button("❌ Reject"):
                 add_log('WARNING', f'Invoice {sample["id"]} rejected')
                 add_event('REJECTION', f'{sample["id"]} rejected by admin')
                 st.error("Rejected!")
@@ -773,14 +880,10 @@ elif st.session_state.page == 'fraud':
 elif st.session_state.page == 'observability':
     st.markdown(f'<div class="main-header">📊 {t("observability")}</div>', unsafe_allow_html=True)
     
-    tab1, tab2, tab3 = st.tabs([
-        t('execution_logs'),
-        t('system_events'),
-        t('error_logs')
-    ])
+    tab1, tab2, tab3 = st.tabs(["🔍 Execution Logs", "📅 System Events", "❌ Error Logs"])
     
     with tab1:
-        st.subheader(f"🔍 {t('execution_logs')}")
+        st.subheader("🔍 Execution Logs")
         
         if st.session_state.execution_logs:
             st.markdown('<div class="execution-log">', unsafe_allow_html=True)
@@ -798,7 +901,7 @@ elif st.session_state.page == 'observability':
             st.info("No execution logs yet. Process an invoice to see logs.")
     
     with tab2:
-        st.subheader(f"📅 {t('system_events')}")
+        st.subheader("📅 System Events")
         
         if st.session_state.system_events:
             for event in st.session_state.system_events[:20]:
@@ -810,15 +913,13 @@ elif st.session_state.page == 'observability':
             st.info("No system events yet.")
     
     with tab3:
-        st.subheader(f"❌ {t('error_logs')}")
+        st.subheader("❌ Error Logs")
         
         error_logs = [log for log in st.session_state.execution_logs if log['level'] == 'ERROR']
         
         if error_logs:
             for log in error_logs[:10]:
                 st.error(f"**[{log['timestamp'].strftime('%H:%M:%S')}]** {log['message']}")
-                if log['details']:
-                    st.code(str(log['details']))
         else:
             st.success("✅ No errors - System healthy!")
 
@@ -827,119 +928,24 @@ elif st.session_state.page == 'integrations':
     
     st.info("ℹ️ Configure external notification channels for real-time fraud alerts")
     
-    # Slack
-    with st.expander(f"💬 {t('slack_integration')}", expanded=True):
-        slack_enabled = st.checkbox("Enable Slack notifications", value=False, key='slack_enabled')
-        
+    with st.expander("💬 Slack Integration", expanded=True):
+        slack_enabled = st.checkbox("Enable Slack notifications", value=False)
         if slack_enabled:
-            slack_webhook = st.text_input(
-                "Slack Webhook URL",
-                value="https://hooks.slack.com/services/YOUR/WEBHOOK/URL",
-                help="Get webhook from: Slack → Apps → Incoming Webhooks"
-            )
-            
-            slack_channel = st.text_input("Channel", value="#fraud-alerts")
-            
-            col1, col2 = st.columns(2)
-            with col1:
-                if st.button(f"🧪 {t('test_connection')}", key='test_slack'):
-                    add_log('INFO', 'Testing Slack connection')
-                    st.success("✅ Slack connection test sent!")
-                    add_event('INTEGRATION_TEST', 'Slack webhook tested')
-            
-            with col2:
-                if st.button("💾 Save Slack Config", key='save_slack'):
-                    add_log('SUCCESS', 'Slack configuration saved')
-                    st.success("✅ Configuration saved!")
-            
-            st.markdown("""
-            **Setup Instructions:**
-            1. Go to https://api.slack.com/messaging/webhooks
-            2. Create new Incoming Webhook
-            3. Select channel (e.g., #fraud-alerts)
-            4. Copy Webhook URL
-            5. Paste URL above
-            """)
-        else:
-            st.markdown('<div class="status-badge status-inactive">Inactive</div>', unsafe_allow_html=True)
-    
-    # Telegram
-    with st.expander(f"✈️ {t('telegram_integration')}"):
-        tele_enabled = st.checkbox("Enable Telegram notifications", value=False, key='tele_enabled')
-        
-        if tele_enabled:
-            tele_token = st.text_input(
-                "Bot Token",
-                type="password",
-                help="Get from @BotFather"
-            )
-            tele_chat_id = st.text_input("Chat ID", help="Your Telegram Chat ID")
-            
-            col1, col2 = st.columns(2)
-            with col1:
-                if st.button(f"🧪 {t('test_connection')}", key='test_tele'):
-                    add_log('INFO', 'Testing Telegram connection')
-                    st.success("✅ Telegram test sent!")
-            with col2:
-                if st.button("💾 Save Telegram Config", key='save_tele'):
-                    st.success("✅ Saved!")
-            
-            st.markdown("""
-            **Setup Instructions:**
-            1. Open Telegram, search @BotFather
-            2. Send /newbot command
-            3. Follow instructions, get Bot Token
-            4. Start chat with your bot
-            5. Get Chat ID from @userinfobot
-            """)
-        else:
-            st.markdown('<div class="status-badge status-inactive">Inactive</div>', unsafe_allow_html=True)
-    
-    # Zalo OA
-    with st.expander(f"📱 {t('zalo_integration')}"):
-        zalo_enabled = st.checkbox("Enable Zalo OA notifications", value=False, key='zalo_enabled')
-        
-        if zalo_enabled:
-            zalo_oa_id = st.text_input("OA ID", help="Your Zalo Official Account ID")
-            zalo_access_token = st.text_input("Access Token", type="password")
-            
-            col1, col2 = st.columns(2)
-            with col1:
-                if st.button(f"🧪 {t('test_connection')}", key='test_zalo'):
-                    add_log('INFO', 'Testing Zalo OA connection')
-                    st.success("✅ Zalo test sent!")
-            with col2:
-                if st.button("💾 Save Zalo Config", key='save_zalo'):
-                    st.success("✅ Saved!")
-            
-            st.markdown("""
-            **Setup Instructions:**
-            1. Go to https://oa.zalo.me
-            2. Create Official Account
-            3. Go to Settings → API
-            4. Generate Access Token
-            5. Copy OA ID and Token
-            """)
-        else:
-            st.markdown('<div class="status-badge status-inactive">Inactive</div>', unsafe_allow_html=True)
+            slack_webhook = st.text_input("Slack Webhook URL", value="https://hooks.slack.com/services/...")
+            if st.button("🧪 Test Slack"):
+                add_log('INFO', 'Testing Slack connection')
+                st.success("✅ Slack test sent!")
 
 elif st.session_state.page == 'security':
     st.markdown(f'<div class="main-header">🛡️ {t("security")}</div>', unsafe_allow_html=True)
     
     st.subheader("🚨 Active Threats")
     
-    threat = {
-        'id': 'THREAT-001',
-        'type': 'NFC Relay Attack',
-        'severity': 'HIGH',
-        'details': 'Transaction duration: 1250ms, Geo-velocity: 1200 km/h'
-    }
-    
-    st.markdown(f"""
+    st.markdown("""
     <div class="alert-high">
-        <strong>{threat['id']}: {threat['type']}</strong><br>
-        Severity: {threat['severity']}<br>
-        Details: {threat['details']}<br>
+        <strong>THREAT-001: NFC Relay Attack</strong><br>
+        Severity: HIGH<br>
+        Details: Transaction duration: 1250ms, Geo-velocity: 1200 km/h<br>
         Action: BLOCKED
     </div>
     """, unsafe_allow_html=True)

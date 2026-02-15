@@ -10,7 +10,6 @@ import pandas as pd
 import plotly.graph_objects as go
 import plotly.express as px
 from datetime import datetime, timedelta
-import redis
 from decimal import Decimal
 
 # Page config
@@ -62,43 +61,59 @@ st.markdown("""
 if 'page' not in st.session_state:
     st.session_state.page = 'overview'
 if 'user_role' not in st.session_state:
-    st.session_state.user_role = 'admin'  # TODO: Implement proper auth
+    st.session_state.user_role = 'admin'
 
-# AWS Clients (with error handling for local dev)
+# Load AWS credentials from Streamlit secrets (if available)
 try:
-    dynamodb = boto3.resource('dynamodb', region_name='ap-southeast-1')
-    s3_client = boto3.client('s3', region_name='ap-southeast-1')
-    stepfunctions = boto3.client('stepfunctions', region_name='ap-southeast-1')
-    textract = boto3.client('textract', region_name='ap-southeast-1')
-    bedrock = boto3.client('bedrock-runtime', region_name='ap-southeast-1')
-    
-    # Redis for caching
-    redis_client = redis.Redis(
-        host='localhost',  # TODO: Use ElastiCache in production
-        port=6379,
-        decode_responses=True
-    )
+    AWS_ACCESS_KEY = st.secrets["AWS_ACCESS_KEY"]
+    AWS_SECRET_KEY = st.secrets["AWS_SECRET_KEY"]
+    SFN_ARN = st.secrets["SFN_ARN"]
+    AWS_REGION = st.secrets.get("AWS_REGION", "ap-southeast-1")
+except:
+    AWS_ACCESS_KEY = None
+    AWS_SECRET_KEY = None
+    SFN_ARN = None
+    AWS_REGION = "ap-southeast-1"
+
+# AWS Clients (with error handling for Streamlit Cloud)
+try:
+    if AWS_ACCESS_KEY and AWS_SECRET_KEY:
+        dynamodb = boto3.resource(
+            'dynamodb',
+            region_name=AWS_REGION,
+            aws_access_key_id=AWS_ACCESS_KEY,
+            aws_secret_access_key=AWS_SECRET_KEY
+        )
+        s3_client = boto3.client(
+            's3',
+            region_name=AWS_REGION,
+            aws_access_key_id=AWS_ACCESS_KEY,
+            aws_secret_access_key=AWS_SECRET_KEY
+        )
+        stepfunctions = boto3.client(
+            'stepfunctions',
+            region_name=AWS_REGION,
+            aws_access_key_id=AWS_ACCESS_KEY,
+            aws_secret_access_key=AWS_SECRET_KEY
+        )
+    else:
+        # Demo mode - no AWS connection
+        dynamodb = None
+        s3_client = None
+        stepfunctions = None
 except Exception as e:
-    st.warning(f"⚠️ Running in local mode. AWS services unavailable: {e}")
+    st.info(f"ℹ️ Running in demo mode - Sample data displayed")
     dynamodb = None
-    redis_client = None
+    s3_client = None
+    stepfunctions = None
 
 # ========================================
 # HELPER FUNCTIONS
 # ========================================
 
-@st.cache_data(ttl=300)  # Cache for 5 minutes
+@st.cache_data(ttl=300)
 def get_dashboard_metrics():
-    """Fetch key metrics from Redis cache"""
-    try:
-        if redis_client:
-            cached = redis_client.get('dashboard:metrics')
-            if cached:
-                return json.loads(cached)
-    except:
-        pass
-    
-    # Fallback to sample data for demo
+    """Get key metrics - using demo data for hackathon"""
     return {
         'accuracy': 99.2,
         'automation_rate': 85.3,
@@ -111,8 +126,7 @@ def get_dashboard_metrics():
     }
 
 def get_recent_alerts():
-    """Fetch recent fraud alerts from DynamoDB"""
-    # Sample data for demo
+    """Get recent fraud alerts - demo data"""
     return [
         {
             'id': 'INV-2026-1234',
@@ -146,8 +160,6 @@ def get_recent_alerts():
 def get_fraud_trend_data(days=30):
     """Generate fraud trend data"""
     dates = pd.date_range(end=datetime.now(), periods=days, freq='D')
-    
-    # Sample trend data
     fraud_rates = [2.1 + (i % 7) * 0.3 - 0.5 for i in range(days)]
     invoice_volumes = [3000 + (i % 7) * 500 for i in range(days)]
     
@@ -157,7 +169,6 @@ def get_fraud_trend_data(days=30):
         'invoice_volume': invoice_volumes,
         'fraud_count': [int(vol * rate / 100) for vol, rate in zip(invoice_volumes, fraud_rates)]
     })
-    
     return df
 
 # ========================================
@@ -184,8 +195,6 @@ with st.sidebar:
             st.session_state.page = page_id
     
     st.markdown("---")
-    
-    # User info
     st.markdown(f"**User**: Admin")
     st.markdown(f"**Role**: {st.session_state.user_role}")
     st.markdown(f"**Last Login**: {datetime.now().strftime('%Y-%m-%d %H:%M')}")
@@ -194,53 +203,30 @@ with st.sidebar:
 # MAIN CONTENT AREA
 # ========================================
 
-# Page routing
 if st.session_state.page == 'overview':
     # ====== OVERVIEW DASHBOARD ======
     st.markdown('<div class="main-header">📊 AgentFlow Finance Guard - Overview</div>', unsafe_allow_html=True)
     
-    # Fetch metrics
     metrics = get_dashboard_metrics()
     
     # Top KPI Cards
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
-        st.metric(
-            "🎯 Detection Accuracy",
-            f"{metrics['accuracy']}%",
-            delta="0.2%",
-            help="Fraud detection accuracy rate"
-        )
+        st.metric("🎯 Detection Accuracy", f"{metrics['accuracy']}%", delta="0.2%")
     
     with col2:
-        st.metric(
-            "🤖 Automation Rate",
-            f"{metrics['automation_rate']}%",
-            delta="1.5%",
-            help="Percentage of auto-approved/blocked invoices"
-        )
+        st.metric("🤖 Automation Rate", f"{metrics['automation_rate']}%", delta="1.5%")
     
     with col3:
-        st.metric(
-            "⚡ Avg Latency",
-            f"{metrics['avg_latency_ms']}ms",
-            delta="-200ms",
-            delta_color="inverse",
-            help="Average processing time per invoice"
-        )
+        st.metric("⚡ Avg Latency", f"{metrics['avg_latency_ms']}ms", delta="-200ms", delta_color="inverse")
     
     with col4:
-        st.metric(
-            "💰 Fraud Prevented",
-            f"${metrics['fraud_prevented_usd']:,}",
-            delta="$42K",
-            help="Total fraud amount prevented (YTD)"
-        )
+        st.metric("💰 Fraud Prevented", f"${metrics['fraud_prevented_usd']:,}", delta="$42K")
     
     st.markdown("---")
     
-    # Second row of metrics
+    # Second row
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
@@ -267,7 +253,6 @@ if st.session_state.page == 'overview':
         
         fig = go.Figure()
         
-        # Fraud rate line
         fig.add_trace(go.Scatter(
             x=trend_data['date'],
             y=trend_data['fraud_rate'],
@@ -276,7 +261,6 @@ if st.session_state.page == 'overview':
             yaxis='y1'
         ))
         
-        # Invoice volume bars
         fig.add_trace(go.Bar(
             x=trend_data['date'],
             y=trend_data['invoice_volume'],
@@ -364,81 +348,55 @@ if st.session_state.page == 'overview':
 
 elif st.session_state.page == 'upload':
     # ====== INVOICE UPLOAD ======
-    st.markdown('<div class="main-header">📄 Invoice Upload - OCR Extraction</div>', unsafe_allow_html=True)
+    st.markdown('<div class="main-header">📄 Invoice Upload</div>', unsafe_allow_html=True)
     
-    st.info("💡 **Tip**: Hệ thống hỗ trợ PDF, PNG, JPG. Confidence score > 70% sẽ được xử lý tự động.")
+    st.info("💡 **Demo Mode**: Upload your invoice for OCR extraction demo")
     
-    uploaded_file = st.file_uploader(
-        "Upload Invoice",
-        type=['pdf', 'png', 'jpg', 'jpeg'],
-        help="Drag and drop hoặc click để upload"
-    )
+    uploaded_file = st.file_uploader("Upload Invoice", type=['pdf', 'png', 'jpg', 'jpeg'])
     
     if uploaded_file:
         col1, col2 = st.columns([1, 1])
         
         with col1:
             st.subheader("📄 Uploaded Document")
-            
-            if uploaded_file.type == 'application/pdf':
-                st.info("PDF preview (first page)")
-                # TODO: Render PDF preview
-            else:
+            if uploaded_file.type != 'application/pdf':
                 st.image(uploaded_file, caption="Invoice Image")
+            else:
+                st.info("📄 PDF uploaded")
         
         with col2:
             st.subheader("🔍 OCR Processing")
             
             if st.button("🚀 Process Invoice", type="primary"):
-                with st.spinner("Processing with Amazon Textract..."):
-                    # TODO: Implement actual Textract call
+                with st.spinner("Processing..."):
                     import time
                     time.sleep(2)
                     
-                    # Sample extraction result
-                    extraction_result = {
+                    result = {
                         'invoice_number': 'INV-2026-5678',
                         'invoice_date': '2026-02-10',
                         'supplier_name': 'ABC Corporation',
-                        'supplier_email': 'billing@abccorp.com',
                         'amount': 12345.67,
                         'currency': 'USD',
-                        'po_number': 'PO-2026-1234',
                         'confidence': 87.5
                     }
                     
-                    confidence = extraction_result['confidence']
+                    st.success(f"✅ Extracted! (Confidence: {result['confidence']}%)")
+                    st.json(result)
                     
-                    if confidence >= 70:
-                        st.success(f"✅ Extracted successfully! (Confidence: {confidence}%)")
-                    else:
-                        st.error(f"⚠️ Low confidence ({confidence}%) - Manual review required")
-                    
-                    st.json(extraction_result)
-                    
-                    # Show next steps
-                    if confidence >= 70:
-                        st.markdown("### Next Steps")
-                        st.markdown("1. ✅ PII Preprocessing")
-                        st.markdown("2. 🔢 Decimal Matching")
-                        st.markdown("3. 🧠 AI Risk Analysis")
-                        
-                        if st.button("▶️ Continue to Risk Analysis"):
-                            st.session_state.page = 'fraud'
-                            st.rerun()
+                    if st.button("▶️ Continue to Risk Analysis"):
+                        st.session_state.page = 'fraud'
+                        st.rerun()
 
 elif st.session_state.page == 'fraud':
     # ====== FRAUD DETECTION ======
-    st.markdown('<div class="main-header">🔍 Fraud Detection & Risk Analysis</div>', unsafe_allow_html=True)
+    st.markdown('<div class="main-header">🔍 Fraud Detection</div>', unsafe_allow_html=True)
     
-    # Sample invoice for demo
     sample_invoice = {
         'id': 'INV-2026-5678',
         'amount': 12345.67,
         'po_amount': 12000.00,
-        'supplier': 'ABC Corporation',
-        'supplier_trust_score': 75,
-        'invoice_date': '2026-02-10'
+        'supplier': 'ABC Corporation'
     }
     
     col1, col2 = st.columns([2, 1])
@@ -455,44 +413,25 @@ elif st.session_state.page == 'fraud':
         with detail_col2:
             difference = abs(sample_invoice['amount'] - sample_invoice['po_amount'])
             percentage = (difference / sample_invoice['po_amount']) * 100
-            
             st.metric("Difference", f"${difference:,.2f}")
-            st.metric("Deviation", f"{percentage:.2f}%", 
-                     delta=f"{percentage:.2f}%",
-                     delta_color="inverse")
+            st.metric("Deviation", f"{percentage:.2f}%", delta=f"{percentage:.2f}%", delta_color="inverse")
         
         st.markdown("---")
-        
-        # Risk Score Gauge
         st.subheader("🧠 AI Risk Analysis")
         
-        # Calculate risk score (simplified)
-        math_score = min(percentage * 10, 70)
-        trust_score = (100 - sample_invoice['supplier_trust_score']) * 0.4
-        risk_score = math_score + trust_score
+        risk_score = min(percentage * 10, 70) + 15
         
         fig = go.Figure(go.Indicator(
-            mode = "gauge+number+delta",
-            value = risk_score,
-            domain = {'x': [0, 1], 'y': [0, 1]},
-            title = {'text': "Fraud Risk Score", 'font': {'size': 24}},
-            delta = {'reference': 50, 'increasing': {'color': "red"}},
-            gauge = {
-                'axis': {'range': [None, 100], 'tickwidth': 1, 'tickcolor': "darkblue"},
-                'bar': {'color': "darkblue"},
-                'bgcolor': "white",
-                'borderwidth': 2,
-                'bordercolor': "gray",
+            mode="gauge+number",
+            value=risk_score,
+            title={'text': "Fraud Risk Score"},
+            gauge={
+                'axis': {'range': [0, 100]},
                 'steps': [
                     {'range': [0, 30], 'color': '#4caf50'},
                     {'range': [30, 70], 'color': '#ff9800'},
                     {'range': [70, 100], 'color': '#f44336'}
-                ],
-                'threshold': {
-                    'line': {'color': "red", 'width': 4},
-                    'thickness': 0.75,
-                    'value': 70
-                }
+                ]
             }
         ))
         
@@ -503,54 +442,33 @@ elif st.session_state.page == 'fraud':
         st.subheader("🎯 Risk Breakdown")
         
         breakdown = pd.DataFrame({
-            'Component': ['Math Score', 'Supplier Trust', 'Amount Anomaly', 'Temporal', 'Device'],
-            'Points': [math_score, trust_score, 5, 2, 0],
-            'Max': [70, 40, 10, 10, 10]
+            'Component': ['Math Score', 'Supplier Trust', 'Amount Anomaly'],
+            'Points': [28, 15, 5]
         })
         
-        fig = px.bar(
-            breakdown,
-            y='Component',
-            x='Points',
-            orientation='h',
-            title='Risk Components',
-            color='Points',
-            color_continuous_scale='Reds'
-        )
+        fig = px.bar(breakdown, y='Component', x='Points', orientation='h',
+                    color='Points', color_continuous_scale='Reds')
         fig.update_layout(height=400, showlegend=False)
         st.plotly_chart(fig, use_container_width=True)
         
         st.markdown("---")
         
-        # Decision
         if risk_score < 30:
-            decision = "AUTO-APPROVE"
-            st.success(f"✅ Decision: {decision}")
-            st.markdown("Low risk - Automatically approved")
+            st.success("✅ AUTO-APPROVE - Low risk")
         elif risk_score < 70:
-            decision = "MANUAL CHECK"
-            st.warning(f"⚠️ Decision: {decision}")
-            st.markdown("Medium risk - Requires human review")
-            
-            st.markdown("### Take Action")
+            st.warning("⚠️ MANUAL CHECK - Medium risk")
             col_a, col_b = st.columns(2)
             if col_a.button("✅ Approve", type="primary"):
-                st.success("Invoice approved!")
-            if col_b.button("❌ Reject", type="secondary"):
-                st.error("Invoice rejected!")
+                st.success("Approved!")
+            if col_b.button("❌ Reject"):
+                st.error("Rejected!")
         else:
-            decision = "AUTO-BLOCK"
-            st.error(f"🚨 Decision: {decision}")
-            st.markdown("High risk - Automatically blocked")
+            st.error("🚨 AUTO-BLOCK - High risk")
 
 elif st.session_state.page == 'ml_insights':
-    # ====== ML INSIGHTS ======
-    st.markdown('<div class="main-header">🤖 ML Intelligence Center</div>', unsafe_allow_html=True)
+    st.markdown('<div class="main-header">🤖 ML Intelligence</div>', unsafe_allow_html=True)
     
-    st.info("🔬 **Advanced Analytics**: Prophet forecasting, Isolation Forest anomaly detection, K-means clustering")
-    
-    # Fraud Forecast
-    st.subheader("📈 Fraud Rate Forecast (Next 30 Days)")
+    st.subheader("📈 Fraud Rate Forecast (30 Days)")
     
     forecast_dates = pd.date_range(start=datetime.now(), periods=30, freq='D')
     forecast_data = pd.DataFrame({
@@ -561,31 +479,17 @@ elif st.session_state.page == 'ml_insights':
     })
     
     fig = go.Figure()
+    fig.add_trace(go.Scatter(x=forecast_data['ds'], y=forecast_data['yhat_upper'],
+                            fill=None, mode='lines', line_color='rgba(0,0,0,0)', showlegend=False))
+    fig.add_trace(go.Scatter(x=forecast_data['ds'], y=forecast_data['yhat_lower'],
+                            fill='tonexty', fillcolor='rgba(31,119,180,0.2)', 
+                            mode='lines', line_color='rgba(0,0,0,0)', name='Confidence'))
+    fig.add_trace(go.Scatter(x=forecast_data['ds'], y=forecast_data['yhat'],
+                            mode='lines', line=dict(color='#1f77b4', width=3), name='Forecast'))
     
-    # Confidence interval
-    fig.add_trace(go.Scatter(
-        x=forecast_data['ds'], y=forecast_data['yhat_upper'],
-        fill=None, mode='lines', line_color='rgba(0,0,0,0)',
-        showlegend=False
-    ))
-    fig.add_trace(go.Scatter(
-        x=forecast_data['ds'], y=forecast_data['yhat_lower'],
-        fill='tonexty', mode='lines', line_color='rgba(0,0,0,0)',
-        fillcolor='rgba(31, 119, 180, 0.2)',
-        name='Confidence Interval'
-    ))
-    
-    # Forecast line
-    fig.add_trace(go.Scatter(
-        x=forecast_data['ds'], y=forecast_data['yhat'],
-        mode='lines', line=dict(color='#1f77b4', width=3),
-        name='Forecast'
-    ))
-    
-    fig.update_layout(height=400, hovermode='x unified')
+    fig.update_layout(height=400)
     st.plotly_chart(fig, use_container_width=True)
     
-    # Anomaly Detection
     st.subheader("🚨 Detected Anomalies (Last 7 Days)")
     
     anomalies = pd.DataFrame({
@@ -593,192 +497,63 @@ elif st.session_state.page == 'ml_insights':
         'Amount': [45000, 89000, 12000],
         'Supplier': ['Unknown Corp', 'ABC Ltd', 'XYZ Inc'],
         'Anomaly Score': [0.92, 0.87, 0.81],
-        'Reason': ['Unusually high amount', 'New supplier + high amount', 'Rapid succession']
+        'Reason': ['Unusually high', 'New supplier', 'Rapid succession']
     })
     
     st.dataframe(anomalies, use_container_width=True)
-    
-    # Supplier Risk Clustering
-    st.subheader("🎯 Supplier Risk Segmentation")
-    
-    col1, col2 = st.columns([1, 2])
-    
-    with col1:
-        risk_distribution = pd.DataFrame({
-            'Risk Tier': ['LOW', 'MEDIUM', 'HIGH'],
-            'Count': [234, 87, 23]
-        })
-        
-        st.dataframe(risk_distribution)
-        
-        st.markdown("### Summary")
-        st.markdown("- **Low Risk**: 68% of suppliers")
-        st.markdown("- **Medium Risk**: 25%")
-        st.markdown("- **High Risk**: 7% (flagged)")
-    
-    with col2:
-        fig = px.pie(
-            risk_distribution,
-            values='Count',
-            names='Risk Tier',
-            title='Supplier Distribution',
-            color='Risk Tier',
-            color_discrete_map={'LOW': '#4caf50', 'MEDIUM': '#ff9800', 'HIGH': '#f44336'}
-        )
-        st.plotly_chart(fig, use_container_width=True)
 
 elif st.session_state.page == 'merchant':
-    # ====== MERCHANT SUCCESS ======
-    st.markdown('<div class="main-header">🏪 Merchant Success Center</div>', unsafe_allow_html=True)
+    st.markdown('<div class="main-header">🏪 Merchant Success</div>', unsafe_allow_html=True)
     
-    merchant_id = st.selectbox("Select Merchant", ['Merchant A', 'Merchant B', 'Merchant C'])
-    
-    # Sales Performance
     st.subheader("📊 Sales Performance")
     
     col1, col2, col3 = st.columns(3)
-    
     with col1:
-        st.metric("This Week Sales", "$125,400", delta="-22%", delta_color="inverse")
-    
+        st.metric("This Week", "$125,400", delta="-22%", delta_color="inverse")
     with col2:
-        st.metric("Last Week Sales", "$161,000")
-    
+        st.metric("Last Week", "$161,000")
     with col3:
-        st.metric("Avg Order Value", "$245", delta="-5%")
+        st.metric("Avg Order", "$245", delta="-5%")
     
-    st.warning("⚠️ Sales dropped 22% this week - Root cause analysis triggered")
-    
-    # Root Cause Analysis
-    st.subheader("🔍 Root Cause Analysis")
-    
-    causes = [
-        {'factor': '💰 Pricing', 'issue': 'Prices 35% above market average', 'impact': 'HIGH'},
-        {'factor': '📦 Inventory', 'issue': '3 best-sellers out of stock', 'impact': 'MEDIUM'},
-        {'factor': '⭐ Reviews', 'issue': '8 negative reviews in past 7 days', 'impact': 'LOW'}
-    ]
-    
-    for cause in causes:
-        with st.expander(f"{cause['factor']} - {cause['impact']} Impact"):
-            st.write(f"**Issue**: {cause['issue']}")
-            
-            if 'Pricing' in cause['factor']:
-                st.info("💡 **Recommendation**: Competitor ABC launched 30% off promotion. Consider matching or emphasizing free shipping.")
-    
-    # Image Quality
-    st.subheader("📸 Product Image Quality")
-    
-    quality_data = pd.DataFrame({
-        'Product': ['Product A', 'Product B', 'Product C', 'Product D'],
-        'Quality Score': [85, 62, 91, 45],
-        'Issues': ['None', 'Blurry', 'None', 'Poor lighting + blurry']
-    })
-    
-    for _, row in quality_data.iterrows():
-        col1, col2, col3 = st.columns([2, 1, 2])
-        
-        with col1:
-            st.write(f"**{row['Product']}**")
-        
-        with col2:
-            score = row['Quality Score']
-            if score >= 80:
-                st.success(f"✅ {score}/100")
-            elif score >= 60:
-                st.warning(f"⚠️ {score}/100")
-            else:
-                st.error(f"❌ {score}/100")
-        
-        with col3:
-            if row['Issues'] != 'None':
-                st.write(f"Issues: {row['Issues']}")
+    st.warning("⚠️ Sales dropped 22% - Root cause analysis triggered")
 
 elif st.session_state.page == 'security':
-    # ====== SECURITY ======
-    st.markdown('<div class="main-header">🛡️ Security Operations Center</div>', unsafe_allow_html=True)
+    st.markdown('<div class="main-header">🛡️ Security Operations</div>', unsafe_allow_html=True)
     
-    # Real-time threat feed
     st.subheader("🚨 Active Threats")
     
-    threats = [
-        {
-            'id': 'THREAT-001',
-            'type': 'NFC Relay Attack',
-            'severity': 'HIGH',
-            'timestamp': '2026-02-15 14:30:25',
-            'details': 'Transaction duration: 1250ms, Geo-velocity: 1200 km/h',
-            'action': 'BLOCKED'
-        },
-        {
-            'id': 'THREAT-002',
-            'type': 'Account Takeover',
-            'severity': 'MEDIUM',
-            'timestamp': '2026-02-15 13:15:10',
-            'details': 'Typing speed changed from 45 WPM to 85 WPM',
-            'action': 'FORCE_REAUTH'
-        }
-    ]
+    threat = {
+        'id': 'THREAT-001',
+        'type': 'NFC Relay Attack',
+        'severity': 'HIGH',
+        'details': 'Transaction duration: 1250ms, Geo-velocity: 1200 km/h'
+    }
     
-    for threat in threats:
-        severity_color = 'alert-high' if threat['severity'] == 'HIGH' else 'alert-medium'
-        
-        st.markdown(f"""
-        <div class="{severity_color}">
-            <strong>{threat['id']}: {threat['type']}</strong><br>
-            Severity: {threat['severity']}<br>
-            Time: {threat['timestamp']}<br>
-            Details: {threat['details']}<br>
-            Action: {threat['action']}
-        </div>
-        """, unsafe_allow_html=True)
-        
-        st.markdown("<br>", unsafe_allow_html=True)
-    
-    # Fraud Ring Detection
-    st.subheader("🕸️ Fraud Ring Detection")
-    
-    st.info("🔬 **Graph Analysis**: Louvain community detection on 15,234 accounts")
-    
-    st.markdown("""
-    **Detected Fraud Ring #1**:
-    - 12 accounts
-    - Shared 3 device fingerprints
-    - 147 fraudulent invoices ($2.3M)
-    - All accounts created within 72 hours
-    """)
-    
-    if st.button("🔍 View Full Network Graph"):
-        st.info("Network visualization would render here (using Plotly Network Graph)")
+    st.markdown(f"""
+    <div class="alert-high">
+        <strong>{threat['id']}: {threat['type']}</strong><br>
+        Severity: {threat['severity']}<br>
+        Details: {threat['details']}<br>
+        Action: BLOCKED
+    </div>
+    """, unsafe_allow_html=True)
 
 else:
-    # ====== SETTINGS ======
-    st.markdown('<div class="main-header">⚙️ System Settings</div>', unsafe_allow_html=True)
+    st.markdown('<div class="main-header">⚙️ Settings</div>', unsafe_allow_html=True)
     
-    st.subheader("🎚️ Risk Thresholds")
+    auto_approve = st.slider("Auto-Approve Threshold", 0, 100, 30)
+    auto_block = st.slider("Auto-Block Threshold", 0, 100, 70)
     
-    auto_approve_threshold = st.slider("Auto-Approve Threshold", 0, 100, 30)
-    auto_block_threshold = st.slider("Auto-Block Threshold", 0, 100, 70)
-    
-    st.info(f"Current Configuration: Auto-approve < {auto_approve_threshold}, Manual review {auto_approve_threshold}-{auto_block_threshold}, Auto-block ≥ {auto_block_threshold}")
-    
-    st.subheader("🔔 Notifications")
-    
-    slack_webhook = st.text_input("Slack Webhook URL", value="https://hooks.slack.com/services/...")
-    email_alerts = st.checkbox("Enable Email Alerts", value=True)
-    
-    st.subheader("🔐 Security")
-    
-    mfa_enabled = st.checkbox("Require MFA", value=True)
-    session_timeout = st.number_input("Session Timeout (minutes)", value=30, min_value=5, max_value=120)
+    st.info(f"Config: Auto-approve < {auto_approve}, Manual {auto_approve}-{auto_block}, Auto-block ≥ {auto_block}")
     
     if st.button("💾 Save Settings", type="primary"):
-        st.success("✅ Settings saved successfully!")
+        st.success("✅ Settings saved!")
 
 # Footer
 st.markdown("---")
 st.markdown("""
 <div style='text-align: center; color: #666;'>
-    AgentFlow Finance Guard v1.0 | Powered by AWS Bedrock & Anthropic Claude | 
-    <a href='#'>Documentation</a> | <a href='#'>Support</a>
+    AgentFlow Finance Guard v1.0 | SWIN Hackathon 2026 | 
+    Powered by AWS Bedrock & Claude
 </div>
 """, unsafe_allow_html=True)

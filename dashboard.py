@@ -830,7 +830,7 @@ st.set_page_config(
     menu_items={
         'Get Help': 'https://github.com/agentflow',
         'Report a bug': 'https://github.com/agentflow/issues',
-        'About': f'{APP_NAME} v{APP_VERSION} - {HACKATHON}'
+        'About': f'{APP_NAME} - {HACKATHON}'
     }
 )
 

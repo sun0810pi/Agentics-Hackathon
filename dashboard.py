@@ -1285,7 +1285,6 @@ with st.sidebar:
             AgentFlow
         </h2>
         <p style='margin: 0.3rem 0 0 0; color: #8892a6; font-size: 0.85rem;'>
-            Finance Guard v{APP_VERSION}
         </p>
     </div>
     """, unsafe_allow_html=True)
@@ -1642,7 +1641,7 @@ st.markdown(f"""
             margin-top: 2rem; border: 2px solid rgba(74, 158, 255, 0.2);'>
     <h3 style='background: linear-gradient(135deg, #4A9EFF 0%, #00D68F 100%); 
                -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 0;'>
-        {APP_NAME} v{APP_VERSION}
+        {APP_NAME}
     </h3>
     <p style='color: #8892a6; margin: 0.5rem 0;'>{HACKATHON}</p>
     <p style='color: #8892a6; margin: 1rem 0;'>

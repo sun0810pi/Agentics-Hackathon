@@ -963,39 +963,31 @@ DARK_THEME_CONTINUATION = """
     /* ═══ STREAMLIT NATIVE COMPONENTS - ENHANCED ═══ */
     
     /* Metrics with visible borders */
-    [data-testid="stMetricValue"] {
-        background: rgba(38, 39, 48, 0.85);
-        border: 2px solid rgba(74, 158, 255, 0.25);
-        border-radius: var(--radius-md);
-        padding: var(--spacing-lg) !important;
-        box-shadow: var(--shadow-sm);
-        transition: all var(--transition-normal);
+    [data-testid="stMetric"] {
+        background: rgba(28, 30, 38, 0.65);
+        border-radius: 12px;
+        padding: 12px;
+        transition: all 0.2s ease;
     }
     
-    [data-testid="stMetricValue"]:hover {
-        border-color: var(--accent-primary);
-        box-shadow: var(--shadow-glow), var(--shadow-md);
-        transform: translateY(-2px);
+    [data-testid="stMetric"]:hover {
+        background: rgba(40, 44, 55, 0.75);
     }
     
     [data-testid="stMetricLabel"] {
-        color: var(--text-secondary) !important;
         font-weight: 600 !important;
-        font-size: 0.95rem !important;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
+        font-size: 0.85rem !important;
+        opacity: 0.8;
     }
     
-    [data-testid="stMetricValue"] > div {
-        color: var(--text-primary) !important;
-        font-size: 2.2rem !important;
-        font-weight: 800 !important;
-        font-family: 'Poppins', sans-serif !important;
+    [data-testid="stMetricValue"] {
+        font-size: 1.8rem !important;
+        font-weight: 700 !important;
     }
     
     [data-testid="stMetricDelta"] {
-        font-weight: 700 !important;
-        font-size: 0.9rem !important;
+        font-weight: 600 !important;
+        font-size: 0.85rem !important;
     }
     
     /* ═══ ALERT CARDS - ULTRA PREMIUM ═══ */

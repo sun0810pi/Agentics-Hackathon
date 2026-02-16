@@ -962,32 +962,28 @@ DARK_THEME = """
 DARK_THEME_CONTINUATION = """
     /* ═══ STREAMLIT NATIVE COMPONENTS - ENHANCED ═══ */
     
-    /* Metrics with visible borders */
-    [data-testid="stMetric"] {
-        background: rgba(28, 30, 38, 0.65);
-        border-radius: 12px;
-        padding: 12px;
-        transition: all 0.2s ease;
+    /* Subtle hover effects only - no aggressive styling */
+    .stMetric {
+        transition: transform 0.2s ease;
     }
     
-    [data-testid="stMetric"]:hover {
-        background: rgba(40, 44, 55, 0.75);
+    .stMetric:hover {
+        transform: translateY(-2px);
     }
     
+    /* Color overrides only - let Streamlit handle layout */
     [data-testid="stMetricLabel"] {
+        color: var(--text-secondary) !important;
         font-weight: 600 !important;
-        font-size: 0.85rem !important;
-        opacity: 0.8;
     }
     
     [data-testid="stMetricValue"] {
-        font-size: 1.8rem !important;
-        font-weight: 700 !important;
+        color: var(--text-primary) !important;
+        font-size: 2rem !important;
     }
     
     [data-testid="stMetricDelta"] {
         font-weight: 600 !important;
-        font-size: 0.85rem !important;
     }
     
     /* ═══ ALERT CARDS - ULTRA PREMIUM ═══ */

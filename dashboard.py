@@ -2088,6 +2088,34 @@ def get_user_role_name() -> str:
 # AWS CONFIGURATION
 # ═══════════════════════════════════════════════════════════════════════════
 
+def add_log(level: str, message: str, details: Optional[Any] = None):
+    """
+    Add entry to execution logs
+    
+    Args:
+        level: Log level (INFO, SUCCESS, WARNING, ERROR)
+        message: Log message
+        details: Additional details (dict, list, str)
+    """
+    log_entry = {
+        'id': str(uuid.uuid4()),
+        'timestamp': datetime.now(),
+        'level': level.upper(),
+        'message': message,
+        'details': details,
+        'user': st.session_state.get('user_email', 'system'),
+        'session_id': st.session_state.get('session_token', 'none')
+    }
+    
+    st.session_state.execution_logs.insert(0, log_entry)
+    st.session_state.execution_logs = st.session_state.execution_logs[:500]  # Keep last 500
+    
+    # Also add to error logs if ERROR
+    if level.upper() == 'ERROR':
+        st.session_state.error_logs.insert(0, log_entry)
+        st.session_state.error_logs = st.session_state.error_logs[:100]
+
+
 def load_aws_config() -> Dict[str, Any]:
     """Load AWS configuration from Streamlit secrets"""
     try:
@@ -2124,34 +2152,6 @@ def load_aws_config() -> Dict[str, Any]:
         }
 
 aws_config = load_aws_config()
-
-def add_log(level: str, message: str, details: Optional[Any] = None):
-    """
-    Add entry to execution logs
-    
-    Args:
-        level: Log level (INFO, SUCCESS, WARNING, ERROR)
-        message: Log message
-        details: Additional details (dict, list, str)
-    """
-    log_entry = {
-        'id': str(uuid.uuid4()),
-        'timestamp': datetime.now(),
-        'level': level.upper(),
-        'message': message,
-        'details': details,
-        'user': st.session_state.get('user_email', 'system'),
-        'session_id': st.session_state.get('session_token', 'none')
-    }
-    
-    st.session_state.execution_logs.insert(0, log_entry)
-    st.session_state.execution_logs = st.session_state.execution_logs[:500]  # Keep last 500
-    
-    # Also add to error logs if ERROR
-    if level.upper() == 'ERROR':
-        st.session_state.error_logs.insert(0, log_entry)
-        st.session_state.error_logs = st.session_state.error_logs[:100]
-
 
 def get_aws_clients() -> Dict[str, Any]:
     """Initialize AWS service clients with error handling"""

@@ -962,28 +962,40 @@ DARK_THEME = """
 DARK_THEME_CONTINUATION = """
     /* ═══ STREAMLIT NATIVE COMPONENTS - ENHANCED ═══ */
     
-    /* Subtle hover effects only - no aggressive styling */
-    .stMetric {
-        transition: transform 0.2s ease;
+    /* Metrics with visible borders */
+    [data-testid="stMetricValue"] {
+        background: rgba(38, 39, 48, 0.85);
+        border: 2px solid rgba(74, 158, 255, 0.25);
+        border-radius: var(--radius-md);
+        padding: var(--spacing-lg) !important;
+        box-shadow: var(--shadow-sm);
+        transition: all var(--transition-normal);
     }
     
-    .stMetric:hover {
+    [data-testid="stMetricValue"]:hover {
+        border-color: var(--accent-primary);
+        box-shadow: var(--shadow-glow), var(--shadow-md);
         transform: translateY(-2px);
     }
     
-    /* Color overrides only - let Streamlit handle layout */
     [data-testid="stMetricLabel"] {
         color: var(--text-secondary) !important;
         font-weight: 600 !important;
+        font-size: 0.95rem !important;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
     }
     
-    [data-testid="stMetricValue"] {
+    [data-testid="stMetricValue"] > div {
         color: var(--text-primary) !important;
-        font-size: 2rem !important;
+        font-size: 2.2rem !important;
+        font-weight: 800 !important;
+        font-family: 'Poppins', sans-serif !important;
     }
     
     [data-testid="stMetricDelta"] {
-        font-weight: 600 !important;
+        font-weight: 700 !important;
+        font-size: 0.9rem !important;
     }
     
     /* ═══ ALERT CARDS - ULTRA PREMIUM ═══ */
@@ -2076,6 +2088,33 @@ def get_user_role_name() -> str:
 # AWS CONFIGURATION
 # ═══════════════════════════════════════════════════════════════════════════
 
+def add_log(level: str, message: str, details: Optional[Any] = None):
+    """
+    Add entry to execution logs
+    
+    Args:
+        level: Log level (INFO, SUCCESS, WARNING, ERROR)
+        message: Log message
+        details: Additional details (dict, list, str)
+    """
+    log_entry = {
+        'id': str(uuid.uuid4()),
+        'timestamp': datetime.now(),
+        'level': level.upper(),
+        'message': message,
+        'details': details,
+        'user': st.session_state.get('user_email', 'system'),
+        'session_id': st.session_state.get('session_token', 'none')
+    }
+    
+    st.session_state.execution_logs.insert(0, log_entry)
+    st.session_state.execution_logs = st.session_state.execution_logs[:500]  # Keep last 500
+    
+    # Also add to error logs if ERROR
+    if level.upper() == 'ERROR':
+        st.session_state.error_logs.insert(0, log_entry)
+        st.session_state.error_logs = st.session_state.error_logs[:100]
+
 def load_aws_config() -> Dict[str, Any]:
     """Load AWS configuration from Streamlit secrets"""
     try:
@@ -2154,33 +2193,6 @@ aws_clients = get_aws_clients()
 # ═══════════════════════════════════════════════════════════════════════════
 # LOGGING SYSTEM
 # ═══════════════════════════════════════════════════════════════════════════
-
-def add_log(level: str, message: str, details: Optional[Any] = None):
-    """
-    Add entry to execution logs
-    
-    Args:
-        level: Log level (INFO, SUCCESS, WARNING, ERROR)
-        message: Log message
-        details: Additional details (dict, list, str)
-    """
-    log_entry = {
-        'id': str(uuid.uuid4()),
-        'timestamp': datetime.now(),
-        'level': level.upper(),
-        'message': message,
-        'details': details,
-        'user': st.session_state.get('user_email', 'system'),
-        'session_id': st.session_state.get('session_token', 'none')
-    }
-    
-    st.session_state.execution_logs.insert(0, log_entry)
-    st.session_state.execution_logs = st.session_state.execution_logs[:500]  # Keep last 500
-    
-    # Also add to error logs if ERROR
-    if level.upper() == 'ERROR':
-        st.session_state.error_logs.insert(0, log_entry)
-        st.session_state.error_logs = st.session_state.error_logs[:100]
 
 def add_event(event_type: str, description: str, data: Optional[Dict] = None):
     """

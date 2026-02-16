@@ -893,6 +893,38 @@ st.markdown(theme_css, unsafe_allow_html=True)
 # AWS CONFIGURATION
 # ═══════════════════════════════════════════════════════════════════════════
 
+def add_log(level: str, message: str, details: Optional[Any] = None):
+    """Add entry to execution logs with timestamp"""
+    log_entry = {
+        'timestamp': datetime.now(),
+        'level': level.upper(),
+        'message': message,
+        'details': details
+    }
+    st.session_state.execution_logs.insert(0, log_entry)
+    st.session_state.execution_logs = st.session_state.execution_logs[:200]  # Keep last 200
+
+def add_event(event_type: str, description: str, data: Optional[Dict] = None):
+    """Add system event for tracking"""
+    event = {
+        'timestamp': datetime.now(),
+        'type': event_type,
+        'description': description,
+        'data': data or {}
+    }
+    st.session_state.system_events.insert(0, event)
+    st.session_state.system_events = st.session_state.system_events[:200]
+
+def add_chat(question: str, answer: str):
+    """Add chat exchange to history"""
+    chat = {
+        'timestamp': datetime.now(),
+        'question': question,
+        'answer': answer
+    }
+    st.session_state.chat_history.insert(0, chat)
+    st.session_state.chat_history = st.session_state.chat_history[:10] 
+
 def load_aws_config() -> Dict[str, Any]:
     """Load AWS configuration from secrets"""
     try:
@@ -944,37 +976,7 @@ aws_clients = get_aws_clients()
 # LOGGING & EVENT SYSTEM
 # ═══════════════════════════════════════════════════════════════════════════
 
-def add_log(level: str, message: str, details: Optional[Any] = None):
-    """Add entry to execution logs with timestamp"""
-    log_entry = {
-        'timestamp': datetime.now(),
-        'level': level.upper(),
-        'message': message,
-        'details': details
-    }
-    st.session_state.execution_logs.insert(0, log_entry)
-    st.session_state.execution_logs = st.session_state.execution_logs[:200]  # Keep last 200
-
-def add_event(event_type: str, description: str, data: Optional[Dict] = None):
-    """Add system event for tracking"""
-    event = {
-        'timestamp': datetime.now(),
-        'type': event_type,
-        'description': description,
-        'data': data or {}
-    }
-    st.session_state.system_events.insert(0, event)
-    st.session_state.system_events = st.session_state.system_events[:200]
-
-def add_chat(question: str, answer: str):
-    """Add chat exchange to history"""
-    chat = {
-        'timestamp': datetime.now(),
-        'question': question,
-        'answer': answer
-    }
-    st.session_state.chat_history.insert(0, chat)
-    st.session_state.chat_history = st.session_state.chat_history[:10]  # Keep last 10
+ # Keep last 10
 
 # ═══════════════════════════════════════════════════════════════════════════
 # AI CHATBOT - BEDROCK CLAUDE

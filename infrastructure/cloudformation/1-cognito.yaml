@@ -1,0 +1,42 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: AgentFlow - Cognito User Pool
+
+Resources:
+  AgentFlowUserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: agentflow-users
+      UsernameAttributes: [email]
+      AutoVerifiedAttributes: [email]
+      PasswordPolicy:
+        MinimumLength: 8
+        RequireUppercase: true
+        RequireLowercase: true
+        RequireNumbers: true
+        RequireSymbols: true
+      MfaConfiguration: OPTIONAL
+      Schema:
+        - Name: role
+          AttributeDataType: String
+          Mutable: true
+
+  AgentFlowUserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      ClientName: agentflow-frontend
+      UserPoolId: !Ref AgentFlowUserPool
+      GenerateSecret: false
+      ExplicitAuthFlows:
+        - ALLOW_USER_PASSWORD_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+      AccessTokenValidity: 1
+      IdTokenValidity: 1
+      RefreshTokenValidity: 30
+
+Outputs:
+  UserPoolId:
+    Value: !Ref AgentFlowUserPool
+    Export: { Name: AgentFlowUserPoolId }
+  UserPoolClientId:
+    Value: !Ref AgentFlowUserPoolClient
+    Export: { Name: AgentFlowUserPoolClientId }

@@ -1,0 +1,49 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: AgentFlow - API Gateway with JWT Authorizer
+
+Parameters:
+  UserPoolId:    { Type: String }
+  UserPoolClientId: { Type: String }
+  LambdaArn:     { Type: String }
+
+Resources:
+  AgentFlowAPI:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: agentflow-api
+      ProtocolType: HTTP
+      CorsConfiguration:
+        AllowOrigins: ['https://*.streamlit.app']
+        AllowHeaders: ['Authorization','Content-Type']
+        AllowMethods: ['GET','POST','OPTIONS']
+
+  JWTAuthorizer:
+    Type: AWS::ApiGatewayV2::Authorizer
+    Properties:
+      ApiId: !Ref AgentFlowAPI
+      AuthorizerType: JWT
+      Name: cognito-jwt
+      IdentitySource: ['$request.header.Authorization']
+      JwtConfiguration:
+        Audience: [!Ref UserPoolClientId]
+        Issuer: !Sub 'https://cognito-idp.${AWS::Region}.amazonaws.com/${UserPoolId}'
+
+  LambdaIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref AgentFlowAPI
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !Ref LambdaArn
+      PayloadFormatVersion: '2.0'
+
+  DefaultStage:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      ApiId: !Ref AgentFlowAPI
+      StageName: '$default'
+      AutoDeploy: true
+
+Outputs:
+  ApiUrl:
+    Value: !Sub 'https://${AgentFlowAPI}.execute-api.${AWS::Region}.amazonaws.com'
+    Export: { Name: AgentFlowApiUrl }

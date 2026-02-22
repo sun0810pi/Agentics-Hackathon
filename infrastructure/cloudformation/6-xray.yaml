@@ -1,0 +1,19 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: AgentFlow - X-Ray Configuration
+
+Resources:
+  XRaySamplingRule:
+    Type: AWS::XRay::SamplingRule
+    Properties:
+      SamplingRule:
+        RuleName: agentflow-sampling
+        ResourceARN: '*'
+        Priority: 1
+        FixedRate: 0.1
+        ReservoirSize: 5
+        ServiceName: agentflow-backend
+        ServiceType: '*'
+        Host: '*'
+        HTTPMethod: '*'
+        URLPath: '*'
+        Version: 1

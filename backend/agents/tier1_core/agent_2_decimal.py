@@ -1,38 +1,27 @@
-"""Agent 2: Decimal Matcher - Validates invoice amounts vs PO data"""
-from agents.base import BaseAgent
-from typing import Dict, Any, List, Tuple
-import re
+"""backend/agents/tier1_core/agent_2_decimal.py — Amount Validator"""
+from agents.base import BaseAgent, AgentContext, AgentOutput, AgentTier
 
 class Agent2Decimal(BaseAgent):
-    agent_id = 2
-    agent_name = "Decimal Matcher"
-    tier = "Core Detection"
+    agent_id = 2; agent_name = "Decimal Matcher"; tier = AgentTier.CORE
+    TOLERANCE = 0.02
 
-    async def _execute(self, invoice_data: Dict, context: Dict) -> Tuple[Dict, List[str], float]:
-        flags = []
-        ocr_data = context.get("results", {}).get(0, {}).get("invoice_fields", {})
-        amount_str = ocr_data.get("amount_total", "")
-        amount = None
-        discrepancy = False
+    async def _execute(self, ctx: AgentContext) -> AgentOutput:
+        e = ctx.extracted
+        flags, findings = [], {}
+        line_total = sum(float(i.get("amount", 0)) for i in e.get("line_items", []))
+        subtotal   = float(e.get("subtotal", 0))
+        tax        = float(e.get("tax_amount", 0))
+        total      = float(e.get("total_amount", 0))
 
-        try:
-            if amount_str:
-                cleaned = re.sub(r'[^\d.]', '', str(amount_str))
-                amount = float(cleaned)
-                # Check for suspicious round numbers (fraud indicator)
-                if amount > 10000 and amount % 1000 == 0:
-                    flags.append("SUSPICIOUS_ROUND_AMOUNT")
-                # Check for micro-amounts (test invoice?)
-                if amount < 1.0:
-                    flags.append("SUSPICIOUSLY_LOW_AMOUNT")
-                # Check for extremely large amounts
-                if amount > 1_000_000:
-                    flags.append("EXTREMELY_LARGE_AMOUNT")
-        except (ValueError, TypeError):
-            flags.append("INVALID_AMOUNT_FORMAT")
+        if abs(line_total - subtotal) > self.TOLERANCE and line_total > 0:
+            flags.append("LINE_ITEMS_SUM_MISMATCH"); findings["line_delta"] = round(line_total - subtotal, 2)
+        if abs((subtotal + tax) - total) > self.TOLERANCE and subtotal > 0:
+            flags.append("TOTAL_AMOUNT_MISMATCH"); findings["total_delta"] = round((subtotal+tax)-total, 2)
+        if total <= 0:   flags.append("ZERO_OR_NEGATIVE_AMOUNT")
+        if total > 1e6:  flags.append("UNUSUALLY_LARGE_AMOUNT")
+        if total > 0 and (tax/total)*100 > 30: flags.append("ABNORMAL_TAX_RATE")
 
-        return {
-            "amount_parsed": amount,
-            "amount_valid": amount is not None and amount > 0,
-            "discrepancy_detected": discrepancy,
-        }, flags, 0.92 if amount else 0.3
+        ctx.fraud_flags.extend(flags)
+        findings["validated"] = len(flags) == 0
+        conf = max(0.3, 0.95 - len(flags) * 0.2)
+        return AgentOutput(2, self.agent_name, "COMPLETED", 0, conf, findings=findings, flags=flags)

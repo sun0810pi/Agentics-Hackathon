@@ -1,0 +1,45 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: AgentFlow - Lambda Function
+
+Parameters:
+  ECRImageUri: { Type: String }
+
+Resources:
+  AgentFlowLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: agentflow-lambda-role
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: { Service: lambda.amazonaws.com }
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess
+      Policies:
+        - PolicyName: agentflow-permissions
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: [textract:AnalyzeDocument, bedrock:InvokeModel, 
+                         secretsmanager:GetSecretValue, sns:Publish]
+                Resource: '*'
+
+  AgentFlowFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: agentflow-backend
+      PackageType: Image
+      Code: { ImageUri: !Ref ECRImageUri }
+      Role: !GetAtt AgentFlowLambdaRole.Arn
+      MemorySize: 1024
+      Timeout: 60
+      Environment:
+        Variables:
+          AWS_XRAY_SDK_ENABLED: 'true'
+
+Outputs:
+  LambdaArn: { Value: !GetAtt AgentFlowFunction.Arn }

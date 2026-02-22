@@ -1,88 +1,60 @@
 """
 backend/api/rate_limiter.py
 ============================
-Per-user token bucket rate limiter.
+Per-user Token Bucket Rate Limiter.
 
-This is a TOP 1% feature — not just WAF-level limiting, but
-per-identity application-level limiting with token bucket algorithm.
+Algorithm:
+- Mỗi user có 1 bucket với max N tokens
+- Mỗi request tiêu 1-2 tokens (tuỳ endpoint)
+- Tokens refill liên tục theo thời gian
+- Bucket rỗng → 429 Too Many Requests
 
-Token Bucket Algorithm:
-- Each user has a bucket with max N tokens
-- Each request consumes 1 token
-- Tokens refill at rate R per second
-- If bucket empty → 429 Too Many Requests
+Thread-safe với asyncio.Lock cho single instance.
+Cần Redis để safe khi horizontal scaling (nhiều Lambda instances).
 """
 
-import time
-import asyncio
-import logging
+import time, asyncio, logging
 from typing import Dict, Optional, Tuple
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 
 logger = logging.getLogger(__name__)
 
 
 @dataclass
 class TokenBucket:
-    """
-    A single user's token bucket.
-
-    max_tokens:   Maximum capacity (burst limit)
-    refill_rate:  Tokens added per second
-    tokens:       Current token count
-    last_refill:  Timestamp of last refill
-    """
     max_tokens:  float
-    refill_rate: float
+    refill_rate: float          # tokens/second
     tokens:      float
     last_refill: float = field(default_factory=time.time)
 
-    def consume(self, tokens: float = 1.0) -> Tuple[bool, float]:
-        """
-        Try to consume `tokens` from the bucket.
-
-        Returns:
-            (allowed: bool, tokens_remaining: float)
-        """
+    def consume(self, cost: float = 1.0) -> Tuple[bool, float]:
+        """Trả về (allowed, tokens_remaining)."""
         self._refill()
-        if self.tokens >= tokens:
-            self.tokens -= tokens
+        if self.tokens >= cost:
+            self.tokens -= cost
             return True, self.tokens
         return False, self.tokens
 
     def _refill(self) -> None:
-        """Add tokens based on elapsed time since last refill."""
-        now = time.time()
-        elapsed = now - self.last_refill
-        added = elapsed * self.refill_rate
-        self.tokens = min(self.max_tokens, self.tokens + added)
+        now     = time.time()
+        added   = (now - self.last_refill) * self.refill_rate
+        self.tokens      = min(self.max_tokens, self.tokens + added)
         self.last_refill = now
 
     @property
-    def reset_at(self) -> float:
-        """Seconds until bucket is full (for Retry-After header)."""
-        if self.tokens >= self.max_tokens:
-            return 0.0
-        needed = self.max_tokens - self.tokens
-        return needed / self.refill_rate
+    def reset_in_seconds(self) -> float:
+        if self.tokens >= self.max_tokens: return 0.0
+        return (self.max_tokens - self.tokens) / self.refill_rate
 
 
 class RateLimiter:
     """
-    In-memory rate limiter.
-
-    For production scale: swap the dict for Redis using the same interface.
-    The logic here is identical — only storage changes.
-
-    Default config:
-        - 10 requests per 60-second window per user
-        - Burst of 15 allowed (token bucket smoothing)
-        - /api/analyze endpoint costs 2 tokens (heavy operation)
-        - /api/metrics  endpoint costs 1 token
+    In-memory per-user rate limiter.
+    Default: 15 tokens max, 10 tokens/minute refill.
+    Heavy endpoints (/api/analyze) cost 2 tokens.
     """
 
-    # Endpoint cost table — heavier operations cost more tokens
     ENDPOINT_COSTS: Dict[str, float] = {
         "/api/analyze":         2.0,
         "/api/metrics":         1.0,
@@ -90,114 +62,73 @@ class RateLimiter:
         "/api/fraud-scenarios": 1.0,
         "/api/audit-logs":      1.0,
         "/api/agents/status":   0.5,
-        "/health":              0.0,  # health checks are free
+        "/api/feedback":        1.0,
+        "/health":              0.0,
     }
 
-    def __init__(
-        self,
-        max_tokens:  float = 15.0,
-        refill_rate: float = 10.0 / 60.0,  # 10 requests / 60 seconds
-        cleanup_interval: int = 300,         # clean stale buckets every 5 min
-    ):
-        self.max_tokens  = max_tokens
-        self.refill_rate = refill_rate
+    def __init__(self, max_tokens: float = 15.0, refill_rate: float = 10.0/60.0,
+                 cleanup_interval: int = 300):
+        self.max_tokens       = max_tokens
+        self.refill_rate      = refill_rate
         self.cleanup_interval = cleanup_interval
         self._buckets: Dict[str, TokenBucket] = {}
-        self._lock = asyncio.Lock()
-        self._last_cleanup = time.time()
+        self._lock            = asyncio.Lock()
+        self._last_cleanup    = time.time()
 
-    def _get_or_create_bucket(self, user_id: str) -> TokenBucket:
-        """Get existing bucket or create new full bucket for user."""
-        if user_id not in self._buckets:
-            self._buckets[user_id] = TokenBucket(
-                max_tokens=self.max_tokens,
-                refill_rate=self.refill_rate,
-                tokens=self.max_tokens,  # start full
-            )
-        return self._buckets[user_id]
-
-    async def check(
-        self,
-        user_id: str,
-        endpoint: str = "/api/analyze",
-    ) -> Tuple[bool, Dict]:
-        """
-        Check if user is within rate limit.
-
-        Returns:
-            (allowed: bool, info: dict with limit headers)
-        """
+    async def check(self, user_id: str, endpoint: str = "/api/analyze") -> Tuple[bool, dict]:
         async with self._lock:
             self._maybe_cleanup()
-            bucket = self._get_or_create_bucket(user_id)
-            cost = self.ENDPOINT_COSTS.get(endpoint, 1.0)
+            if user_id not in self._buckets:
+                self._buckets[user_id] = TokenBucket(
+                    max_tokens=self.max_tokens,
+                    refill_rate=self.refill_rate,
+                    tokens=self.max_tokens,
+                )
+            bucket = self._buckets[user_id]
+            cost   = self.ENDPOINT_COSTS.get(endpoint, 1.0)
 
             if cost == 0.0:
-                return True, self._build_info(bucket, user_id)
+                return True, self._info(bucket, user_id)
 
             allowed, remaining = bucket.consume(cost)
-            info = self._build_info(bucket, user_id, remaining)
-
             if not allowed:
-                logger.warning(
-                    f"Rate limit exceeded: user={user_id} endpoint={endpoint} "
-                    f"tokens={remaining:.2f}"
-                )
-            return allowed, info
+                logger.warning(f"Rate limit exceeded user={user_id} endpoint={endpoint}")
+            return allowed, self._info(bucket, user_id, remaining)
 
-    def _build_info(
-        self,
-        bucket: TokenBucket,
-        user_id: str,
-        remaining: Optional[float] = None,
-    ) -> Dict:
-        if remaining is None:
-            remaining = bucket.tokens
+    def _info(self, bucket: TokenBucket, user_id: str, remaining: float = None) -> dict:
+        r = remaining if remaining is not None else bucket.tokens
         return {
-            "user_id":         user_id,
-            "limit":           int(self.max_tokens),
-            "remaining":       max(0, int(remaining)),
-            "reset_in_seconds": round(bucket.reset_at, 1),
-            "reset_at":        datetime.utcfromtimestamp(
-                                   time.time() + bucket.reset_at
-                               ).isoformat(),
+            "user_id":           user_id,
+            "limit":             int(self.max_tokens),
+            "remaining":         max(0, int(r)),
+            "reset_in_seconds":  round(bucket.reset_in_seconds, 1),
+            "reset_at":          datetime.fromtimestamp(
+                                     time.time() + bucket.reset_in_seconds,
+                                     tz=timezone.utc).isoformat(),
         }
 
     def _maybe_cleanup(self) -> None:
-        """Remove stale buckets to prevent memory leak."""
         now = time.time()
-        if now - self._last_cleanup < self.cleanup_interval:
-            return
-        stale_cutoff = now - (self.cleanup_interval * 2)
-        stale = [
-            uid for uid, b in self._buckets.items()
-            if b.last_refill < stale_cutoff
-        ]
-        for uid in stale:
-            del self._buckets[uid]
-        if stale:
-            logger.debug(f"Rate limiter cleaned {len(stale)} stale buckets")
+        if now - self._last_cleanup < self.cleanup_interval: return
+        stale = [uid for uid, b in self._buckets.items() if b.last_refill < now - self.cleanup_interval*2]
+        for uid in stale: del self._buckets[uid]
+        if stale: logger.debug(f"Rate limiter: cleaned {len(stale)} stale buckets")
         self._last_cleanup = now
 
-    def get_stats(self) -> Dict:
-        """Return current limiter stats (for admin endpoint)."""
-        return {
-            "active_users":  len(self._buckets),
-            "max_tokens":    self.max_tokens,
-            "refill_rate":   self.refill_rate,
-            "endpoint_costs": self.ENDPOINT_COSTS,
-        }
+    def get_stats(self) -> dict:
+        return {"active_users": len(self._buckets), "max_tokens": self.max_tokens,
+                "refill_rate": self.refill_rate, "endpoint_costs": self.ENDPOINT_COSTS}
 
 
-# ── Singleton instance ────────────────────────────────
-_rate_limiter: Optional[RateLimiter] = None
+# Singleton
+import os
+_limiter: Optional[RateLimiter] = None
 
 def get_rate_limiter() -> RateLimiter:
-    global _rate_limiter
-    if _rate_limiter is None:
-        import os
-        _rate_limiter = RateLimiter(
+    global _limiter
+    if _limiter is None:
+        _limiter = RateLimiter(
             max_tokens=float(os.getenv("RATE_LIMIT_MAX_TOKENS", "15")),
             refill_rate=float(os.getenv("RATE_LIMIT_REFILL_RATE", str(10/60))),
         )
-    return _rate_limiter
+    return _limiter

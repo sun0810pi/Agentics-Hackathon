@@ -1,2 +1,2 @@
-# backend/agents/__init__.py
+"""backend/agents/__init__.py"""
 from agents.orchestrator import AgentOrchestrator

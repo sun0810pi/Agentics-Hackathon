@@ -1,0 +1,28 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: AgentFlow - RDS PostgreSQL (Encrypted)
+
+Resources:
+  AgentFlowDB:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBInstanceIdentifier: agentflow-db
+      DBInstanceClass: db.t3.micro
+      Engine: postgres
+      EngineVersion: '15.4'
+      MasterUsername: agentflow_user
+      ManageMasterUserPassword: true   # Secrets Manager auto-managed
+      DBName: agentflow
+      AllocatedStorage: 20
+      StorageEncrypted: true
+      MultiAZ: false
+      BackupRetentionPeriod: 7
+      DeletionProtection: true
+      PubliclyAccessible: false
+
+Outputs:
+  DBEndpoint:
+    Value: !GetAtt AgentFlowDB.Endpoint.Address
+    Export: { Name: AgentFlowDBEndpoint }
+  DBSecretArn:
+    Value: !GetAtt AgentFlowDB.MasterUserSecret.SecretArn
+    Export: { Name: AgentFlowDBSecretArn }

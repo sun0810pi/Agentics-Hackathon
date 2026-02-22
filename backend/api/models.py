@@ -1,4 +1,9 @@
-# backend/api/models.py
-# Re-export shared models for backend use
-# Backend uses shared/models.py as the source of truth
-from shared.models import *
+"""
+backend/api/models.py
+======================
+Pydantic models cho API request validation.
+Import từ shared/models.py để reuse, extend thêm nếu cần.
+"""
+from shared.models import AnalyzeRequest, FeedbackRequest, AnalyzeResponse, MetricsResponse, HealthResponse, ErrorResponse
+
+__all__ = ["AnalyzeRequest","FeedbackRequest","AnalyzeResponse","MetricsResponse","HealthResponse","ErrorResponse"]

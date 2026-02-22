@@ -1,31 +1,27 @@
-"""
-backend/config.py
-==================
-Backend configuration — mirrors frontend/config.py structure
-but reads from environment variables / AWS Secrets Manager.
-"""
-
+"""backend/config.py — Backend configuration from env vars."""
 import os
 
-# Agent metadata (must match frontend/config.py exactly)
+AWS_REGION           = os.getenv("AWS_REGION", "us-east-1")
+COGNITO_USER_POOL_ID = os.getenv("COGNITO_USER_POOL_ID", "")
+COGNITO_CLIENT_ID    = os.getenv("COGNITO_CLIENT_ID", "")
+DB_SECRET_NAME       = os.getenv("DB_SECRET_NAME", "")
+DB_HOST              = os.getenv("DB_HOST", "localhost")
+DB_PORT              = int(os.getenv("DB_PORT", "5432"))
+DB_NAME              = os.getenv("DB_NAME", "agentflow")
+DB_USER              = os.getenv("DB_USER", "postgres")
+DB_PASSWORD          = os.getenv("DB_PASSWORD", "")
+SNS_ALERT_TOPIC_ARN  = os.getenv("SNS_ALERT_TOPIC_ARN", "")
+ALLOWED_ORIGINS      = os.getenv("ALLOWED_ORIGINS", "http://localhost:8501")
+DEBUG                = os.getenv("DEBUG", "false").lower() == "true"
+APP_VERSION          = "3.1.0"
+
+# Agent metadata — must match shared/constants.py
 AGENT_NAMES = [
-    "OCR Extractor",           # 0
-    "PII Preprocessor",        # 1
-    "Decimal Matcher",         # 2
-    "AI Analyst",              # 3
-    "Audit Seal",              # 4
-    "Notifier",                # 5
-    "Dashboard Data",          # 6
-    "Integrator",              # 7
-    "ML Insights",             # 8
-    "Continuous Learning",     # 9
-    "Multi-Currency",          # 10
-    "Merchant Advisor",        # 11
-    "Quality Inspector",       # 12
-    "Trend Analyzer",          # 13
-    "Security Sentinel",       # 14
-    "Fraud Ring Analyzer",     # 15
-    "Behavioral Consistency",  # 16
+    "OCR Extractor", "PII Preprocessor", "Decimal Matcher", "AI Analyst",
+    "Audit Seal", "Notifier", "Dashboard Data", "Integrator",
+    "ML Insights", "Continuous Learning", "Multi-Currency",
+    "Merchant Advisor", "Quality Inspector", "Trend Analyzer",
+    "Security Sentinel", "Fraud Ring Analyzer", "Behavioral Consistency",
 ]
 
 AGENT_DESCRIPTIONS = [
@@ -47,12 +43,3 @@ AGENT_DESCRIPTIONS = [
     "Identifies coordinated fraud rings via graph analysis",
     "Validates user behavior consistency",
 ]
-
-# Runtime config from env
-AWS_REGION           = os.getenv("AWS_REGION", "us-east-1")
-COGNITO_USER_POOL_ID = os.getenv("COGNITO_USER_POOL_ID", "")
-COGNITO_CLIENT_ID    = os.getenv("COGNITO_CLIENT_ID", "")
-DB_SECRET_NAME       = os.getenv("DB_SECRET_NAME", "")
-SNS_ALERT_TOPIC_ARN  = os.getenv("SNS_ALERT_TOPIC_ARN", "")
-ALLOWED_ORIGINS      = os.getenv("ALLOWED_ORIGINS", "http://localhost:8501")
-DEBUG                = os.getenv("DEBUG", "false").lower() == "true"

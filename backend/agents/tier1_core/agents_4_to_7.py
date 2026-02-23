@@ -1,83 +1,150 @@
-"""backend/agents/tier1_core/agent_4_audit.py — Immutable Audit Trail"""
-import hashlib, json, time, logging
+"""
+backend/agents/tier1_core/agents_4_to_7.py
+============================================
+Agents 4-7: Audit, Notifier, Dashboard, Integrator
+Single module-level logger (không duplicate).
+"""
+
+import hashlib, json, time, logging, os, asyncio
 from agents.base import BaseAgent, AgentContext, AgentOutput, AgentTier
+
+# ── ONE logger cho cả module ──────────────────────────────
 logger = logging.getLogger(__name__)
 
+
+# ── Agent 4 — Immutable Audit Trail ──────────────────────
 class Agent4Audit(BaseAgent):
     agent_id = 4; agent_name = "Audit Seal"; tier = AgentTier.CORE
 
     async def _execute(self, ctx: AgentContext) -> AgentOutput:
-        payload = json.dumps({"invoice_id": ctx.invoice_id, "extracted": ctx.extracted,
-            "risk_score": ctx.risk_data.get("risk_score", 0), "decision": ctx.risk_data.get("decision", "ERROR"),
-            "flags": ctx.fraud_flags, "timestamp": time.time(), "trace_id": ctx.trace_id}, sort_keys=True)
-        h = hashlib.sha256(payload.encode()).hexdigest()
-        entry = f"[{ctx.invoice_id}] decision={ctx.risk_data.get('decision','?')} hash={h[:16]}..."
+        payload = json.dumps({
+            "invoice_id": ctx.invoice_id,
+            "extracted":  ctx.extracted,
+            "risk_score": ctx.risk_data.get("risk_score", 0),
+            "decision":   ctx.risk_data.get("decision", "ERROR"),
+            "flags":      ctx.fraud_flags,
+            "timestamp":  time.time(),
+            "trace_id":   ctx.trace_id,
+        }, sort_keys=True, default=str)
+        audit_hash = hashlib.sha256(payload.encode()).hexdigest()
+        entry = (
+            f"[{ctx.invoice_id}] "
+            f"decision={ctx.risk_data.get('decision', '?')} "
+            f"risk={ctx.risk_data.get('risk_score', 0)} "
+            f"hash={audit_hash[:16]}..."
+        )
         ctx.audit_entries.append(entry)
-        return AgentOutput(4, self.agent_name, "COMPLETED", 0, 1.0, findings={"audit_hash": h, "entry": entry})
+        return AgentOutput(
+            agent_id=4, agent_name=self.agent_name,
+            status="COMPLETED", duration_ms=0, confidence=1.0,
+            findings={"audit_hash": audit_hash, "entry": entry, "flags_sealed": ctx.fraud_flags.copy()},
+        )
 
 
-"""backend/agents/tier1_core/agent_5_notifier.py — Alert Notifications"""
-import os, logging
-from agents.base import BaseAgent, AgentContext, AgentOutput, AgentTier
-logger = logging.getLogger(__name__)
-
+# ── Agent 5 — Alert Notifications ────────────────────────
 class Agent5Notifier(BaseAgent):
     agent_id = 5; agent_name = "Notifier"; tier = AgentTier.CORE
 
     async def _execute(self, ctx: AgentContext) -> AgentOutput:
         decision = ctx.risk_data.get("decision", "APPROVE")
+
+        # Only alert on BLOCK or REVIEW
         if decision not in ("BLOCK", "REVIEW"):
-            return AgentOutput(5, self.agent_name, "SKIPPED", 0, 1.0, findings={"reason": f"{decision} — no alert needed"})
+            return AgentOutput(5, self.agent_name, "SKIPPED", 0, 1.0,
+                               findings={"reason": f"{decision} — no alert needed"})
+
         if self._demo_mode(ctx):
-            return AgentOutput(5, self.agent_name, "COMPLETED", 0, 1.0, findings={"sent": ["email(demo)", "slack(demo)"], "decision": decision})
+            logger.info(f"[Demo] Would send alert for {ctx.invoice_id}: {decision}")
+            return AgentOutput(5, self.agent_name, "COMPLETED", 0, 1.0,
+                               findings={"sent": ["email(demo)", "slack(demo)"], "decision": decision})
+
+        sent = await self._send_real_alerts(ctx, decision)
+        return AgentOutput(5, self.agent_name, "COMPLETED", 0, 1.0,
+                           findings={"sent": sent, "decision": decision, "invoice_id": ctx.invoice_id})
+
+    async def _send_real_alerts(self, ctx: AgentContext, decision: str) -> list:
         sent = []
+        arn  = os.getenv("SNS_ALERT_TOPIC_ARN", "")
+        if not arn:
+            logger.warning("SNS_ALERT_TOPIC_ARN not set — no alerts sent")
+            return sent
         try:
             import boto3
-            arn = os.getenv("SNS_ALERT_TOPIC_ARN")
-            if arn:
-                boto3.client("sns", region_name=os.getenv("AWS_REGION","us-east-1")).publish(
-                    TopicArn=arn, Subject=f"AgentFlow {decision}: {ctx.invoice_id}",
-                    Message=f"⚠️ {decision}: Invoice {ctx.invoice_id} | Risk={ctx.risk_data.get('risk_score')}")
-                sent.append("sns")
+            sns = boto3.client("sns", region_name=os.getenv("AWS_REGION", "us-east-1"))
+            risk = ctx.risk_data.get("risk_score", 0)
+            emoji = "🚨" if decision == "BLOCK" else "⚠️"
+            sns.publish(
+                TopicArn=arn,
+                Subject=f"AgentFlow {decision}: {ctx.invoice_id}",
+                Message=(
+                    f"{emoji} {decision} detected\n"
+                    f"Invoice: {ctx.invoice_id}\n"
+                    f"Risk Score: {risk}/100\n"
+                    f"Flags: {', '.join(ctx.fraud_flags) or 'none'}\n"
+                    f"Trace: {ctx.trace_id}"
+                ),
+                MessageAttributes={
+                    "decision":   {"DataType": "String", "StringValue": decision},
+                    "risk_score": {"DataType": "Number", "StringValue": str(risk)},
+                },
+            )
+            sent.append("sns")
         except Exception as e:
-            logger.warning(f"SNS failed: {e}")
-        return AgentOutput(5, self.agent_name, "COMPLETED", 0, 1.0, findings={"sent": sent, "decision": decision})
+            logger.warning(f"SNS publish failed: {e}")
+        return sent
 
 
-"""backend/agents/tier1_core/agent_6_dashboard.py — Dashboard Aggregator"""
-import time
-from agents.base import BaseAgent, AgentContext, AgentOutput, AgentTier
-
+# ── Agent 6 — Dashboard Aggregator ───────────────────────
 class Agent6Dashboard(BaseAgent):
     agent_id = 6; agent_name = "Dashboard Data"; tier = AgentTier.CORE
 
     async def _execute(self, ctx: AgentContext) -> AgentOutput:
-        summary = {"invoice_id": ctx.invoice_id, "vendor": ctx.extracted.get("vendor_name"),
-            "amount": ctx.extracted.get("total_amount"), "currency": ctx.extracted.get("currency","USD"),
-            "decision": ctx.risk_data.get("decision"), "risk_score": ctx.risk_data.get("risk_score"),
-            "flags_count": len(ctx.fraud_flags), "processing_ms": round((time.time()-ctx.started_at)*1000,2)}
+        elapsed_ms = round((time.time() - ctx.started_at) * 1000, 2)
+        summary = {
+            "invoice_id":     ctx.invoice_id,
+            "vendor":         ctx.extracted.get("vendor_name", "Unknown"),
+            "amount":         ctx.extracted.get("total_amount", 0),
+            "currency":       ctx.extracted.get("currency", "USD"),
+            "decision":       ctx.risk_data.get("decision", "ERROR"),
+            "risk_score":     ctx.risk_data.get("risk_score", 0),
+            "risk_level":     ctx.risk_data.get("risk_level", "UNKNOWN"),
+            "flags_count":    len(ctx.fraud_flags),
+            "flags":          ctx.fraud_flags.copy(),
+            "processing_ms":  elapsed_ms,
+            "ocr_confidence": ctx.extracted.get("ocr_confidence", 0),
+        }
         return AgentOutput(6, self.agent_name, "COMPLETED", 0, 1.0, findings=summary)
 
 
-"""backend/agents/tier1_core/agent_7_integrator.py — External Integrations"""
-import os, logging
-from agents.base import BaseAgent, AgentContext, AgentOutput, AgentTier
-logger = logging.getLogger(__name__)
-
+# ── Agent 7 — External Integrations ──────────────────────
 class Agent7Integrator(BaseAgent):
     agent_id = 7; agent_name = "Integrator"; tier = AgentTier.CORE
 
     async def _execute(self, ctx: AgentContext) -> AgentOutput:
         if self._demo_mode(ctx):
-            return AgentOutput(7, self.agent_name, "COMPLETED", 0, 1.0, findings={"synced_to": ["Google Sheets(demo)", "ERP(demo)"]})
-        synced = []
-        webhook = os.getenv("INTEGRATION_WEBHOOK_URL")
+            return AgentOutput(7, self.agent_name, "COMPLETED", 0, 1.0,
+                               findings={"synced_to": ["Google Sheets (demo)", "ERP (demo)"]})
+
+        synced = await self._sync_external(ctx)
+        return AgentOutput(7, self.agent_name, "COMPLETED", 0, 1.0,
+                           findings={"synced_to": synced, "invoice_id": ctx.invoice_id})
+
+    async def _sync_external(self, ctx: AgentContext) -> list:
+        synced   = []
+        webhook  = os.getenv("INTEGRATION_WEBHOOK_URL", "")
         if webhook:
             try:
                 import httpx
-                async with httpx.AsyncClient() as c:
-                    await c.post(webhook, json={"invoice_id": ctx.invoice_id, "decision": ctx.risk_data.get("decision"), "risk_score": ctx.risk_data.get("risk_score")}, timeout=5.0)
+                payload = {
+                    "invoice_id": ctx.invoice_id,
+                    "decision":   ctx.risk_data.get("decision"),
+                    "risk_score": ctx.risk_data.get("risk_score"),
+                    "timestamp":  time.time(),
+                }
+                async with httpx.AsyncClient(timeout=5.0) as c:
+                    resp = await c.post(webhook, json=payload)
+                    resp.raise_for_status()
                 synced.append("webhook")
             except Exception as e:
-                logger.warning(f"Webhook failed: {e}")
-        return AgentOutput(7, self.agent_name, "COMPLETED", 0, 1.0, findings={"synced_to": synced})
+                logger.warning(f"Webhook sync failed: {e}")
+        return synced

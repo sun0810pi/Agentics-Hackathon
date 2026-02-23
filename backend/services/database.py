@@ -249,8 +249,11 @@ async def get_invoice_by_id(invoice_id: str) -> Optional[dict]:
             try:
                 data["detail"] = json.loads(data["result_json"])
             except Exception:
-                pass
-            del data["result_json"]   # don't send raw JSON string to client
+                data["detail"] = {}
+            del data["result_json"]   # only delete if it existed
+        else:
+            # result_json is None or missing — safe to pop if present
+            data.pop("result_json", None)
         return data
     except Exception as e:
         logger.error(f"get_invoice_by_id [{invoice_id}]: {e}")

@@ -2,17 +2,27 @@
 backend/agents/base.py
 =======================
 Base class cho tất cả 17 agents.
-Mọi agent đều kế thừa class này và implement _execute().
+
+PERF FIXES:
+  - logger.info → logger.debug per-agent (giảm 34 log lines/invoice xuống 0)
+  - X-Ray import moved to module level (17× per pipeline → 1×)
+  - X-Ray availability cached as class var (không re-try import mỗi call)
 """
 
-import time
-import logging
-import abc
+import time, logging, abc
 from typing import Any, Dict, List, Optional
 from dataclasses import dataclass, field
 from enum import Enum
 
 logger = logging.getLogger(__name__)
+
+# ── X-Ray: import once at module level, cache availability ─
+try:
+    from services.xray_tracer import xray_subsegment as _xray_sub
+    _XRAY_OK = True
+except Exception:
+    _XRAY_OK = False
+    _xray_sub = None
 
 
 class AgentTier(str, Enum):
@@ -24,17 +34,13 @@ class AgentTier(str, Enum):
 
 @dataclass
 class AgentContext:
-    """
-    Shared context được pass qua tất cả agents.
-    Agents đọc từ context và ghi kết quả vào context.
-    """
+    """Shared context được pass qua tất cả agents."""
     invoice_id:   str
     file_name:    str
     file_data:    bytes
-    mode:         str = "full"   # full | fast | demo
-    trace_id:     str = ""
+    mode:         str  = "full"
+    trace_id:     str  = ""
 
-    # Populated by agents as they run
     extracted:     Dict[str, Any] = field(default_factory=dict)
     pii_report:    Dict[str, Any] = field(default_factory=dict)
     risk_data:     Dict[str, Any] = field(default_factory=dict)
@@ -43,7 +49,7 @@ class AgentContext:
     ml_data:       Dict[str, Any] = field(default_factory=dict)
     audit_entries: List[str]      = field(default_factory=list)
 
-    started_at:    float = field(default_factory=time.time)
+    started_at:    float               = field(default_factory=time.time)
     agent_results: List[Dict[str, Any]] = field(default_factory=list)
 
 
@@ -54,7 +60,7 @@ class AgentOutput:
     agent_name:  str
     status:      str          # COMPLETED | FAILED | SKIPPED
     duration_ms: float
-    confidence:  float        # 0.0 - 1.0
+    confidence:  float
     findings:    Dict[str, Any] = field(default_factory=dict)
     flags:       List[str]      = field(default_factory=list)
     error:       Optional[str]  = None
@@ -62,52 +68,47 @@ class AgentOutput:
 
 class BaseAgent(abc.ABC):
     """
-    Abstract base class cho tất cả agents.
-    Override _execute(), không override run().
+    Abstract base class. Override _execute(), không override run().
     """
-
     agent_id:   int
     agent_name: str
     tier:       AgentTier
     enabled:    bool = True
 
     async def run(self, context: AgentContext) -> AgentOutput:
-        """Entry point. Wrap _execute với timing + error handling."""
         if not self.enabled:
             return AgentOutput(
                 agent_id=self.agent_id, agent_name=self.agent_name,
                 status="SKIPPED", duration_ms=0.0, confidence=0.0,
             )
 
-        start = time.time()
-        logger.info(f"[Agent {self.agent_id}] {self.agent_name} — START")
+        start = time.perf_counter()
+        # PERF: debug-only log — no INFO spam per agent
+        logger.debug(f"[Agent {self.agent_id}] {self.agent_name} START")
 
         try:
-            # Wrap với X-Ray subsegment nếu có
-            try:
-                from services.xray_tracer import xray_subsegment
-                with xray_subsegment(f"agent_{self.agent_id}_{self.agent_name}"):
+            # PERF: X-Ray availability cached at import time (no per-call try/except)
+            if _XRAY_OK and _xray_sub:
+                with _xray_sub(f"agent_{self.agent_id}_{self.agent_name}"):
                     output = await self._execute(context)
-            except ImportError:
+            else:
                 output = await self._execute(context)
 
         except Exception as e:
-            duration = (time.time() - start) * 1000
-            logger.error(f"[Agent {self.agent_id}] {self.agent_name} — FAILED: {e}")
+            duration_ms = (time.perf_counter() - start) * 1000
+            logger.error(f"[Agent {self.agent_id}] {self.agent_name} FAILED: {e}")
             output = AgentOutput(
                 agent_id=self.agent_id, agent_name=self.agent_name,
-                status="FAILED", duration_ms=round(duration, 2),
+                status="FAILED", duration_ms=round(duration_ms, 2),
                 confidence=0.0, error=str(e),
             )
 
-        output.duration_ms = round((time.time() - start) * 1000, 2)
-
-        logger.info(
-            f"[Agent {self.agent_id}] {self.agent_name} — "
-            f"{output.status} {output.duration_ms:.0f}ms conf={output.confidence:.2f}"
+        output.duration_ms = round((time.perf_counter() - start) * 1000, 2)
+        logger.debug(
+            f"[Agent {self.agent_id}] {self.agent_name} "
+            f"{output.status} {output.duration_ms:.1f}ms"
         )
 
-        # Ghi vào context để orchestrator tổng hợp
         context.agent_results.append({
             "agent_id":    output.agent_id,
             "agent_name":  output.agent_name,
@@ -121,9 +122,7 @@ class BaseAgent(abc.ABC):
         return output
 
     @abc.abstractmethod
-    async def _execute(self, context: AgentContext) -> AgentOutput:
-        """Implement agent logic ở đây."""
-        ...
+    async def _execute(self, context: AgentContext) -> AgentOutput: ...
 
     def _demo_mode(self, ctx: AgentContext) -> bool:
         return ctx.mode == "demo"

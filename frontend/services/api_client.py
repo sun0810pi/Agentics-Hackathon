@@ -1,8 +1,10 @@
 import requests
 import streamlit as st
+import base64
+import random
 from typing import Dict, Any, Optional, List
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 from config import config
 from utils.constants import *
 from utils.helpers import log_action
@@ -11,15 +13,6 @@ logger = logging.getLogger(__name__)
 
 
 class APIClient:
-    """
-    Backend API client
-    
-    Handles all HTTP requests to FastAPI backend with:
-    - JWT token management
-    - Automatic retries
-    - Response caching
-    - Error handling
-    """
     
     def __init__(self):
         """Initialize API client"""
@@ -36,12 +29,7 @@ class APIClient:
         logger.info(f"API Client initialized with base URL: {self.base_url}")
     
     def _get_auth_headers(self) -> Dict[str, str]:
-        """
-        Get authentication headers with JWT token
-        
-        Returns:
-            Dict with Authorization header if logged in
-        """
+        """Get authentication headers with JWT token"""
         headers = {}
         
         # Get access token from session
@@ -57,19 +45,7 @@ class APIClient:
         response: requests.Response,
         endpoint: str
     ) -> Dict[str, Any]:
-        """
-        Handle API response
-        
-        Args:
-            response: Response object
-            endpoint: Endpoint name for logging
-            
-        Returns:
-            Parsed JSON response
-            
-        Raises:
-            APIError: If response indicates error
-        """
+        """Handle API response with backend error format"""
         try:
             # Check status code
             if response.status_code == 200:
@@ -92,8 +68,13 @@ class APIClient:
                 raise Exception("Backend server error. Please try again later.")
             
             else:
-                # Other error
-                error_msg = response.json().get('detail', 'Unknown error')
+                # Other error - parse backend error format
+                try:
+                    error_data = response.json()
+                    error_msg = error_data.get('message', 'Unknown error')
+                except:
+                    error_msg = f"HTTP {response.status_code}"
+                
                 logger.error(f"API error on {endpoint}: {error_msg}")
                 raise Exception(error_msg)
         
@@ -114,28 +95,27 @@ class APIClient:
                 timeout=5
             )
             
-            return self._handle_response(response, "health_check")
+            data = self._handle_response(response, "health_check")
+            
+            # Transform backend format to frontend format
+            return {
+                'status': data.get('status', 'unknown'),
+                'mode': 'demo' if data.get('demo_mode') == 'true' else 'production',
+                'version': data.get('version'),
+                'services': data.get('services', {})
+            }
         
         except requests.exceptions.Timeout:
             logger.warning("Health check timeout")
-            return {
-                'status': 'timeout',
-                'mode': 'unknown'
-            }
+            return {'status': 'timeout', 'mode': 'unknown'}
         
         except requests.exceptions.ConnectionError:
             logger.warning("Health check connection error")
-            return {
-                'status': 'unavailable',
-                'mode': 'unknown'
-            }
+            return {'status': 'unavailable', 'mode': 'unknown'}
         
         except Exception as e:
             logger.error(f"Health check error: {e}")
-            return {
-                'status': 'error',
-                'mode': 'unknown'
-            }
+            return {'status': 'error', 'mode': 'unknown'}
     
     def analyze_invoice(
         self,
@@ -145,27 +125,30 @@ class APIClient:
         auto_approve_threshold: int = 30
     ) -> Dict[str, Any]:
         """
-        Analyze invoice with backend
+        Analyze invoice with backend - FIXED VERSION
         
         Args:
             file_bytes: File content as bytes
             filename: Original filename
             mode: Processing mode (full, fast, demo)
-            auto_approve_threshold: Auto-approve threshold
+            auto_approve_threshold: Auto-approve threshold (not used by backend)
             
         Returns:
             Dict with processing result
         """
         try:
-            # Prepare files
-            files = {
-                'file': (filename, file_bytes, 'application/octet-stream')
-            }
+            # Generate invoice ID
+            invoice_id = f"INV-{random.randint(100000, 999999)}"
             
-            # Prepare data
+            # Encode file to base64 (backend expects this)
+            file_b64 = base64.b64encode(file_bytes).decode('utf-8')
+            
+            # Prepare JSON body (NOT multipart!)
             data = {
-                'mode': mode,
-                'auto_approve_threshold': auto_approve_threshold
+                'invoice_id': invoice_id,
+                'file_name': filename,
+                'file_data': file_b64,
+                'mode': mode
             }
             
             # Get auth headers
@@ -176,8 +159,7 @@ class APIClient:
             
             response = self.session.post(
                 f"{self.base_url}/api/analyze",
-                files=files,
-                data=data,
+                json=data,  # ← JSON body, NOT files!
                 headers=headers,
                 timeout=self.timeout
             )
@@ -188,10 +170,15 @@ class APIClient:
             log_action('analyze_invoice', {
                 'filename': filename,
                 'mode': mode,
-                'decision': result.get('decision')
+                'invoice_id': invoice_id,
+                'decision': result.get('final_decision')
             })
             
-            return result
+            # Return with success flag
+            return {
+                'success': True,
+                **result
+            }
         
         except requests.exceptions.Timeout:
             logger.error(f"Analyze timeout for {filename}")
@@ -214,23 +201,23 @@ class APIClient:
                 'error': str(e)
             }
     
-    def get_metrics(self) -> Dict[str, Any]:
-        """
-        Get dashboard metrics
-        
-        Returns:
-            Dict with metrics data
-        """
+    def get_metrics(self, days: int = 30) -> Dict[str, Any]:
         try:
             headers = self._get_auth_headers()
             
             response = self.session.get(
                 f"{self.base_url}/api/metrics",
+                params={'days': days},
                 headers=headers,
                 timeout=10
             )
             
-            return self._handle_response(response, "get_metrics")
+            data = self._handle_response(response, "get_metrics")
+            
+            return {
+                'success': True,
+                'data': data
+            }
         
         except Exception as e:
             logger.error(f"Error getting metrics: {e}")
@@ -250,12 +237,17 @@ class APIClient:
             headers = self._get_auth_headers()
             
             response = self.session.get(
-                f"{self.base_url}/api/agents",
+                f"{self.base_url}/api/agents/status",
                 headers=headers,
                 timeout=10
             )
             
-            return self._handle_response(response, "list_agents")
+            data = self._handle_response(response, "list_agents")
+            
+            return {
+                'success': True,
+                'agents': data.get('agents', [])
+            }
         
         except Exception as e:
             logger.error(f"Error listing agents: {e}")
@@ -266,19 +258,17 @@ class APIClient:
     
     def get_invoices(
         self,
-        limit: int = 100,
-        status: Optional[str] = None,
-        start_date: Optional[str] = None,
-        end_date: Optional[str] = None
+        page: int = 1,
+        page_size: int = 50,
+        decision: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         Get invoices from backend
         
         Args:
-            limit: Maximum number of invoices
-            status: Filter by status (APPROVED, PENDING, BLOCKED)
-            start_date: Filter by start date (YYYY-MM-DD)
-            end_date: Filter by end date (YYYY-MM-DD)
+            page: Page number
+            page_size: Items per page
+            decision: Filter by decision (APPROVE, REVIEW, BLOCK)
             
         Returns:
             Dict with invoices list
@@ -287,13 +277,13 @@ class APIClient:
             headers = self._get_auth_headers()
             
             # Build query params
-            params = {'limit': limit}
-            if status:
-                params['status'] = status
-            if start_date:
-                params['start_date'] = start_date
-            if end_date:
-                params['end_date'] = end_date
+            params = {
+                'page': page,
+                'page_size': page_size
+            }
+            
+            if decision:
+                params['decision'] = decision
             
             response = self.session.get(
                 f"{self.base_url}/api/invoices",
@@ -302,10 +292,42 @@ class APIClient:
                 timeout=15
             )
             
-            return self._handle_response(response, "get_invoices")
+            data = self._handle_response(response, "get_invoices")
+            
+            return {
+                'success': True,
+                'invoices': data.get('invoices', []),
+                'total': data.get('total', 0),
+                'page': data.get('page', page),
+                'has_more': data.get('has_more', False)
+            }
         
         except Exception as e:
             logger.error(f"Error getting invoices: {e}")
+            return {
+                'success': False,
+                'error': str(e)
+            }
+    
+    def get_invoice_by_id(self, invoice_id: str) -> Dict[str, Any]:
+        try:
+            headers = self._get_auth_headers()
+            
+            response = self.session.get(
+                f"{self.base_url}/api/invoices/{invoice_id}",
+                headers=headers,
+                timeout=10
+            )
+            
+            data = self._handle_response(response, "get_invoice_by_id")
+            
+            return {
+                'success': True,
+                'invoice': data
+            }
+        
+        except Exception as e:
+            logger.error(f"Error getting invoice {invoice_id}: {e}")
             return {
                 'success': False,
                 'error': str(e)
@@ -327,7 +349,12 @@ class APIClient:
                 timeout=10
             )
             
-            return self._handle_response(response, "get_fraud_scenarios")
+            data = self._handle_response(response, "get_fraud_scenarios")
+            
+            return {
+                'success': True,
+                'scenarios': data.get('scenarios', [])
+            }
         
         except Exception as e:
             logger.error(f"Error getting fraud scenarios: {e}")
@@ -338,15 +365,15 @@ class APIClient:
     
     def get_audit_logs(
         self,
-        limit: int = 100,
-        action: Optional[str] = None
+        page: int = 1,
+        page_size: int = 50
     ) -> Dict[str, Any]:
         """
         Get audit logs
         
         Args:
-            limit: Maximum number of logs
-            action: Filter by action type
+            page: Page number
+            page_size: Items per page
             
         Returns:
             Dict with audit logs
@@ -354,18 +381,20 @@ class APIClient:
         try:
             headers = self._get_auth_headers()
             
-            params = {'limit': limit}
-            if action:
-                params['action'] = action
-            
             response = self.session.get(
                 f"{self.base_url}/api/audit-logs",
-                params=params,
+                params={'page': page, 'page_size': page_size},
                 headers=headers,
                 timeout=10
             )
             
-            return self._handle_response(response, "get_audit_logs")
+            data = self._handle_response(response, "get_audit_logs")
+            
+            return {
+                'success': True,
+                'logs': data.get('logs', []),
+                'total': data.get('total', 0)
+            }
         
         except Exception as e:
             logger.error(f"Error getting audit logs: {e}")
@@ -379,7 +408,7 @@ class APIClient:
         limit: int = 10
     ) -> Dict[str, Any]:
         """
-        Get X-Ray traces for observability
+        Get X-Ray traces for observability - NEW ENDPOINT
         
         Args:
             limit: Maximum number of traces
@@ -397,7 +426,12 @@ class APIClient:
                 timeout=10
             )
             
-            return self._handle_response(response, "get_xray_traces")
+            data = self._handle_response(response, "get_xray_traces")
+            
+            return {
+                'success': True,
+                'traces': data.get('traces', [])
+            }
         
         except Exception as e:
             logger.error(f"Error getting X-Ray traces: {e}")
@@ -412,7 +446,7 @@ class APIClient:
         payload: str
     ) -> Dict[str, Any]:
         """
-        Test attack simulation (for Security page demo)
+        Test attack simulation (for Security page demo) - NEW ENDPOINT
         
         Args:
             attack_type: Type of attack (sql_injection, xss, etc.)
@@ -436,10 +470,66 @@ class APIClient:
                 timeout=10
             )
             
-            return self._handle_response(response, "test_attack")
+            result = self._handle_response(response, "test_attack")
+            
+            return {
+                'success': True,
+                **result
+            }
         
         except Exception as e:
             logger.error(f"Error testing attack: {e}")
+            return {
+                'success': False,
+                'error': str(e)
+            }
+    
+    def submit_feedback(
+        self,
+        invoice_id: str,
+        original_decision: str,
+        correct_decision: str,
+        reason: str = ""
+    ) -> Dict[str, Any]:
+        """
+        Submit feedback for ML improvement
+        
+        Args:
+            invoice_id: Invoice ID
+            original_decision: Original decision by system
+            correct_decision: Correct decision by human
+            reason: Reason for correction
+            
+        Returns:
+            Dict with result
+        """
+        try:
+            headers = self._get_auth_headers()
+            
+            data = {
+                'invoice_id': invoice_id,
+                'original_decision': original_decision,
+                'correct_decision': correct_decision,
+                'reason': reason,
+                'reviewer_id': st.session_state.get('user_email', 'unknown')
+            }
+            
+            response = self.session.post(
+                f"{self.base_url}/api/feedback",
+                json=data,
+                headers=headers,
+                timeout=10
+            )
+            
+            result = self._handle_response(response, "submit_feedback")
+            
+            return {
+                'success': True,
+                'message': result.get('message', 'Feedback submitted')
+            }
+        
+        except Exception as e:
+            logger.error(f"Error submitting feedback: {e}")
             return {
                 'success': False,
                 'error': str(e)

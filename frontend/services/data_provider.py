@@ -11,12 +11,7 @@ logger = logging.getLogger(__name__)
 class DataProvider:
     """
     Smart data provider that switches between demo and real data
-    
-    Strategy:
-    1. Check if backend is available
-    2. If available → use real data from backend
-    3. If unavailable → use demo data generator
-    4. Cache results for performance
+    WITH FIELD MAPPING for backend compatibility
     """
     
     def __init__(self):
@@ -33,37 +28,45 @@ class DataProvider:
         logger.info(f"Data Provider initialized (demo_mode={self.demo_mode}, backend_available={self.backend_available})")
     
     def _check_backend(self) -> bool:
-        """
-        Check if backend is available
-        
-        Returns:
-            True if backend responds
-        """
+        """Check if backend is available"""
         return is_backend_available()
     
-    def get_dashboard_metrics(self) -> Dict[str, Any]:
-        """
-        Get dashboard metrics
+    def _map_backend_response(self, backend_data: Dict[str, Any]) -> Dict[str, Any]:
+        if not backend_data:
+            return {}
         
-        Returns:
-            Dict with metrics:
-            - total_processed: int
-            - total_approved: int
-            - total_blocked: int
-            - total_pending: int
-            - accuracy: float (percentage)
-            - automation_rate: float (percentage)
-            - avg_latency_ms: int
-            - fraud_prevented_usd: int
-            - uptime_pct: float
-            - agents_active: int
-        """
+        # Extract nested risk data
+        risk_data = backend_data.get('risk', {})
+        
+        return {
+            'invoice_id': backend_data.get('invoice_id'),
+            'decision': backend_data.get('final_decision'),  # ← map field
+            'risk_score': risk_data.get('risk_score', 0),    # ← extract nested
+            'risk_level': risk_data.get('risk_level', 'UNKNOWN'),
+            'confidence': backend_data.get('final_confidence', 0.0),
+            'agent_results': backend_data.get('agent_results', []),
+            'total_duration_ms': backend_data.get('total_duration_ms', 0),
+            'agents_run': backend_data.get('agents_run', 0),
+            'agents_succeeded': backend_data.get('agents_succeeded', 0),
+            'agents_failed': backend_data.get('agents_failed', 0),
+            'fraud_indicators': backend_data.get('fraud_indicators', {}),
+            'security': backend_data.get('security', {}),
+            'ml_insights': backend_data.get('ml_insights', {}),
+            'extracted': backend_data.get('extracted', {}),
+            'pii_report': backend_data.get('pii_report', {}),
+            'trace_id': backend_data.get('trace_id'),
+            'metadata': backend_data  # Keep full response for debugging
+        }
+    
+    def get_dashboard_metrics(self) -> Dict[str, Any]:
+        """Get dashboard metrics with backend fallback"""
         if self.backend_available:
             try:
                 logger.debug("Fetching metrics from backend")
                 result = self.api_client.get_metrics()
                 
                 if result.get('success'):
+                    # Backend metrics already in correct format
                     return result.get('data', {})
                 else:
                     logger.warning(f"Backend metrics error: {result.get('error')}")
@@ -79,29 +82,16 @@ class DataProvider:
         self,
         limit: int = 100,
         status: Optional[str] = None,
-        start_date: Optional[str] = None,
-        end_date: Optional[str] = None
+        page: int = 1
     ) -> List[Dict[str, Any]]:
-        """
-        Get invoices
-        
-        Args:
-            limit: Maximum number of invoices
-            status: Filter by status
-            start_date: Filter by start date
-            end_date: Filter by end date
-            
-        Returns:
-            List of invoice dicts
-        """
+        """Get invoices with pagination"""
         if self.backend_available:
             try:
-                logger.debug(f"Fetching {limit} invoices from backend")
+                logger.debug(f"Fetching invoices from backend (page={page})")
                 result = self.api_client.get_invoices(
-                    limit=limit,
-                    status=status,
-                    start_date=start_date,
-                    end_date=end_date
+                    page=page,
+                    page_size=limit,
+                    decision=status
                 )
                 
                 if result.get('success'):
@@ -122,13 +112,22 @@ class DataProvider:
         
         return invoices
     
-    def get_fraud_scenarios(self) -> List[Dict[str, Any]]:
-        """
-        Get active fraud scenarios
+    def get_invoice_by_id(self, invoice_id: str) -> Optional[Dict[str, Any]]:
+        """Get single invoice by ID"""
+        if self.backend_available:
+            try:
+                result = self.api_client.get_invoice_by_id(invoice_id)
+                
+                if result.get('success'):
+                    return result.get('invoice')
+            
+            except Exception as e:
+                logger.error(f"Error fetching invoice {invoice_id}: {e}")
         
-        Returns:
-            List of fraud scenario dicts
-        """
+        return None
+    
+    def get_fraud_scenarios(self) -> List[Dict[str, Any]]:
+        """Get active fraud scenarios"""
         if self.backend_available:
             try:
                 logger.debug("Fetching fraud scenarios from backend")
@@ -147,12 +146,7 @@ class DataProvider:
         return self.demo_generator.generate_fraud_scenarios()
     
     def get_agent_metrics(self) -> List[Dict[str, Any]]:
-        """
-        Get agent performance metrics
-        
-        Returns:
-            List of agent metric dicts
-        """
+        """Get agent performance metrics"""
         if self.backend_available:
             try:
                 logger.debug("Fetching agent metrics from backend")
@@ -175,47 +169,21 @@ class DataProvider:
         days: int = 30,
         metric: str = "processed"
     ) -> List[Dict[str, Any]]:
-        """
-        Get time series data for charts
-        
-        Args:
-            days: Number of days
-            metric: Metric type (processed, approved, blocked, etc.)
-            
-        Returns:
-            List of time series points
-        """
-        if self.backend_available:
-            try:
-                logger.debug(f"Fetching time series from backend (days={days}, metric={metric})")
-                # TODO: Add backend endpoint for time series
-                # For now, use demo data
-            except Exception as e:
-                logger.error(f"Error fetching backend time series: {e}")
-        
-        # Use demo data
+        """Get time series data for charts"""
+        # Always use demo data for now (backend doesn't have this endpoint yet)
         logger.debug(f"Using demo time series (days={days})")
         return self.demo_generator.generate_time_series(days)
     
     def get_audit_logs(
         self,
         limit: int = 100,
-        action: Optional[str] = None
+        page: int = 1
     ) -> List[Dict[str, Any]]:
-        """
-        Get audit logs
-        
-        Args:
-            limit: Maximum number of logs
-            action: Filter by action type
-            
-        Returns:
-            List of audit log dicts
-        """
+        """Get audit logs"""
         if self.backend_available:
             try:
-                logger.debug(f"Fetching audit logs from backend (limit={limit})")
-                result = self.api_client.get_audit_logs(limit=limit, action=action)
+                logger.debug(f"Fetching audit logs from backend (page={page})")
+                result = self.api_client.get_audit_logs(page=page, page_size=limit)
                 
                 if result.get('success'):
                     return result.get('logs', [])
@@ -233,15 +201,7 @@ class DataProvider:
         self,
         limit: int = 10
     ) -> List[Dict[str, Any]]:
-        """
-        Get X-Ray traces
-        
-        Args:
-            limit: Maximum number of traces
-            
-        Returns:
-            List of X-Ray trace dicts
-        """
+        """Get X-Ray traces"""
         if self.backend_available:
             try:
                 logger.debug(f"Fetching X-Ray traces from backend (limit={limit})")
@@ -266,18 +226,6 @@ class DataProvider:
         mode: str = "full",
         auto_approve_threshold: int = 30
     ) -> Dict[str, Any]:
-        """
-        Process invoice (main workflow)
-        
-        Args:
-            file_bytes: File content
-            filename: Original filename
-            mode: Processing mode (full, fast, demo)
-            auto_approve_threshold: Auto-approve threshold
-            
-        Returns:
-            Processing result dict
-        """
         if self.backend_available and mode != "demo":
             try:
                 logger.info(f"Processing invoice via backend: {filename}")
@@ -288,12 +236,17 @@ class DataProvider:
                     auto_approve_threshold=auto_approve_threshold
                 )
                 
-                if not result.get('success') and result.get('success') is not None:
-                    logger.warning(f"Backend processing failed: {result.get('error')}")
-                    # Don't fallback to demo for actual file processing
-                    return result
-                
-                return result
+                if result.get('success'):
+                    # Map backend response to frontend format
+                    mapped = self._map_backend_response(result)
+                    mapped['success'] = True
+                    return mapped
+                else:
+                    # Return error
+                    return {
+                        'success': False,
+                        'error': result.get('error', 'Unknown error')
+                    }
             
             except Exception as e:
                 logger.error(f"Error processing invoice: {e}")
@@ -304,47 +257,60 @@ class DataProvider:
         
         # Demo mode - simulate processing
         logger.info(f"Processing invoice in demo mode: {filename}")
-        return self.demo_generator.simulate_invoice_processing(
+        demo_result = self.demo_generator.simulate_invoice_processing(
             filename=filename,
             mode=mode
         )
+        demo_result['success'] = True
+        return demo_result
 
 
 # Singleton instance
 @st.cache_resource
 def get_data_provider() -> DataProvider:
-    """
-    Get cached data provider instance
-    
-    Returns:
-        DataProvider instance
-    """
+    """Get cached data provider instance"""
     return DataProvider()
 
 
-# Convenience functions
+# Convenience functions with error handling
 def get_dashboard_metrics() -> Dict[str, Any]:
     """Get dashboard metrics"""
-    provider = get_data_provider()
-    return provider.get_dashboard_metrics()
+    try:
+        provider = get_data_provider()
+        return provider.get_dashboard_metrics()
+    except Exception as e:
+        logger.error(f"Error in get_dashboard_metrics: {e}")
+        return {}
 
 
 def get_invoices(limit: int = 100, status: Optional[str] = None) -> List[Dict[str, Any]]:
     """Get invoices"""
-    provider = get_data_provider()
-    return provider.get_invoices(limit=limit, status=status)
+    try:
+        provider = get_data_provider()
+        return provider.get_invoices(limit=limit, status=status)
+    except Exception as e:
+        logger.error(f"Error in get_invoices: {e}")
+        return []
 
 
 def get_fraud_scenarios() -> List[Dict[str, Any]]:
     """Get fraud scenarios"""
-    provider = get_data_provider()
-    return provider.get_fraud_scenarios()
+    try:
+        provider = get_data_provider()
+        return provider.get_fraud_scenarios()
+    except Exception as e:
+        logger.error(f"Error in get_fraud_scenarios: {e}")
+        return []
 
 
 def get_agent_metrics() -> List[Dict[str, Any]]:
     """Get agent metrics"""
-    provider = get_data_provider()
-    return provider.get_agent_metrics()
+    try:
+        provider = get_data_provider()
+        return provider.get_agent_metrics()
+    except Exception as e:
+        logger.error(f"Error in get_agent_metrics: {e}")
+        return []
 
 
 def process_invoice(
@@ -354,10 +320,17 @@ def process_invoice(
     auto_approve_threshold: int = 30
 ) -> Dict[str, Any]:
     """Process invoice"""
-    provider = get_data_provider()
-    return provider.process_invoice(
-        file_bytes=file_bytes,
-        filename=filename,
-        mode=mode,
-        auto_approve_threshold=auto_approve_threshold
-    )
+    try:
+        provider = get_data_provider()
+        return provider.process_invoice(
+            file_bytes=file_bytes,
+            filename=filename,
+            mode=mode,
+            auto_approve_threshold=auto_approve_threshold
+        )
+    except Exception as e:
+        logger.error(f"Error in process_invoice: {e}")
+        return {
+            'success': False,
+            'error': str(e)
+        }

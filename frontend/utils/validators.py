@@ -582,3 +582,15 @@ __all__ = [
     'sanitize_string',
     'validate_file_upload'
 ]
+
+def detect_sql_injection(input_str: str) -> bool:
+    return InputValidator.detect_sql_injection(input_str)
+
+def detect_xss(input_str: str) -> bool:
+    return InputValidator.detect_xss(input_str)
+
+def detect_path_traversal(input_str: str) -> bool:
+    return InputValidator.detect_path_traversal(input_str)
+
+def sanitize_filename(filename: str) -> str:
+    return InputValidator.sanitize_filename(filename)

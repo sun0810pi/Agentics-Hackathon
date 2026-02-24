@@ -278,3 +278,22 @@ def login_page():
         f"</div>",
         unsafe_allow_html=True
     )
+    
+def show_login_page():
+    return login_page()
+
+def show_signup_page():
+    return login_page()
+
+def logout():
+    return logout_user()
+
+def is_logged_in() -> bool:
+    return st.session_state.get('logged_in', False)
+
+def get_current_user() -> dict:
+    return {
+        'email': st.session_state.get('user_email', ''),
+        'name':  st.session_state.get('user_name', ''),
+        'role':  st.session_state.get('user_role', 'viewer'),
+    }

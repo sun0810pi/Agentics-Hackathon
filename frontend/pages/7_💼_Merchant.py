@@ -8,7 +8,7 @@ from components.widgets import (
 )
 from components.metrics import metric_card_group, kpi_card
 from services.data_provider import get_data_provider
-from utils.helpers import format_currency, format_percentage
+from utils.helpers import format_currency, format_percentage, format_number
 import logging
 import random
 

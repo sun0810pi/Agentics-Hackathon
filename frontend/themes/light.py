@@ -113,6 +113,13 @@ LIGHT_THEME = """
         transition: all 0.2s ease;
         border-radius: 8px;
         padding: 0.5rem 1rem;
+        color: #0f172a !important;
+    }
+    
+    [data-testid="stSidebar"] .stMarkdown p,
+    [data-testid="stSidebar"] .stMarkdown div,
+    [data-testid="stSidebar"] span {
+        color: #0f172a !important;
     }
     
     [data-testid="stSidebar"] label:hover {

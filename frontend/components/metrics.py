@@ -12,7 +12,7 @@ def metric_card(
     help_text: Optional[str] = None
 ):
     """
-    Display a single metric card
+    Display a single metric card with INLINE CSS
     
     Args:
         title: Metric title
@@ -22,20 +22,40 @@ def metric_card(
         suffix: Suffix for value (e.g., "%")
         help_text: Help tooltip text
     """
-    delta_color = "metric-delta"
-    if delta and delta.startswith("-"):
-        delta_color = "metric-delta negative"
+    # Delta color based on sign
+    delta_color = "#00d68f" if delta and not delta.startswith("-") else "#ff5252"
     
+    # Inline CSS - NO CLASSES!
     card_html = f"""
-        <div class="metric-card">
-            <div class="metric-title">
+        <div style="
+            background: linear-gradient(135deg, rgba(74, 158, 255, 0.1), rgba(0, 212, 255, 0.05));
+            border: 1px solid rgba(74, 158, 255, 0.2);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            min-height: 120px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        ">
+            <div style="
+                font-size: 0.875rem;
+                opacity: 0.7;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+                margin-bottom: 0.5rem;
+            ">
                 {title}
                 {f'<span style="opacity: 0.5; margin-left: 0.5rem;">ℹ️</span>' if help_text else ''}
             </div>
-            <div class="metric-value">
+            <div style="
+                font-size: 2rem;
+                font-weight: 900;
+                margin: 0.5rem 0;
+            ">
                 {prefix}{value}{suffix}
             </div>
-            {f'<div class="{delta_color}">{delta}</div>' if delta else ''}
+            {f'<div style="color: {delta_color}; font-size: 0.875rem; font-weight: 700;">{delta}</div>' if delta else ''}
         </div>
     """
     
@@ -75,7 +95,7 @@ def kpi_card(
     variant: str = 'primary'
 ):
     """
-    Advanced KPI card with formatting and comparison
+    Advanced KPI card with formatting and comparison - INLINE CSS
     
     Args:
         title: KPI title
@@ -91,34 +111,7 @@ def kpi_card(
     elif format_type == 'percentage':
         formatted_value = format_percentage(value)
     else:
-        formatted_value = format_number(value)
-    
-    # Calculate delta display
-    delta_html = ""
-    if delta is not None:
-        delta_sign = "+" if delta >= 0 else ""
-        delta_color = "#00d68f" if delta >= 0 else "#ff5252"
-        delta_html = f"""
-            <div style="color: {delta_color}; font-size: 0.875rem; font-weight: 700; margin-top: 0.5rem;">
-                {delta_sign}{delta:.1f}% vs last period
-            </div>
-        """
-    
-    # Calculate target comparison
-    target_html = ""
-    if target is not None:
-        progress = (value / target) * 100 if target > 0 else 0
-        target_color = "#00d68f" if progress >= 100 else "#ffab00"
-        target_html = f"""
-            <div style="margin-top: 0.75rem;">
-                <div style="font-size: 0.75rem; opacity: 0.7; margin-bottom: 0.25rem;">
-                    Target: {format_number(target)}
-                </div>
-                <div style="background: rgba(255,255,255,0.1); height: 6px; border-radius: 3px; overflow: hidden;">
-                    <div style="background: {target_color}; height: 100%; width: {min(progress, 100)}%; transition: width 0.5s ease;"></div>
-                </div>
-            </div>
-        """
+        formatted_value = format_number(int(value))
     
     # Variant colors
     variant_colors = {
@@ -128,15 +121,90 @@ def kpi_card(
         'danger': '#ff5252'
     }
     
-    border_color = variant_colors.get(variant, '#4A9EFF')
+    border_color = variant_colors.get(variant, variant_colors['primary'])
     
-    card_html = f"""
-        <div class="metric-card metric-card-{variant}" style="border-left: 4px solid {border_color};">
-            <div class="metric-title">{title}</div>
-            <div class="metric-value">{formatted_value}</div>
+    # Calculate delta display
+    delta_html = ""
+    if delta is not None:
+        delta_sign = "+" if delta >= 0 else ""
+        delta_color = "#00d68f" if delta >= 0 else "#ff5252"
+        delta_arrow = "↗" if delta >= 0 else "↘"
+        
+        delta_html = f"""
+            <div style="
+                color: {delta_color};
+                font-size: 0.875rem;
+                font-weight: 700;
+                margin-top: 0.5rem;
+            ">
+                {delta_arrow} {delta_sign}{delta:.1f}%
+            </div>
+        """
+    
+    # Calculate progress if target exists
+    progress_html = ""
+    if target is not None and target > 0:
+        progress_pct = min((value / target) * 100, 100)
+        progress_color = "#00d68f" if progress_pct >= 100 else "#4A9EFF"
+        
+        progress_html = f"""
+            <div style="margin-top: 1rem;">
+                <div style="
+                    display: flex;
+                    justify-content: space-between;
+                    font-size: 0.75rem;
+                    margin-bottom: 0.5rem;
+                    opacity: 0.7;
+                ">
+                    <span>Progress to Target</span>
+                    <span>{progress_pct:.1f}%</span>
+                </div>
+                <div style="
+                    background: rgba(255,255,255,0.1);
+                    border-radius: 10px;
+                    height: 8px;
+                    overflow: hidden;
+                ">
+                    <div style="
+                        background: {progress_color};
+                        height: 100%;
+                        width: {progress_pct}%;
+                        border-radius: 10px;
+                        transition: width 0.5s ease;
+                    "></div>
+                </div>
+            </div>
+        """
+    
+    # Build card HTML with INLINE CSS
+    kpi_html = f"""
+        <div style="
+            background: linear-gradient(135deg, rgba(74, 158, 255, 0.15), rgba(0, 212, 255, 0.05));
+            border: 2px solid {border_color};
+            border-radius: 12px;
+            padding: 1.5rem;
+            min-height: 140px;
+        ">
+            <div style="
+                font-size: 0.875rem;
+                opacity: 0.7;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+                margin-bottom: 0.75rem;
+            ">
+                {title}
+            </div>
+            <div style="
+                font-size: 2.5rem;
+                font-weight: 900;
+                line-height: 1;
+                margin-bottom: 0.5rem;
+            ">
+                {formatted_value}
+            </div>
             {delta_html}
-            {target_html}
+            {progress_html}
         </div>
     """
     
-    st.markdown(card_html, unsafe_allow_html=True)
+    st.markdown(kpi_html, unsafe_allow_html=True)

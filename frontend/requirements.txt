@@ -1,52 +1,14 @@
-# Python dependencies for AgentFlow Frontend
-# Python 3.11+
-
-# ============================================
-# CORE FRAMEWORK
-# ============================================
-streamlit==1.30.0
-streamlit-extras==0.3.6
-
-# ============================================
-# DATA & VISUALIZATION
-# ============================================
-pandas==2.1.4
-numpy==1.26.3
-plotly==5.18.0
-
-# ============================================
-# HTTP & API
-# ============================================
-requests==2.31.0
-urllib3==2.1.0
-
-# ============================================
-# AWS SDK
-# ============================================
-boto3==1.34.20
-botocore==1.34.20
-warrant==0.6.1                # AWS Cognito wrapper
-
-# ============================================
-# DATA VALIDATION
-# ============================================
-pydantic==2.5.3
-email-validator==2.1.0.post1
-
-# ============================================
-# SECURITY
-# ============================================
-bleach==6.1.0                 # XSS prevention
-python-dotenv==1.0.0          # Environment variables
-
-# ============================================
-# UTILITIES
-# ============================================
-python-dateutil==2.8.2
-pytz==2023.3.post1
-
-# ============================================
-# OPTIONAL - FOR PRODUCTION
-# ============================================
-# psutil==5.9.6               # System monitoring
-# sentry-sdk==1.39.1          # Error tracking
+streamlit>=1.35.0
+pandas>=2.0.0
+numpy>=1.24.0
+plotly>=5.18.0
+requests>=2.31.0
+pydantic>=2.5.0
+python-dateutil>=2.8.0
+bleach>=6.0.0
+python-dotenv>=1.0.0
+urllib3>=2.0.0
+boto3>=1.34.0
+botocore>=1.34.0
+email-validator>=2.0.0
+pytz>=2023.3

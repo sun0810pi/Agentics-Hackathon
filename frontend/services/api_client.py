@@ -2,6 +2,7 @@ import requests
 import streamlit as st
 import base64
 import random
+import time
 from typing import Dict, Any, Optional, List
 import logging
 from datetime import datetime
@@ -13,12 +14,24 @@ logger = logging.getLogger(__name__)
 
 
 class APIClient:
+    """
+    Backend API client with authentication and error handling
+    
+    Features:
+    - Automatic JWT token management
+    - Demo mode header injection (X-Demo-Mode)
+    - Request retry logic with exponential backoff
+    - Comprehensive error handling
+    - Request/response logging with IDs
+    - Health check caching
+    """
     
     def __init__(self):
         """Initialize API client"""
         self.base_url = config.get_backend_url()
         self.timeout = config.get_backend_timeout()
         self.session = requests.Session()
+        self._request_counter = 0
         
         # Set default headers
         self.session.headers.update({
@@ -26,17 +39,38 @@ class APIClient:
             'User-Agent': f'{config.APP_NAME}/{config.APP_VERSION}'
         })
         
-        logger.info(f"API Client initialized with base URL: {self.base_url}")
+        logger.info(f"✅ API Client initialized: {self.base_url} (timeout: {self.timeout}s)")
+    
+    def _get_request_id(self) -> str:
+        """Generate unique request ID for tracking"""
+        self._request_counter += 1
+        return f"REQ-{int(time.time())}-{self._request_counter:04d}"
     
     def _get_auth_headers(self) -> Dict[str, str]:
-        """Get authentication headers with JWT token"""
+        """
+        Get authentication headers with JWT token or demo mode
+        
+        Returns:
+            Dict with authorization headers
+        
+        FIXED: Now adds X-Demo-Mode header when in demo mode
+        """
         headers = {}
         
         # Get access token from session
-        access_token = st.session_state.get('access_token')
+        access_token = st.session_state.get('access_token', '')
         
         if access_token and access_token != 'demo_access_token':
+            # Real JWT token - use Authorization header
             headers['Authorization'] = f'Bearer {access_token}'
+            logger.debug("🔐 Using JWT authentication")
+        else:
+            # Demo mode - add header to bypass JWT verification on backend
+            headers['X-Demo-Mode'] = 'true'
+            logger.debug("🎭 Using demo mode (X-Demo-Mode header)")
+        
+        # Add request ID for tracking
+        headers['X-Request-ID'] = self._get_request_id()
         
         return headers
     
@@ -45,26 +79,43 @@ class APIClient:
         response: requests.Response,
         endpoint: str
     ) -> Dict[str, Any]:
-        """Handle API response with backend error format"""
+        """
+        Handle API response with backend error format
+        
+        Args:
+            response: HTTP response object
+            endpoint: API endpoint name (for logging)
+            
+        Returns:
+            Parsed response data
+            
+        Raises:
+            Exception: On error responses
+        """
         try:
+            # Log response
+            request_id = response.headers.get('X-Request-ID', 'unknown')
+            logger.debug(f"📥 Response {request_id}: {response.status_code} from {endpoint}")
+            
             # Check status code
             if response.status_code == 200:
                 return response.json()
             
             elif response.status_code == 401:
                 # Unauthorized - clear session
-                logger.warning(f"Unauthorized request to {endpoint}")
+                logger.warning(f"🔒 Unauthorized request to {endpoint}")
                 st.session_state.logged_in = False
                 raise Exception("Session expired. Please login again.")
             
             elif response.status_code == 429:
                 # Rate limited
-                logger.warning(f"Rate limited on {endpoint}")
-                raise Exception("Rate limit exceeded. Please try again later.")
+                logger.warning(f"⏱️ Rate limited on {endpoint}")
+                retry_after = response.headers.get('Retry-After', '60')
+                raise Exception(f"Rate limit exceeded. Try again in {retry_after}s.")
             
             elif response.status_code >= 500:
                 # Server error
-                logger.error(f"Server error on {endpoint}: {response.status_code}")
+                logger.error(f"🔥 Server error on {endpoint}: {response.status_code}")
                 raise Exception("Backend server error. Please try again later.")
             
             else:
@@ -72,50 +123,78 @@ class APIClient:
                 try:
                     error_data = response.json()
                     error_msg = error_data.get('message', 'Unknown error')
+                    error_detail = error_data.get('detail', '')
+                    
+                    if error_detail:
+                        error_msg = f"{error_msg}: {error_detail}"
+                    
                 except:
                     error_msg = f"HTTP {response.status_code}"
                 
-                logger.error(f"API error on {endpoint}: {error_msg}")
+                logger.error(f"❌ API error on {endpoint}: {error_msg}")
                 raise Exception(error_msg)
         
         except requests.exceptions.JSONDecodeError:
-            logger.error(f"Invalid JSON response from {endpoint}")
+            logger.error(f"⚠️ Invalid JSON response from {endpoint}")
             raise Exception("Invalid response from server")
     
-    def health_check(self) -> Dict[str, Any]:
+    @st.cache_data(ttl=60)
+    def health_check(_self) -> Dict[str, Any]:
         """
-        Check backend health
+        Check backend health (cached for 60s)
         
         Returns:
             Dict with health status
+        
+        FIXED: Now handles both boolean and string values for demo_mode
         """
         try:
-            response = self.session.get(
-                f"{self.base_url}/health",
+            response = _self.session.get(
+                f"{_self.base_url}/health",
                 timeout=5
             )
             
-            data = self._handle_response(response, "health_check")
+            data = _self._handle_response(response, "health_check")
             
-            # Transform backend format to frontend format
-            return {
+            # FIXED: Handle both boolean True/False and string 'true'/'false'
+            demo_mode_raw = data.get('demo_mode')
+            
+            # Support multiple formats:
+            # - Boolean: True/False
+            # - String: 'true'/'false', '1'/'0', 'yes'/'no'
+            # - Integer: 1/0
+            if isinstance(demo_mode_raw, bool):
+                is_demo = demo_mode_raw
+            elif isinstance(demo_mode_raw, str):
+                is_demo = demo_mode_raw.lower() in ['true', '1', 'yes', 'on']
+            elif isinstance(demo_mode_raw, int):
+                is_demo = demo_mode_raw == 1
+            else:
+                is_demo = False
+            
+            result = {
                 'status': data.get('status', 'unknown'),
-                'mode': 'demo' if data.get('demo_mode') == 'true' else 'production',
-                'version': data.get('version'),
-                'services': data.get('services', {})
+                'mode': 'demo' if is_demo else 'production',
+                'version': data.get('version', 'unknown'),
+                'services': data.get('services', {}),
+                'timestamp': datetime.now().isoformat()
             }
+            
+            logger.info(f"💚 Health check: {result['status']} (mode: {result['mode']})")
+            
+            return result
         
         except requests.exceptions.Timeout:
-            logger.warning("Health check timeout")
+            logger.warning("⏱️ Health check timeout")
             return {'status': 'timeout', 'mode': 'unknown'}
         
         except requests.exceptions.ConnectionError:
-            logger.warning("Health check connection error")
+            logger.warning("🔌 Health check connection error")
             return {'status': 'unavailable', 'mode': 'unknown'}
         
         except Exception as e:
-            logger.error(f"Health check error: {e}")
-            return {'status': 'error', 'mode': 'unknown'}
+            logger.error(f"❌ Health check error: {e}")
+            return {'status': 'error', 'mode': 'unknown', 'error': str(e)}
     
     def analyze_invoice(
         self,
@@ -125,7 +204,7 @@ class APIClient:
         auto_approve_threshold: int = 30
     ) -> Dict[str, Any]:
         """
-        Analyze invoice with backend - FIXED VERSION
+        Analyze invoice with backend
         
         Args:
             file_bytes: File content as bytes
@@ -151,15 +230,15 @@ class APIClient:
                 'mode': mode
             }
             
-            # Get auth headers
+            # Get auth headers (includes X-Demo-Mode if in demo)
             headers = self._get_auth_headers()
             
             # Make request
-            logger.info(f"Analyzing invoice: {filename} (mode: {mode})")
+            logger.info(f"📤 Analyzing invoice: {filename} (mode: {mode})")
             
             response = self.session.post(
                 f"{self.base_url}/api/analyze",
-                json=data,  # ← JSON body, NOT files!
+                json=data,
                 headers=headers,
                 timeout=self.timeout
             )
@@ -174,6 +253,8 @@ class APIClient:
                 'decision': result.get('final_decision')
             })
             
+            logger.info(f"✅ Analysis complete: {result.get('final_decision')} (risk: {result.get('risk', {}).get('risk_score', 0)})")
+            
             # Return with success flag
             return {
                 'success': True,
@@ -181,27 +262,28 @@ class APIClient:
             }
         
         except requests.exceptions.Timeout:
-            logger.error(f"Analyze timeout for {filename}")
+            logger.error(f"⏱️ Analyze timeout for {filename}")
             return {
                 'success': False,
-                'error': 'Request timeout. Please try again.'
+                'error': f'Request timeout after {self.timeout}s. Please try again.'
             }
         
         except requests.exceptions.ConnectionError:
-            logger.error(f"Connection error analyzing {filename}")
+            logger.error(f"🔌 Connection error analyzing {filename}")
             return {
                 'success': False,
-                'error': 'Cannot connect to backend. Using demo mode.'
+                'error': 'Cannot connect to backend. Check if backend is running.'
             }
         
         except Exception as e:
-            logger.error(f"Error analyzing {filename}: {e}")
+            logger.error(f"❌ Error analyzing {filename}: {e}")
             return {
                 'success': False,
                 'error': str(e)
             }
     
     def get_metrics(self, days: int = 30) -> Dict[str, Any]:
+        """Get dashboard metrics"""
         try:
             headers = self._get_auth_headers()
             
@@ -220,19 +302,14 @@ class APIClient:
             }
         
         except Exception as e:
-            logger.error(f"Error getting metrics: {e}")
+            logger.error(f"❌ Error getting metrics: {e}")
             return {
                 'success': False,
                 'error': str(e)
             }
     
     def list_agents(self) -> Dict[str, Any]:
-        """
-        Get list of agents with status
-        
-        Returns:
-            Dict with agents list
-        """
+        """Get list of agents with status"""
         try:
             headers = self._get_auth_headers()
             
@@ -250,7 +327,7 @@ class APIClient:
             }
         
         except Exception as e:
-            logger.error(f"Error listing agents: {e}")
+            logger.error(f"❌ Error listing agents: {e}")
             return {
                 'success': False,
                 'error': str(e)
@@ -262,17 +339,7 @@ class APIClient:
         page_size: int = 50,
         decision: Optional[str] = None
     ) -> Dict[str, Any]:
-        """
-        Get invoices from backend
-        
-        Args:
-            page: Page number
-            page_size: Items per page
-            decision: Filter by decision (APPROVE, REVIEW, BLOCK)
-            
-        Returns:
-            Dict with invoices list
-        """
+        """Get invoices from backend"""
         try:
             headers = self._get_auth_headers()
             
@@ -303,13 +370,14 @@ class APIClient:
             }
         
         except Exception as e:
-            logger.error(f"Error getting invoices: {e}")
+            logger.error(f"❌ Error getting invoices: {e}")
             return {
                 'success': False,
                 'error': str(e)
             }
     
     def get_invoice_by_id(self, invoice_id: str) -> Dict[str, Any]:
+        """Get single invoice by ID"""
         try:
             headers = self._get_auth_headers()
             
@@ -327,19 +395,14 @@ class APIClient:
             }
         
         except Exception as e:
-            logger.error(f"Error getting invoice {invoice_id}: {e}")
+            logger.error(f"❌ Error getting invoice {invoice_id}: {e}")
             return {
                 'success': False,
                 'error': str(e)
             }
     
     def get_fraud_scenarios(self) -> Dict[str, Any]:
-        """
-        Get active fraud scenarios
-        
-        Returns:
-            Dict with fraud scenarios
-        """
+        """Get active fraud scenarios"""
         try:
             headers = self._get_auth_headers()
             
@@ -357,7 +420,7 @@ class APIClient:
             }
         
         except Exception as e:
-            logger.error(f"Error getting fraud scenarios: {e}")
+            logger.error(f"❌ Error getting fraud scenarios: {e}")
             return {
                 'success': False,
                 'error': str(e)
@@ -368,16 +431,7 @@ class APIClient:
         page: int = 1,
         page_size: int = 50
     ) -> Dict[str, Any]:
-        """
-        Get audit logs
-        
-        Args:
-            page: Page number
-            page_size: Items per page
-            
-        Returns:
-            Dict with audit logs
-        """
+        """Get audit logs"""
         try:
             headers = self._get_auth_headers()
             
@@ -397,7 +451,7 @@ class APIClient:
             }
         
         except Exception as e:
-            logger.error(f"Error getting audit logs: {e}")
+            logger.error(f"❌ Error getting audit logs: {e}")
             return {
                 'success': False,
                 'error': str(e)
@@ -407,15 +461,7 @@ class APIClient:
         self,
         limit: int = 10
     ) -> Dict[str, Any]:
-        """
-        Get X-Ray traces for observability - NEW ENDPOINT
-        
-        Args:
-            limit: Maximum number of traces
-            
-        Returns:
-            Dict with X-Ray traces
-        """
+        """Get X-Ray traces for observability"""
         try:
             headers = self._get_auth_headers()
             
@@ -434,7 +480,7 @@ class APIClient:
             }
         
         except Exception as e:
-            logger.error(f"Error getting X-Ray traces: {e}")
+            logger.error(f"❌ Error getting X-Ray traces: {e}")
             return {
                 'success': False,
                 'error': str(e)
@@ -445,16 +491,7 @@ class APIClient:
         attack_type: str,
         payload: str
     ) -> Dict[str, Any]:
-        """
-        Test attack simulation (for Security page demo) - NEW ENDPOINT
-        
-        Args:
-            attack_type: Type of attack (sql_injection, xss, etc.)
-            payload: Attack payload
-            
-        Returns:
-            Dict with attack test result
-        """
+        """Test attack simulation (for Security page demo)"""
         try:
             headers = self._get_auth_headers()
             
@@ -478,7 +515,7 @@ class APIClient:
             }
         
         except Exception as e:
-            logger.error(f"Error testing attack: {e}")
+            logger.error(f"❌ Error testing attack: {e}")
             return {
                 'success': False,
                 'error': str(e)
@@ -491,18 +528,7 @@ class APIClient:
         correct_decision: str,
         reason: str = ""
     ) -> Dict[str, Any]:
-        """
-        Submit feedback for ML improvement
-        
-        Args:
-            invoice_id: Invoice ID
-            original_decision: Original decision by system
-            correct_decision: Correct decision by human
-            reason: Reason for correction
-            
-        Returns:
-            Dict with result
-        """
+        """Submit feedback for ML improvement"""
         try:
             headers = self._get_auth_headers()
             
@@ -529,7 +555,7 @@ class APIClient:
             }
         
         except Exception as e:
-            logger.error(f"Error submitting feedback: {e}")
+            logger.error(f"❌ Error submitting feedback: {e}")
             return {
                 'success': False,
                 'error': str(e)

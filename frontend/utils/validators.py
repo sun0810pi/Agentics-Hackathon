@@ -160,7 +160,7 @@ class InputValidator:
     
     @staticmethod
     def sanitize_filename(filename: str) -> str:
-        """
+        r"""
         Sanitize filename for safe storage
         
         Prevents:

@@ -130,7 +130,7 @@ elif sort_by == 'Amount':
 if not filtered_scenarios:
     st.info("No scenarios match the selected filters")
 else:
-    for scenario in filtered_scenarios:
+    for i, scenario in enumerate(filtered_scenarios):
         severity = scenario.get('severity', 'LOW')
         scenario_type = scenario.get('type', 'Unknown')
         status = scenario.get('status', 'Unknown')
@@ -184,15 +184,15 @@ else:
             col1, col2, col3 = st.columns(3)
             
             with col1:
-                if st.button("🔍 Investigate", key=f"investigate_{scenario.get('id')}", use_container_width=True):
+                if st.button("🔍 Investigate", key=f"investigate_{i}", use_container_width=True):
                     st.info(f"Opening investigation dashboard for {scenario_type}...")
             
             with col2:
-                if st.button("✅ Mark Resolved", key=f"resolve_{scenario.get('id')}", use_container_width=True):
+                if st.button("✅ Mark Resolved", key=f"resolve_{i}", use_container_width=True):
                     st.success(f"Marked {scenario_type} as resolved")
             
             with col3:
-                if st.button("📊 View Details", key=f"details_{scenario.get('id')}", use_container_width=True):
+                if st.button("📊 View Details", key=f"details_{i}", use_container_width=True):
                     with st.expander("Scenario Details", expanded=True):
                         st.json({
                             'id': scenario.get('id'),

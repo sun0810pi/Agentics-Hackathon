@@ -814,6 +814,35 @@ LIGHT_THEME = """
         box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
     }
     
+     .stSelectbox > div > div > div,
+    .stSelectbox [data-baseweb="select"] span,
+    .stSelectbox [data-baseweb="select"] div {
+        color: #0f172a !important;
+        background-color: transparent;
+    }
+    
+    /* Dropdown option list */
+    [data-baseweb="popover"] li,
+    [data-baseweb="menu"] li {
+        color: #0f172a !important;
+        background: #ffffff !important;
+    }
+    
+    [data-baseweb="popover"] li:hover,
+    [data-baseweb="menu"] li:hover {
+        background: #dbeafe !important;
+        color: #2563eb !important;
+    }
+    
+    /* Dropdown container background */
+    [data-baseweb="popover"],
+    [data-baseweb="menu"] {
+        background: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 10px !important;
+        box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1) !important;
+    }
+    
     /* =====================================================
        SLIDER - GRADIENT TRACK
        ===================================================== */

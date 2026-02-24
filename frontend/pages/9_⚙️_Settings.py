@@ -1,4 +1,6 @@
 import streamlit as st
+from utils.helpers import apply_theme
+apply_theme()
 from components.widgets import (
     success_box,
     warning_box,

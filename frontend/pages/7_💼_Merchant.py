@@ -1,4 +1,6 @@
 import streamlit as st
+from utils.helpers import apply_theme
+apply_theme()
 from components.widgets import (
     alert_box,
     card_container,

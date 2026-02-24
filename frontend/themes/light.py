@@ -808,23 +808,10 @@ LIGHT_THEME = """
         transition: all 0.3s ease;
     }
     
-     .stSelectbox > div > div > div {
-        color: #0f172a !important;
-    }
-    
-    [data-testid="stSelectbox"] span,
-    [data-testid="stSelectbox"] div {
-        color: #0f172a !important;
-    }
-    
-    /* Dropdown options */
-    [data-testid="stSelectboxVirtualDropdown"] li {
-        color: #0f172a !important;
-        background: #ffffff !important;
-    }
-    
-    [data-testid="stSelectboxVirtualDropdown"] li:hover {
-        background: rgba(37, 99, 235, 0.08) !important;
+    .stSelectbox > div > div:hover,
+    .stMultiSelect > div > div:hover {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
     }
     
     /* =====================================================

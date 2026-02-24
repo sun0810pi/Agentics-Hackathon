@@ -1,4 +1,6 @@
 import streamlit as st
+from utils.helpers import apply_theme
+apply_theme()
 from components.widgets import alert_box, success_box, error_box, warning_box
 from services.data_provider import process_invoice
 from utils.validators import validate_file_upload

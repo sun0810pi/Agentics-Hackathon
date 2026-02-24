@@ -1,4 +1,6 @@
 import streamlit as st
+from utils.helpers import apply_theme
+apply_theme()
 from components.metrics import metric_card_group, kpi_card
 from components.charts import (
     plot_time_series,

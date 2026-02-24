@@ -951,3 +951,16 @@ __all__ = [
     'AuthenticationError',
     'handle_error'
 ]
+
+def apply_theme():
+    """Inject theme CSS vào page hiện tại. Gọi ở đầu mỗi page file."""
+    import streamlit as st
+    from config import config
+    try:
+        from themes.dark import DARK_THEME
+        from themes.light import LIGHT_THEME
+        theme = st.session_state.get('theme', 'dark')
+        css = DARK_THEME if theme == 'dark' else LIGHT_THEME
+        st.markdown(css, unsafe_allow_html=True)
+    except Exception:
+        pass

@@ -23,6 +23,20 @@ from pathlib import Path
 from typing import Callable
 
 import streamlit as st
+import streamlit.components.v1 as components
+
+components.html("""
+<style>
+#sidebar-btn{position:fixed;left:0;top:50%;transform:translateY(-50%);z-index:999999;background:linear-gradient(135deg,#FF6B6B,#FF5252);border:3px solid white;border-left:none;border-radius:0 16px 16px 0;width:45px;height:70px;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:4px 0 20px rgba(0,0,0,0.6)}
+#sidebar-btn:hover{width:50px;height:80px;background:linear-gradient(135deg,#FF8A8A,#FF6B6B)}
+</style>
+<button id="sidebar-btn" onclick="
+const b=document.querySelector('[data-testid=collapsedControl]')||document.querySelector('button[kind=header]');
+if(b){b.click();return}
+const s=document.querySelector('[data-testid=stSidebar]');
+if(s){const h=s.style.display==='none';s.style.display=h?'block':'none';s.style.marginLeft=h?'0':'-21rem'}
+"><svg width='24' height='24' viewBox='0 0 24 24'><path d='M9 5l7 7-7 7' stroke='white' stroke-width='2' fill='none'/></svg></button>
+""",height=0)
 
 st.markdown("""
 <style>

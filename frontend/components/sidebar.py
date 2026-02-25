@@ -42,8 +42,7 @@ def _render_sidebar_inner():
         user_email = st.session_state.get('user_email', '')
         rc = {'Admin':'#4A9EFF','Analyst':'#00d68f','Viewer':'#ffab00'}.get(user_role,'#718096')
         st.markdown(
-            f'<div style="padding:0.6rem;background:rgba(74,158,255,0.1);border-radius:8px;'
-            f'border:1px solid rgba(74,158,255,0.2);margin-bottom:0.5rem;">'
+            f'<div style="padding:0.6rem;background:rgba(74,158,255,0.1);border-radius:8px;' f'border:1px solid rgba(74,158,255,0.2);margin-bottom:0.5rem;">'
             f'<b>{user_name}</b><br/>'
             f'<span style="font-size:0.72rem;color:{rc};font-weight:700;">{user_role}</span><br/>'
             f'<span style="font-size:0.68rem;opacity:0.55;">{user_email}</span>'
@@ -60,13 +59,7 @@ def _render_sidebar_inner():
             if user_role_key not in page['roles']:
                 continue
             nav_links += (
-                f'<a href="{page["url"]}" target="_self" style="'
-                f'display:block;padding:0.5rem 0.75rem;margin:0.2rem 0;'
-                f'border-radius:8px;text-decoration:none;color:inherit;'
-                f'background:rgba(255,255,255,0.05);'
-                f'border:1px solid rgba(255,255,255,0.08);'
-                f'font-size:0.9rem;font-weight:500;'
-                f'transition:background 0.2s;"'
+                f'<a href="{page["url"]}" target="_self" style="' f'display:block;padding:0.5rem 0.75rem;margin:0.2rem 0;' f'border-radius:8px;text-decoration:none;color:inherit;' f'background:rgba(255,255,255,0.05);' f'border:1px solid rgba(255,255,255,0.08);' f'font-size:0.9rem;font-weight:500;' f'transition:background 0.2s;"'
                 f' onmouseover="this.style.background=\'rgba(74,158,255,0.2)\'"'
                 f' onmouseout="this.style.background=\'rgba(255,255,255,0.05)\'">'
                 f'{page["icon"]} {page["title"]}</a>'

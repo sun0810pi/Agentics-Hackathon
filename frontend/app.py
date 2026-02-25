@@ -40,7 +40,7 @@ st.markdown(get_theme_css(st.session_state.get("theme", "dark")), unsafe_allow_h
 # Main
 if st.session_state.get("logged_in", False):
     # Logged in at root URL → redirect to Overview
-    st.switch_page("pages/1_📊_Overview.py")
+    st.switch_page("pages/1_Overview.py")
 else:
     from auth.login import login_page
     login_page()

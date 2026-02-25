@@ -254,16 +254,13 @@ def show():
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        if st.button("📄 Upload Invoice", use_container_width=True, type="primary"):
-            st.switch_page("pages/2_📄_Upload.py")
+        st.markdown('<a href="/Upload" target="_self"><button style="width:100%;padding:0.5rem;background:#4A9EFF;color:white;border:none;border-radius:8px;cursor:pointer;font-size:0.9rem;">📄 Upload Invoice</button></a>', unsafe_allow_html=True)
     
     with col2:
-        if st.button("🚨 View Fraud Alerts", use_container_width=True):
-            st.switch_page("pages/3_🚨_Fraud.py")
+        st.markdown('<a href="/Fraud" target="_self"><button style="width:100%;padding:0.5rem;background:rgba(255,255,255,0.1);color:inherit;border:1px solid rgba(255,255,255,0.2);border-radius:8px;cursor:pointer;font-size:0.9rem;">🚨 View Fraud Alerts</button></a>', unsafe_allow_html=True)
     
     with col3:
-        if st.button("📈 Observability", use_container_width=True):
-            st.switch_page("pages/6_📈_Observability.py")
+        st.markdown('<a href="/Observability" target="_self"><button style="width:100%;padding:0.5rem;background:rgba(255,255,255,0.1);color:inherit;border:1px solid rgba(255,255,255,0.2);border-radius:8px;cursor:pointer;font-size:0.9rem;">📈 Observability</button></a>', unsafe_allow_html=True)
     
     # Footer
     import datetime

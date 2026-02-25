@@ -186,23 +186,6 @@ DARK_THEME = """
     /* Hide Streamlit branding */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
-    header {visibility: hidden;}
-    /* Sidebar toggle - must override header visibility:hidden */
-    section[data-testid="stSidebarCollapsedControl"],
-    section[data-testid="stSidebarCollapsedControl"] *,
-    [data-testid="collapsedControl"],
-    [data-testid="collapsedControl"] * {
-        visibility: visible !important;
-        display: flex !important;
-        opacity: 1 !important;
-        pointer-events: auto !important;
-    }
-    
-    /* Ensure content is above background */
-    .stApp > div {
-        position: relative;
-        z-index: 1;
-    }
     
     /* =====================================================
        SIDEBAR - CYBERPUNK GLASSMORPHISM
@@ -826,45 +809,13 @@ DARK_THEME = """
     /* =====================================================
        HEADERS - NEON GRADIENT TEXT WITH GLOW
        ===================================================== */
-    .main-header {
-        font-size: 3rem;
-        font-weight: 900;
-        background: linear-gradient(
-            135deg,
-            var(--primary) 0%,
-            var(--cyan) 25%,
-            var(--success) 50%,
-            var(--pink) 75%,
-            var(--purple) 100%
-        );
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        background-size: 300% 300%;
-        animation: headerGradient 10s ease infinite, fadeInDown 0.6s ease;
-        letter-spacing: -0.04em;
-        font-family: 'Space Grotesk', 'Inter', sans-serif;
-        text-shadow: 
-            0 0 50px rgba(74, 158, 255, 0.6),
-            0 0 100px rgba(74, 158, 255, 0.4);
-        filter: drop-shadow(0 0 40px rgba(74, 158, 255, 0.5));
-        margin-bottom: 1rem;
-    }
+    .main-
     
-    @keyframes headerGradient {
-        0%, 100% { background-position: 0% 50%; }
+    @keyframes
         50% { background-position: 100% 50%; }
     }
     
-    .sub-header {
-        color: var(--text-secondary);
-        font-size: 1.1875rem;
-        margin-bottom: 2.5rem;
-        font-weight: 500;
-        animation: fadeInUp 0.6s ease;
-        line-height: 1.7;
-        text-shadow: 0 0 20px rgba(74, 158, 255, 0.2);
-    }
+    .sub-
     
     h1 {
         color: var(--text-primary);
@@ -1830,9 +1781,7 @@ DARK_THEME = """
        RESPONSIVE DESIGN
        ===================================================== */
     @media (max-width: 1024px) {
-        .main-header {
-            font-size: 2.5rem;
-        }
+        .main-
         
         .metric-value {
             font-size: 2.25rem;
@@ -1840,13 +1789,9 @@ DARK_THEME = """
     }
     
     @media (max-width: 768px) {
-        .main-header {
-            font-size: 2rem;
-        }
+        .main-
         
-        .sub-header {
-            font-size: 1rem;
-        }
+        .sub-
         
         .metric-value {
             font-size: 1.875rem;
@@ -1876,13 +1821,9 @@ DARK_THEME = """
     }
     
     @media (max-width: 480px) {
-        .main-header {
-            font-size: 1.75rem;
-        }
+        .main-
         
-        .sub-header {
-            font-size: 0.9375rem;
-        }
+        .sub-
         
         .metric-card {
             padding: 1.25rem;

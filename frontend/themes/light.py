@@ -75,27 +75,6 @@ LIGHT_THEME = """
     /* Hide Streamlit branding */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
-    header {visibility: hidden;}
-    /* Sidebar toggle - must override header visibility:hidden */
-    section[data-testid="stSidebarCollapsedControl"],
-    section[data-testid="stSidebarCollapsedControl"] *,
-    [data-testid="collapsedControl"],
-    [data-testid="collapsedControl"] * {
-        visibility: visible !important;
-        display: flex !important;
-        opacity: 1 !important;
-        pointer-events: auto !important;
-    }
-    
-    /* =====================================================
-       SIDEBAR - GLASSMORPHISM
-       ===================================================== */
-    [data-testid="stSidebar"] {
-        background: var(--glass-bg);
-        border-right: 1px solid var(--glass-border);
-        box-shadow: var(--shadow-lg);
-        z-index: 100;
-    }
     
     [data-testid="stSidebar"] > div:first-child {
         background: transparent;
@@ -356,32 +335,14 @@ LIGHT_THEME = """
     /* =====================================================
        HEADERS - GRADIENT TEXT
        ===================================================== */
-    .main-header {
-        font-size: 2.75rem;
-        font-weight: 900;
-        background: linear-gradient(135deg, var(--primary) 0%, var(--success) 50%, var(--warning) 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        margin-bottom: 0.75rem;
-        letter-spacing: -0.03em;
-        animation: fadeInDown 0.6s ease, gradientShift 8s ease infinite;
-        background-size: 200% 200%;
-    }
+    .main-
     
     @keyframes gradientShift {
         0%, 100% { background-position: 0% 50%; }
         50% { background-position: 100% 50%; }
     }
     
-    .sub-header {
-        color: var(--text-secondary);
-        font-size: 1.125rem;
-        margin-bottom: 2.5rem;
-        font-weight: 500;
-        animation: fadeInUp 0.6s ease;
-        line-height: 1.7;
-    }
+    .sub-
     
     h1, h2, h3 {
         color: var(--text-primary);
@@ -1051,9 +1012,7 @@ LIGHT_THEME = """
        RESPONSIVE DESIGN
        ===================================================== */
     @media (max-width: 768px) {
-        .main-header {
-            font-size: 2rem;
-        }
+        .main-
         
         .metric-value {
             font-size: 1.75rem;
@@ -1075,13 +1034,9 @@ LIGHT_THEME = """
     }
     
     @media (max-width: 480px) {
-        .main-header {
-            font-size: 1.5rem;
-        }
+        .main-
         
-        .sub-header {
-            font-size: 1rem;
-        }
+        .sub-
         
         .metric-card {
             padding: 1rem;
@@ -1101,13 +1056,7 @@ LIGHT_THEME = """
     }
     
     [data-testid="collapsedControl"],
-    button[kind="header"] {
-        display: flex !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-        pointer-events: all !important;
-        z-index: 999 !important;
-    }
+    button[kind="
     
     [data-testid="collapsedControl"] {
         display: flex !important;

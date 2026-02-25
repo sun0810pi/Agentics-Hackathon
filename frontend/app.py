@@ -73,10 +73,16 @@ def get_theme_css(theme: str) -> str:
     from themes.light import LIGHT_THEME
     return DARK_THEME if theme == "dark" else LIGHT_THEME
 
-def apply_theme():
     st.markdown(get_theme_css(st.session_state.get("theme", "dark")), unsafe_allow_html=True)
 
 apply_theme()
+st.markdown('<style>[data-testid="stSidebarNav"],[data-testid="stSidebarNavItems"],[data-testid="stSidebarNavSeparator"]{display:none!important;}</style>', unsafe_allow_html=True)
+st.markdown(f"""<style>
+    /* Hide Streamlit's auto-generated page nav (we use custom nav) */
+    [data-testid="stSidebarNav"] { display: none !important; }
+    [data-testid="stSidebarNavItems"] { display: none !important; }
+    [data-testid="stSidebarNavSeparator"] { display: none !important; }
+</style>""", unsafe_allow_html=True)
 
 def is_logged_in() -> bool:
     return st.session_state.get("logged_in", False)

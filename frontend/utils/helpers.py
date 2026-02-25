@@ -956,6 +956,7 @@ __all__ = [
 ]
 
 def apply_theme():
+    """Inject theme CSS + hide auto-nav."""
     """Inject theme CSS vào page hiện tại. Gọi ở đầu mỗi page file."""
     import streamlit as st
     from config import config
@@ -965,5 +966,6 @@ def apply_theme():
         theme = st.session_state.get('theme', 'dark')
         css = DARK_THEME if theme == 'dark' else LIGHT_THEME
         st.markdown(css, unsafe_allow_html=True)
+        st.markdown('<style>[data-testid="stSidebarNav"],[data-testid="stSidebarNavItems"],[data-testid="stSidebarNavSeparator"]{display:none!important;}</style>', unsafe_allow_html=True)
     except Exception:
         pass

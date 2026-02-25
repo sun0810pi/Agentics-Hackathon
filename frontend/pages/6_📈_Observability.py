@@ -4,6 +4,8 @@ apply_theme()
 if not st.session_state.get('logged_in', False):
     st.warning('⚠️ Vui lòng đăng nhập để tiếp tục.')
     st.stop()
+from components.sidebar import render_sidebar
+render_sidebar()
 from components.widgets import (
     alert_box,
     card_container,

@@ -73,15 +73,7 @@ def alert_box(message: str, variant: str = "info") -> None:
     style = _VARIANT_STYLES.get(variant, _VARIANT_STYLES["info"])
     st.markdown(
         f"""
-        <div style="
-            background: {style['bg']};
-            border-left: 4px solid {style['border']};
-            padding: 0.85rem 1.1rem;
-            border-radius: 0 8px 8px 0;
-            margin: 0.5rem 0 1rem 0;
-            font-size: 0.9rem;
-            line-height: 1.5;
-        ">
+        <div style="background: {style['bg']}; border-left: 4px solid {style['border']}; padding: 0.85rem 1.1rem; border-radius: 0 8px 8px 0; margin: 0.5rem 0 1rem 0; font-size: 0.9rem; line-height: 1.5;">
             {message}
         </div>
         """,
@@ -133,23 +125,14 @@ def stat_card(
     style     = _VARIANT_STYLES.get(variant, _VARIANT_STYLES["primary"])
     delta_clr = "#00d68f" if delta_positive else "#ff5252"
     delta_html = (
-        f'<div style="color:{delta_clr}; font-size:0.8rem; font-weight:700; '
-        f'margin-top:0.3rem;">{delta}</div>'
+        f'<div style="color:{delta_clr}; font-size:0.8rem; font-weight:700; ' f'margin-top:0.3rem;">{delta}</div>'
         if delta else ""
     )
     tip = f' title="{help_text}"' if help_text else ""
 
     st.markdown(
         f"""
-        <div{tip} style="
-            background: {style['bg']};
-            border: 1px solid {style['border']}44;
-            border-top: 3px solid {style['border']};
-            border-radius: 10px;
-            padding: 1rem 1.2rem;
-            margin-bottom: 0.5rem;
-            cursor: {'help' if help_text else 'default'};
-        ">
+        <div{tip} style="background: {style['bg']}; border: 1px solid {style['border']}44; border-top: 3px solid {style['border']}; border-radius: 10px; padding: 1rem 1.2rem; margin-bottom: 0.5rem; cursor: {'help' if help_text else 'default'};">
             <div style="font-size:1.6rem; margin-bottom:0.3rem;">{icon}</div>
             <div style="font-size:1.5rem; font-weight:800; line-height:1.2;">{value}</div>
             <div style="font-size:0.8rem; opacity:0.7; margin-top:0.2rem;">{label}</div>
@@ -192,8 +175,7 @@ def progress_bar_animated(
         if label else ""
     )
     pct_html = (
-        f'<span style="font-size:0.8rem; font-weight:700; color:{bar_clr}; '
-        f'min-width:3rem; text-align:right;">{pct:.1f}%</span>'
+        f'<span style="font-size:0.8rem; font-weight:700; color:{bar_clr}; ' f'min-width:3rem; text-align:right;">{pct:.1f}%</span>'
         if show_percentage else ""
     )
 
@@ -201,20 +183,8 @@ def progress_bar_animated(
         f"""
         {label_html}
         <div style="display:flex; align-items:center; gap:0.6rem; margin:0.2rem 0;">
-            <div style="
-                flex:1;
-                background: rgba(255,255,255,0.1);
-                border-radius: {height}px;
-                height: {height}px;
-                overflow: hidden;
-            ">
-                <div style="
-                    background: {bar_clr};
-                    height: 100%;
-                    width: {pct}%;
-                    border-radius: {height}px;
-                    transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
-                "></div>
+            <div style="flex:1; background: rgba(255,255,255,0.1); border-radius: {height}px; height: {height}px; overflow: hidden;">
+                <div style="background: {bar_clr}; height: 100%; width: {pct}%; border-radius: {height}px; transition: width 0.6s cubic-bezier(0.4,0,0.2,1);"></div>
             </div>
             {pct_html}
         </div>
@@ -249,22 +219,8 @@ def card_container(
 
     st.markdown(
         f"""
-        <div style="
-            background: {style['bg']};
-            border: 1px solid {style['border']}55;
-            border-radius: 12px;
-            padding: {padding};
-            margin-bottom: 1rem;
-        ">
-            <div style="
-                font-size: 1rem;
-                font-weight: 700;
-                margin-bottom: 0.9rem;
-                color: {style['border']};
-                display: flex;
-                align-items: center;
-                gap: 0.5rem;
-            ">
+        <div style="background: {style['bg']}; border: 1px solid {style['border']}55; border-radius: 12px; padding: {padding}; margin-bottom: 1rem;">
+            <div style="font-size: 1rem; font-weight: 700; margin-bottom: 0.9rem; color: {style['border']}; display: flex; align-items: center; gap: 0.5rem;">
                 <span>{icon}</span>
                 <span>{title}</span>
             </div>
@@ -294,17 +250,7 @@ def status_badge(label: str, variant: str = "default") -> None:
     fg, bg = _BADGE_COLORS.get(variant, _BADGE_COLORS["default"])
     st.markdown(
         f"""
-        <span style="
-            background: {bg};
-            color: {fg};
-            border: 1px solid {fg}66;
-            border-radius: 20px;
-            padding: 0.2rem 0.7rem;
-            font-size: 0.75rem;
-            font-weight: 700;
-            letter-spacing: 0.03em;
-            display: inline-block;
-        ">{label}</span>
+        <span style="background: {bg}; color: {fg}; border: 1px solid {fg}66; border-radius: 20px; padding: 0.2rem 0.7rem; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.03em; display: inline-block;">{label}</span>
         """,
         unsafe_allow_html=True,
     )
@@ -383,11 +329,7 @@ def empty_state(
     """
     st.markdown(
         f"""
-        <div style="
-            text-align: center;
-            padding: 3rem 1rem;
-            opacity: 0.7;
-        ">
+        <div style="text-align: center; padding: 3rem 1rem; opacity: 0.7;">
             <div style="font-size: 3rem; margin-bottom: 1rem;">{icon}</div>
             <div style="font-size: 1rem; color: #a0aec0;">{message}</div>
         </div>
@@ -436,24 +378,10 @@ def timeline_item(
 
     st.markdown(
         f"""
-        <div style="
-            display: flex;
-            gap: 1rem;
-            padding: 0.75rem 0;
-            border-bottom: 1px solid rgba(255,255,255,0.06);
-            align-items: flex-start;
-        ">
-            <div style="
-                font-size: 1.1rem;
-                margin-top: 0.1rem;
-                flex-shrink: 0;
-            ">{dot_icon}</div>
+        <div style="display: flex; gap: 1rem; padding: 0.75rem 0; border-bottom: 1px solid rgba(255,255,255,0.06); align-items: flex-start;">
+            <div style="font-size: 1.1rem; margin-top: 0.1rem; flex-shrink: 0;">{dot_icon}</div>
             <div style="flex: 1; min-width: 0;">
-                <div style="
-                    font-weight: 700;
-                    font-size: 0.9rem;
-                    color: {color};
-                ">{title}</div>
+                <div style="font-weight: 700; font-size: 0.9rem; color: {color};">{title}</div>
                 {f'<div style="font-size:0.8rem; opacity:0.65; margin-top:0.2rem;">{description}</div>' if description else ''}
             </div>
             {f'<div style="font-size:0.75rem; opacity:0.5; flex-shrink:0; padding-top:0.1rem;">{timestamp}</div>' if timestamp else ''}
@@ -480,8 +408,7 @@ def loading_spinner(message: str = "Loading...") -> None:
     """Animated loading indicator."""
     st.markdown(
         f'<div style="display:flex;align-items:center;gap:0.75rem;padding:1rem;opacity:0.7;">'
-        f'<div style="width:20px;height:20px;border:3px solid rgba(74,158,255,0.3);'
-        f'border-top-color:#4A9EFF;border-radius:50%;animation:spin 0.8s linear infinite;"></div>'
+        f'<div style="width:20px;height:20px;border:3px solid rgba(74,158,255,0.3);' f'border-top-color:#4A9EFF;border-radius:50%;animation:spin 0.8s linear infinite;"></div>'
         f'<span style="font-size:0.9rem;">{message}</span>'
         f'</div>',
         unsafe_allow_html=True

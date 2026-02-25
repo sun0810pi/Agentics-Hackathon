@@ -258,8 +258,7 @@ LIGHT_THEME = """
        ===================================================== */
     .metric-card {
         background: var(--glass-bg);
-        backdrop-filter: blur(20px) saturate(180%);
-        -webkit-backdrop-filter: blur(20px) saturate(180%);
+        -webkit-
         border: 1px solid var(--glass-border);
         border-radius: 16px;
         padding: 1.75rem;
@@ -428,7 +427,6 @@ LIGHT_THEME = """
        ===================================================== */
     .streamlit-expanderHeader {
         background: var(--glass-bg);
-        backdrop-filter: blur(10px);
         border: 1px solid var(--border);
         border-radius: 12px;
         color: var(--text-primary);
@@ -531,7 +529,6 @@ LIGHT_THEME = """
        ===================================================== */
     [data-testid="stFileUploader"] {
         background: var(--glass-bg);
-        backdrop-filter: blur(10px);
         border: 2px dashed var(--primary);
         border-radius: 16px;
         padding: 2.5rem;
@@ -847,8 +844,7 @@ LIGHT_THEME = """
         margin: 4rem auto;
         padding: 3rem;
         background: var(--glass-bg);
-        backdrop-filter: blur(20px) saturate(180%);
-        -webkit-backdrop-filter: blur(20px) saturate(180%);
+        -webkit-
         border: 1px solid var(--glass-border);
         border-radius: 24px;
         box-shadow: var(--shadow-xl);

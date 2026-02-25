@@ -1,6 +1,9 @@
 import streamlit as st
 from utils.helpers import apply_theme
 apply_theme()
+if not st.session_state.get('logged_in', False):
+    st.warning('⚠️ Vui lòng đăng nhập để tiếp tục.')
+    st.stop()
 from components.widgets import alert_box, success_box, error_box, warning_box
 from services.data_provider import process_invoice
 from utils.validators import validate_file_upload

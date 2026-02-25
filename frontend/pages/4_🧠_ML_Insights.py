@@ -1,6 +1,9 @@
 import streamlit as st
 from utils.helpers import apply_theme
 apply_theme()
+if not st.session_state.get('logged_in', False):
+    st.warning('⚠️ Vui lòng đăng nhập để tiếp tục.')
+    st.stop()
 from components.widgets import alert_box, stat_card, progress_bar_animated, card_container
 from components.charts import plot_agent_performance
 from components.metrics import kpi_card

@@ -614,8 +614,7 @@ DARK_THEME = """
        ===================================================== */
     .metric-card {
         background: var(--glass-bg-light);
-        backdrop-filter: blur(40px) saturate(180%);
-        -webkit-backdrop-filter: blur(40px) saturate(180%);
+        -webkit-
         border: 1px solid var(--glass-border);
         border-radius: 18px;
         padding: 2.25rem;
@@ -953,7 +952,6 @@ DARK_THEME = """
        ===================================================== */
     .streamlit-expanderHeader {
         background: var(--glass-bg-light);
-        backdrop-filter: blur(20px);
         border: 1px solid var(--border);
         border-radius: 14px;
         color: var(--text-primary);
@@ -1006,7 +1004,6 @@ DARK_THEME = """
         border-left: 4px solid;
         animation: slideInRight 0.4s ease;
         box-shadow: var(--shadow);
-        backdrop-filter: blur(20px);
         display: flex;
         align-items: center;
         gap: 1.25rem;
@@ -1091,7 +1088,6 @@ DARK_THEME = """
         border: none;
         box-shadow: var(--shadow);
         padding: 1.125rem 1.5rem;
-        backdrop-filter: blur(20px);
     }
     
     /* =====================================================
@@ -1099,7 +1095,6 @@ DARK_THEME = """
        ===================================================== */
     [data-testid="stFileUploader"] {
         background: var(--glass-bg);
-        backdrop-filter: blur(20px);
         border: 2px dashed var(--primary);
         border-radius: 18px;
         padding: 3rem;
@@ -1533,7 +1528,6 @@ DARK_THEME = """
         margin: 4rem auto;
         padding: 3.5rem;
         background: var(--glass-bg-light);
-        backdrop-filter: blur(40px) saturate(180%);
         border: 1px solid var(--glass-border);
         border-radius: 28px;
         box-shadow: 

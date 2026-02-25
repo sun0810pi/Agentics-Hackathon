@@ -78,6 +78,53 @@ def apply_theme():
 
 apply_theme()
 
+st.markdown("""
+<style>
+/* Sidebar toggle - override mọi thứ */
+[data-testid="collapsedControl"] {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    z-index: 999999 !important;
+    position: fixed !important;
+    left: 0 !important;
+    top: 50vh !important;
+    transform: translateY(-50%) !important;
+    width: 40px !important;
+    height: 60px !important;
+    background: #4A9EFF !important;
+    border-radius: 0 10px 10px 0 !important;
+    border: none !important;
+    box-shadow: 4px 0 15px rgba(0,0,0,0.4) !important;
+    cursor: pointer !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+[data-testid="collapsedControl"]:hover {
+    background: #2563eb !important;
+    width: 46px !important;
+}
+[data-testid="collapsedControl"] svg {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    fill: white !important;
+    color: white !important;
+    stroke: white !important;
+    width: 20px !important;
+    height: 20px !important;
+}
+[data-testid="collapsedControl"] * {
+    color: white !important;
+    fill: white !important;
+    stroke: white !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
 def is_logged_in() -> bool:
     return st.session_state.get("logged_in", False)
 

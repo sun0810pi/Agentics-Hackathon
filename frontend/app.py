@@ -29,18 +29,36 @@ if "initialized" not in st.session_state:
     })
 
 # Theme
-@st.cache_data(show_spinner=False)
-def get_theme_css(theme: str) -> str:
+try:
     from themes.dark import DARK_THEME
     from themes.light import LIGHT_THEME
-    return DARK_THEME if theme == "dark" else LIGHT_THEME
-
-st.markdown(get_theme_css(st.session_state.get("theme", "dark")), unsafe_allow_html=True)
+    _theme = st.session_state.get("theme", "dark")
+    st.markdown(DARK_THEME if _theme == "dark" else LIGHT_THEME, unsafe_allow_html=True)
+except Exception as e:
+    st.error(f"Theme error: {e}")
 
 # Main
 if st.session_state.get("logged_in", False):
-    # Logged in at root URL → redirect to Overview
-    st.switch_page("pages/1_Overview.py")
+    from components.sidebar import render_sidebar
+    try:
+        render_sidebar()
+    except Exception as e:
+        st.sidebar.error(f"Sidebar: {e}")
+    
+    st.title(f"👋 Welcome, {st.session_state.get('user_name', 'User')}!")
+    st.markdown("Choose a page from the sidebar, or go to the dashboard:")
+    st.markdown(
+        '<a href="/Overview" target="_self">'
+        '<button style="padding:0.75rem 2rem;background:#4A9EFF;color:white;'
+        'border:none;border-radius:10px;cursor:pointer;font-size:1rem;font-weight:700;">'
+        '📊 Go to Dashboard →</button></a>',
+        unsafe_allow_html=True
+    )
 else:
-    from auth.login import login_page
-    login_page()
+    try:
+        from auth.login import login_page
+        login_page()
+    except Exception as e:
+        import traceback
+        st.error(f"Login page error: {e}")
+        st.code(traceback.format_exc())

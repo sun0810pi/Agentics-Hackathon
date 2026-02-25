@@ -16,5 +16,5 @@ port = 8501
 gatherUsageStats = false
 
 [client]
-showErrorDetails = false
+showErrorDetails = true
 toolbarMode = "viewer"

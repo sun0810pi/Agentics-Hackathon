@@ -183,6 +183,20 @@ DARK_THEME = """
         50% { opacity: 0.6; }
     }
     
+
+    /* =====================================================
+       CRITICAL: Main content must be above background overlays
+       ===================================================== */
+    .stApp > .stAppViewContainer,
+    .stAppViewContainer > section.main,
+    .stAppViewContainer > section.main > .block-container,
+    [data-testid="stAppViewContainer"],
+    [data-testid="stAppViewContainer"] > section,
+    [data-testid="block-container"],
+    .main .block-container {
+        position: relative !important;
+        z-index: 2 !important;
+    }
     /* Hide Streamlit branding */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}

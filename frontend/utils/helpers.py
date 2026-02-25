@@ -949,7 +949,10 @@ __all__ = [
     'ValidationError',
     'APIError',
     'AuthenticationError',
-    'handle_error'
+    'handle_error',
+    
+    #theme
+    'apply_theme'
 ]
 
 def apply_theme():

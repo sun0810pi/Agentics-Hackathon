@@ -4,7 +4,10 @@ apply_theme()
 if not st.session_state.get('logged_in', False):
     st.switch_page("app.py")
 from components.sidebar import render_sidebar
-render_sidebar()
+try:
+    render_sidebar()
+except Exception as _e:
+    st.sidebar.error(f"Sidebar error: {_e}")
 from components.widgets import alert_box, success_box, error_box, warning_box
 from services.data_provider import process_invoice
 from utils.validators import validate_file_upload

@@ -4,7 +4,10 @@ apply_theme()
 if not st.session_state.get('logged_in', False):
     st.switch_page("app.py")
 from components.sidebar import render_sidebar
-render_sidebar()
+try:
+    render_sidebar()
+except Exception as _e:
+    st.sidebar.error(f"Sidebar error: {_e}")
 from components.metrics import metric_card_group, kpi_card
 from components.charts import (
     plot_time_series,

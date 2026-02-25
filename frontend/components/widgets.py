@@ -462,6 +462,27 @@ def timeline_item(
         unsafe_allow_html=True,
     )
 
+
 def info_box(message: str) -> None:
     """Blue info banner. Shorthand for alert_box(msg, 'info')."""
     alert_box(message, "info")
+
+
+def info_tooltip(text: str, icon: str = "ℹ️") -> None:
+    """Inline icon with hover tooltip text."""
+    st.markdown(
+        f'<span title="{text}" style="cursor:help;font-size:1rem;">{icon}</span>',
+        unsafe_allow_html=True
+    )
+
+
+def loading_spinner(message: str = "Loading...") -> None:
+    """Animated loading indicator."""
+    st.markdown(
+        f'<div style="display:flex;align-items:center;gap:0.75rem;padding:1rem;opacity:0.7;">'
+        f'<div style="width:20px;height:20px;border:3px solid rgba(74,158,255,0.3);'
+        f'border-top-color:#4A9EFF;border-radius:50%;animation:spin 0.8s linear infinite;"></div>'
+        f'<span style="font-size:0.9rem;">{message}</span>'
+        f'</div>',
+        unsafe_allow_html=True
+    )

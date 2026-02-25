@@ -1,4 +1,7 @@
 import streamlit as st
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent))
 from utils.helpers import apply_theme
 apply_theme()
 if not st.session_state.get('logged_in', False):

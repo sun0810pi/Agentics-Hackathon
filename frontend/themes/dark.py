@@ -1928,5 +1928,16 @@ DARK_THEME = """
     color: #e2e8f0 !important;
     background: rgba(15,20,40,0.9) !important;
 }
+
+/* Sidebar toggle button - MUST be visible */
+    [data-testid="collapsedControl"],
+    button[kind="header"] {
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        pointer-events: all !important;
+        z-index: 999 !important;
+    }
+    
 </style>
 """

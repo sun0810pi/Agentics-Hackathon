@@ -1093,5 +1093,16 @@ LIGHT_THEME = """
         /* If user's system is in dark mode, keep light theme readable */
         /* This ensures our light theme works well even on dark displays */
     }
+    
+    /* Sidebar toggle button - MUST be visible */
+    [data-testid="collapsedControl"],
+    button[kind="header"] {
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        pointer-events: all !important;
+        z-index: 999 !important;
+    }
+    
 </style>
 """

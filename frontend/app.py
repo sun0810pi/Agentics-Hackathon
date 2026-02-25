@@ -24,6 +24,42 @@ from typing import Callable
 
 import streamlit as st
 
+st.markdown("""
+<style>
+[data-testid="collapsedControl"],
+button[kind="header"] {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: fixed !important;
+    left: 0px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    z-index: 999999 !important;
+    
+    background: #4A9EFF !important;
+    border: 3px solid white !important;
+    border-left: none !important;
+    border-radius: 0 20px 20px 0 !important;
+    width: 50px !important;
+    height: 80px !important;
+    
+    box-shadow: 4px 0 30px rgba(0,0,0,0.8) !important;
+}
+
+[data-testid="collapsedControl"]:hover {
+    background: #00d4ff !important;
+    width: 60px !important;
+}
+
+[data-testid="collapsedControl"] svg {
+    fill: white !important;
+    width: 28px !important;
+    height: 28px !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
 # ── Add frontend root to sys.path ─────────────────────────
 sys.path.insert(0, str(Path(__file__).parent))
 

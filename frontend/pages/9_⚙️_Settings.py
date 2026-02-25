@@ -1,6 +1,9 @@
 import streamlit as st
 from utils.helpers import apply_theme
 apply_theme()
+if not st.session_state.get('logged_in', False):
+    st.warning("⚠️ Vui lòng đăng nhập để tiếp tục.")
+    st.stop()
 from components.widgets import (
     success_box,
     warning_box,
@@ -47,7 +50,7 @@ with tab1:
         with col2:
             role = st.text_input(
                 "Role",
-                value=st.session_state.get('user_role', 'Admin').title(),
+                value=(st.session_state.get('user_role') or 'viewer').title(),
                 disabled=True,
                 help="Role is assigned by administrators"
             )

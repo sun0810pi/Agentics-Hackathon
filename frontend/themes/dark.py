@@ -187,8 +187,8 @@ DARK_THEME = """
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
-    header [data-testid="collapsedControl"],
-    header [data-testid="stSidebarCollapsedControl"] {
+    section[data-testid="stSidebarCollapsedControl"] { visibility: visible !important; }
+    section[data-testid="stSidebarCollapsedControl"] button { visibility: visible !important; }
         visibility: visible !important;
     }
     

@@ -76,6 +76,10 @@ LIGHT_THEME = """
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
+    header [data-testid="collapsedControl"],
+    header [data-testid="stSidebarCollapsedControl"] {
+        visibility: visible !important;
+    }
     
     /* =====================================================
        SIDEBAR - GLASSMORPHISM

@@ -116,6 +116,7 @@ st.markdown("""
     height: 20px !important;
 }
 [data-testid="collapsedControl"] * {
+    visibility: visible !important;
     color: white !important;
     fill: white !important;
     stroke: white !important;

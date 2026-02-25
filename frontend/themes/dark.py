@@ -187,6 +187,10 @@ DARK_THEME = """
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
+    header [data-testid="collapsedControl"],
+    header [data-testid="stSidebarCollapsedControl"] {
+        visibility: visible !important;
+    }
     
     /* Ensure content is above background */
     .stApp > div {

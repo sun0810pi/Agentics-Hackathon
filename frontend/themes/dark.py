@@ -1924,5 +1924,11 @@ DARK_THEME = """
             transition-duration: 0.01ms !important;
         }
     }
+    [data-testid="collapsedControl"] {
+    display: flex !important;
+    visibility: visible !important;
+    color: #e2e8f0 !important;
+    background: rgba(15,20,40,0.9) !important;
+}
 </style>
 """

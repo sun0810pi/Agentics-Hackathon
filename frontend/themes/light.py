@@ -76,9 +76,15 @@ LIGHT_THEME = """
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
-    section[data-testid="stSidebarCollapsedControl"] { visibility: visible !important; }
-    section[data-testid="stSidebarCollapsedControl"] button { visibility: visible !important; }
+    /* Sidebar toggle - must override header visibility:hidden */
+    section[data-testid="stSidebarCollapsedControl"],
+    section[data-testid="stSidebarCollapsedControl"] *,
+    [data-testid="collapsedControl"],
+    [data-testid="collapsedControl"] * {
         visibility: visible !important;
+        display: flex !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
     }
     
     /* =====================================================

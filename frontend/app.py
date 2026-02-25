@@ -26,7 +26,7 @@ st.set_page_config(
     page_title=config.APP_NAME,
     page_icon="🛡️",
     layout="wide",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state="auto",
     menu_items={
         "Get Help":    "https://github.com/yourusername/agentflow",
         "Report a bug":"https://github.com/yourusername/agentflow/issues",

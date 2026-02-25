@@ -1939,5 +1939,23 @@ DARK_THEME = """
         z-index: 999 !important;
     }
     
+    [data-testid="collapsedControl"] {
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+        z-index: 99999 !important;
+        position: fixed !important;
+        left: 0 !important;
+        top: 50% !important;
+        background: #1a1f35 !important;
+        border-radius: 0 8px 8px 0 !important;
+        box-shadow: 4px 0 12px rgba(0,0,0,0.4) !important;
+        padding: 0.5rem !important;
+    }
+    [data-testid="collapsedControl"] svg {
+        fill: #e2e8f0 !important;
+    }
+    
 </style>
 """

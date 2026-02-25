@@ -199,8 +199,6 @@ DARK_THEME = """
        ===================================================== */
     [data-testid="stSidebar"] {
         background: var(--glass-bg);
-        backdrop-filter: blur(40px) saturate(180%);
-        -webkit-backdrop-filter: blur(40px) saturate(180%);
         border-right: 1px solid var(--glass-border);
         box-shadow: 
             4px 0 60px rgba(0, 0, 0, 0.6),

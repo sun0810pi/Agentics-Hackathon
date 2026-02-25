@@ -82,8 +82,6 @@ LIGHT_THEME = """
        ===================================================== */
     [data-testid="stSidebar"] {
         background: var(--glass-bg);
-        backdrop-filter: blur(20px) saturate(180%);
-        -webkit-backdrop-filter: blur(20px) saturate(180%);
         border-right: 1px solid var(--glass-border);
         box-shadow: var(--shadow-lg);
         z-index: 100;

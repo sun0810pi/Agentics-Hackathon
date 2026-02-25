@@ -461,3 +461,7 @@ def timeline_item(
         """,
         unsafe_allow_html=True,
     )
+
+def info_box(message: str) -> None:
+    """Blue info banner. Shorthand for alert_box(msg, 'info')."""
+    alert_box(message, "info")

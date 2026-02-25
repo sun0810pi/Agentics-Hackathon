@@ -1908,73 +1908,40 @@ DARK_THEME = """
     }
     
     @media (prefers-reduced-motion: reduce) {
-        *,
-        *::before,
-        *::after {
-            animation-duration: 0.01ms !important;
-            animation-iteration-count: 1 !important;
-            transition-duration: 0.01ms !important;
-        }
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
     }
-    [data-testid="collapsedControl"] {
-    display: flex !important;
-    visibility: visible !important;
-    color: #e2e8f0 !important;
-    background: rgba(15,20,40,0.9) !important;
 }
 
-    [data-testid="collapsedControl"],
-    button[kind="header"] {
-        display: flex !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-        pointer-events: all !important;
-        z-index: 999 !important;
-    }
-    
-    [data-testid="collapsedControl"] {
-        display: flex !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-        pointer-events: auto !important;
-        z-index: 99999 !important;
-        position: fixed !important;
-        left: 0 !important;
-        top: 50% !important;
-        background: #1a1f35 !important;
-        border-radius: 0 8px 8px 0 !important;
-        box-shadow: 4px 0 12px rgba(0,0,0,0.4) !important;
-        padding: 0.5rem !important;
-    }
-    [data-testid="collapsedControl"] svg {
-        fill: #e2e8f0 !important;
-    }
-    
-    section[data-testid="stSidebarCollapsedControl"],
-    [data-testid="collapsedControl"] {
-        display: block !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-        pointer-events: auto !important;
-        z-index: 999999 !important;
-    }
-    
-    section[data-testid="stSidebarCollapsedControl"] button,
-    [data-testid="collapsedControl"] button {
-        display: flex !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-        pointer-events: auto !important;
-        background: #1e293b !important;
-        border-radius: 0 8px 8px 0 !important;
-        border: 1px solid rgba(255,255,255,0.2) !important;
-    }
-    
-    section[data-testid="stSidebarCollapsedControl"] svg,
-    [data-testid="collapsedControl"] svg {
-        fill: #e2e8f0 !important;
-        display: block !important;
-    }
-    
+/* SIDEBAR FIX - CRITICAL */
+[data-testid="collapsedControl"] {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: fixed !important;
+    left: 0 !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    z-index: 999999 !important;
+    background: rgba(30, 41, 59, 0.95) !important;
+    border-radius: 0 12px 12px 0 !important;
+    padding: 0.75rem !important;
+    box-shadow: 4px 0 20px rgba(0,0,0,0.5) !important;
+}
+
+[data-testid="collapsedControl"]:hover {
+    background: rgba(74, 158, 255, 0.2) !important;
+    transform: translateY(-50%) scale(1.1) !important;
+}
+
+[data-testid="collapsedControl"] svg {
+    fill: #e2e8f0 !important;
+    width: 20px !important;
+    height: 20px !important;
+}
 </style>
 """

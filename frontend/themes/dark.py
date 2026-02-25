@@ -1929,7 +1929,6 @@ DARK_THEME = """
     background: rgba(15,20,40,0.9) !important;
 }
 
-/* Sidebar toggle button - MUST be visible */
     [data-testid="collapsedControl"],
     button[kind="header"] {
         display: flex !important;
@@ -1955,6 +1954,32 @@ DARK_THEME = """
     }
     [data-testid="collapsedControl"] svg {
         fill: #e2e8f0 !important;
+    }
+    
+    section[data-testid="stSidebarCollapsedControl"],
+    [data-testid="collapsedControl"] {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+        z-index: 999999 !important;
+    }
+    
+    section[data-testid="stSidebarCollapsedControl"] button,
+    [data-testid="collapsedControl"] button {
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+        background: #1e293b !important;
+        border-radius: 0 8px 8px 0 !important;
+        border: 1px solid rgba(255,255,255,0.2) !important;
+    }
+    
+    section[data-testid="stSidebarCollapsedControl"] svg,
+    [data-testid="collapsedControl"] svg {
+        fill: #e2e8f0 !important;
+        display: block !important;
     }
     
 </style>

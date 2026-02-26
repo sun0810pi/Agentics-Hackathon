@@ -115,6 +115,40 @@ with st.sidebar:
                 st.session_state.show_logout_confirm=False; st.rerun()
     st.markdown(f'<div style="text-align:center;opacity:.25;font-size:.65rem;padding-top:.4rem;">v{config.APP_VERSION}</div>',unsafe_allow_html=True)
 
+# ── SIDEBAR OPEN HINT (backup for when collapsed) ────────────────
+# Streamlit shows a native ">" toggle at top-left when sidebar is collapsed.
+# We make it impossible to miss by styling it large + bright.
+st.markdown("""
+<style>
+/* Make the native sidebar toggle button BIG and obvious */
+[data-testid="collapsedControl"] {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: fixed !important;
+    top: 50% !important;
+    left: 0 !important;
+    transform: translateY(-50%) !important;
+    z-index: 999 !important;
+}
+[data-testid="collapsedControl"] button {
+    width: 28px !important;
+    height: 72px !important;
+    background: linear-gradient(135deg, #3b82f6, #06b6d4) !important;
+    border-radius: 0 12px 12px 0 !important;
+    border: none !important;
+    box-shadow: 3px 0 16px rgba(59,130,246,0.5) !important;
+    color: white !important;
+}
+[data-testid="collapsedControl"] button svg {
+    width: 18px !important;
+    height: 18px !important;
+    color: white !important;
+    fill: white !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
 # ── PAGE ROUTING ─────────────────────────────────────────────────
 MOD = {
     "Overview":"page_overview","Upload":"page_upload","Fraud":"page_fraud",

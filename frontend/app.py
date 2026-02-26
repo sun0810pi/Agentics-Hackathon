@@ -1,4 +1,4 @@
-"""AgentFlow Finance Guard - True SPA with custom column nav."""
+"""AgentFlow Finance Guard — SPA with custom nav column."""
 import sys, logging, importlib
 from pathlib import Path
 import streamlit as st
@@ -13,49 +13,23 @@ st.set_page_config(
     menu_items={"About": f"{config.APP_NAME} v{config.APP_VERSION}"},
 )
 
-_defaults = {"logged_in":False,"user_email":"","user_name":"","user_role":"viewer",
-             "access_token":"","theme":"dark","page":"Overview","show_logout_confirm":False}
-for k,v in _defaults.items():
+# Defaults
+for k, v in {"logged_in":False,"user_email":"","user_name":"","user_role":"viewer",
+              "access_token":"","theme":"dark","page":"Overview","show_logout_confirm":False}.items():
     if k not in st.session_state: st.session_state[k] = v
 
 IS_DARK = st.session_state.theme == "dark"
 
+# Load theme
 try:
     from themes.dark import DARK_THEME
     from themes.light import LIGHT_THEME
     st.markdown(DARK_THEME if IS_DARK else LIGHT_THEME, unsafe_allow_html=True)
 except Exception: pass
 
-# Kill ALL Streamlit chrome + full-height layout
+# Kill native Streamlit sidebar/toolbar
 st.markdown("""<style>
-[data-testid="stSidebar"]{display:none!important;}
-[data-testid="collapsedControl"]{display:none!important;}
-[data-testid="stToolbar"]{display:none!important;}
-[data-testid="stDecoration"]{display:none!important;}
-[data-testid="stStatusWidget"]{display:none!important;}
-#MainMenu,footer,header{display:none!important;}
-
-/* Remove ALL top padding from Streamlit's default layout */
-.stApp{overflow-x:hidden;}
-.stApp > [data-testid="stAppViewContainer"]{padding:0!important;}
-.stApp > [data-testid="stAppViewContainer"] > section.main{padding:0!important;}
-.main .block-container{
-    padding:0!important; max-width:100%!important;
-    margin:0!important; min-height:100vh!important;
-}
-.main .block-container > div:first-child{padding:0!important; margin:0!important;}
-
-/* Columns full height */
-[data-testid="stHorizontalBlock"]{
-    gap:0!important; margin:0!important; padding:0!important;
-    min-height:100vh!important; align-items:stretch!important;
-}
-[data-testid="stHorizontalBlock"]>div{
-    padding:0!important; margin:0!important; min-height:100vh!important;
-}
-[data-testid="stHorizontalBlock"]>div>div[data-testid="column"]{
-    min-height:100vh!important; height:100%!important;
-}
+[data-testid="stSidebar"],[data-testid="collapsedControl"]{display:none!important;}
 </style>""", unsafe_allow_html=True)
 
 # ── LOGIN ────────────────────────────────────────────────────────
@@ -64,94 +38,89 @@ if not st.session_state.logged_in:
         from auth.login import login_page
         login_page()
     except Exception as e:
-        import traceback
-        st.error(f"Login error: {e}")
-        st.code(traceback.format_exc())
+        import traceback; st.error(f"Login error: {e}"); st.code(traceback.format_exc())
     st.stop()
 
-# ── LAYOUT ───────────────────────────────────────────────────────
-IS_DARK  = st.session_state.theme == "dark"
-NAV_BG   = "#0b0f1c" if IS_DARK else "#ffffff"
-NAV_BOR  = "rgba(59,130,246,0.18)" if IS_DARK else "rgba(37,99,235,0.10)"
-TEXT     = "#e2e8f0" if IS_DARK else "#0f172a"
-TEXT2    = "#64748b"
-CONT_BG  = "#060912" if IS_DARK else "#f0f4ff"
-rc_map   = {"Admin":"#3b82f6","Analyst":"#10b981","Viewer":"#f59e0b"}
+# ── LOGGED IN ────────────────────────────────────────────────────
+IS_DARK = st.session_state.theme == "dark"
+NAV_TEXT  = "#e2e8f0" if IS_DARK else "#0f172a"
+NAV_TEXT2 = "#64748b"
+NAV_BOR   = "rgba(59,130,246,0.2)" if IS_DARK else "rgba(0,0,0,0.08)"
+ACTIVE_BG = "rgba(59,130,246,0.15)" if IS_DARK else "rgba(37,99,235,0.08)"
+ACTIVE_C  = "#3b82f6" if IS_DARK else "#2563eb"
 
 nm = st.session_state.user_name or "User"
 rl = (st.session_state.user_role or "viewer").title()
 em = st.session_state.user_email or ""
-rc = rc_map.get(rl, "#94a3b8")
+rc = {"Admin":"#3b82f6","Analyst":"#10b981","Viewer":"#f59e0b"}.get(rl, "#94a3b8")
 
 PAGES = [
     ("Overview","📊"),("Upload","📄"),("Fraud","🚨"),
-    ("ML_Insights","🧠"),("Security","🛡️"),("Observability","📈"),
+    ("ML Insights","🧠"),("Security","🛡️"),("Observability","📈"),
     ("Merchant","💼"),("Integrations","🔗"),("Settings","⚙️"),
 ]
-
-# Full-height nav via CSS on the column containers
-st.markdown(f"""<style>
-[data-testid="column"]:first-child{{
-    background:{NAV_BG}!important;
-    border-right:1px solid {NAV_BOR}!important;
-    min-height:100vh!important;
-    padding:0!important;
-}}
-[data-testid="column"]:last-child{{
-    background:{CONT_BG}!important;
-    min-height:100vh!important;
-    padding:0!important;
-}}
-</style>""", unsafe_allow_html=True)
+PAGE_KEY = {p[0]: p[0].replace(" ","_") for p in PAGES}
+MOD_MAP  = {
+    "Overview":"page_overview","Upload":"page_upload","Fraud":"page_fraud",
+    "ML_Insights":"page_ml","Security":"page_security","Observability":"page_observability",
+    "Merchant":"page_merchant","Integrations":"page_integrations","Settings":"page_settings",
+}
 
 nav_col, content_col = st.columns([1, 4], gap="small")
 
+# ── NAV ──────────────────────────────────────────────────────────
 with nav_col:
-    # Logo
-    st.markdown(f"""<div style="text-align:center;padding:1.5rem 0.5rem 1.2rem;
-        border-bottom:1px solid {NAV_BOR};margin-bottom:0.75rem;">
-        <div style="font-size:2rem;filter:drop-shadow(0 0 12px rgba(59,130,246,0.6));">🛡️</div>
-        <div style="font-size:1rem;font-weight:700;background:linear-gradient(135deg,#3b82f6,#06b6d4);
-            -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">
-            AgentFlow</div>
-        <div style="font-size:0.58rem;color:{TEXT2};text-transform:uppercase;letter-spacing:.1em;">
-            Finance Guard</div>
-    </div>""", unsafe_allow_html=True)
+    # Logo area
+    st.markdown(f"""
+<div style="padding:1.75rem 1rem 1.25rem;text-align:center;border-bottom:1px solid {NAV_BOR};">
+  <div style="font-size:2.2rem;filter:drop-shadow(0 0 16px rgba(59,130,246,0.55));">🛡️</div>
+  <div style="font-size:1.05rem;font-weight:700;letter-spacing:-.01em;margin-top:6px;
+    background:linear-gradient(135deg,#3b82f6,#06b6d4);
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">
+    AgentFlow</div>
+  <div style="font-size:0.6rem;color:{NAV_TEXT2};text-transform:uppercase;letter-spacing:.12em;margin-top:2px;">
+    Finance Guard</div>
+</div>""", unsafe_allow_html=True)
 
     # User card
-    st.markdown(f"""<div style="background:rgba(59,130,246,.07);border:1px solid rgba(59,130,246,.15);
-        border-radius:10px;padding:0.6rem 0.75rem;margin:0 0.5rem 0.75rem;">
-        <div style="font-weight:600;font-size:0.85rem;color:{TEXT};">{nm}</div>
-        <div style="font-size:0.68rem;color:{rc};font-weight:600;">{rl}</div>
-        <div style="font-size:0.6rem;color:{TEXT2};word-break:break-all;">{em}</div>
-    </div>""", unsafe_allow_html=True)
+    st.markdown(f"""
+<div style="margin:1rem 0.75rem 0.5rem;padding:0.75rem;
+  background:rgba(59,130,246,0.07);border:1px solid rgba(59,130,246,0.15);border-radius:10px;">
+  <div style="font-weight:600;font-size:0.875rem;color:{NAV_TEXT};">{nm}</div>
+  <div style="font-size:0.7rem;color:{rc};font-weight:600;margin-top:2px;">{rl}</div>
+  <div style="font-size:0.65rem;color:{NAV_TEXT2};margin-top:1px;word-break:break-all;">{em}</div>
+</div>""", unsafe_allow_html=True)
 
-    st.markdown(f'<div style="font-size:0.6rem;color:{TEXT2};text-transform:uppercase;'
-                f'letter-spacing:.1em;padding:0 0.75rem 0.35rem;font-weight:600;">Navigation</div>',
-                unsafe_allow_html=True)
+    # Nav label
+    st.markdown(f"""<div style="padding:0.5rem 1rem 0.25rem;
+      font-size:0.62rem;font-weight:600;color:{NAV_TEXT2};
+      text-transform:uppercase;letter-spacing:.1em;">Navigation</div>""",
+      unsafe_allow_html=True)
 
     # Nav buttons
     for pname, icon in PAGES:
-        is_active = st.session_state.page == pname
-        if st.button(f"{icon}  {pname.replace('_',' ')}", key=f"nav_{pname}",
+        pkey = PAGE_KEY[pname]
+        is_active = st.session_state.page == pkey
+        if st.button(f"{icon}  {pname}", key=f"nav_{pkey}",
                      use_container_width=True,
                      type="primary" if is_active else "secondary"):
-            st.session_state.page = pname; st.rerun()
+            st.session_state.page = pkey; st.rerun()
 
+    # Bottom controls
+    st.markdown('<div style="margin-top:auto;padding-top:0.5rem;"></div>', unsafe_allow_html=True)
     st.divider()
 
-    # Theme + Logout
     c1, c2 = st.columns(2)
     with c1:
-        if st.button("☀️", use_container_width=True, key="th_l",
+        if st.button("☀️", use_container_width=True, key="th_l", help="Light mode",
                      type="primary" if not IS_DARK else "secondary"):
             st.session_state.theme = "light"; st.rerun()
     with c2:
-        if st.button("🌙", use_container_width=True, key="th_d",
+        if st.button("🌙", use_container_width=True, key="th_d", help="Dark mode",
                      type="primary" if IS_DARK else "secondary"):
             st.session_state.theme = "dark"; st.rerun()
 
-    st.markdown("<div style='margin-top:0.25rem;'></div>", unsafe_allow_html=True)
+    st.markdown('<div style="height:0.25rem;"></div>', unsafe_allow_html=True)
 
     if not st.session_state.show_logout_confirm:
         if st.button("🚪 Logout", use_container_width=True, key="lo_btn"):
@@ -169,22 +138,19 @@ with nav_col:
             if st.button("No", use_container_width=True, key="lo_n"):
                 st.session_state.show_logout_confirm = False; st.rerun()
 
-    st.markdown(f'<div style="text-align:center;color:{TEXT2};font-size:.58rem;'
-                f'padding-top:.5rem;">v{config.APP_VERSION}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="text-align:center;color:{NAV_TEXT2};font-size:.6rem;padding:.75rem 0 .5rem;">v{config.APP_VERSION}</div>',
+                unsafe_allow_html=True)
 
 # ── PAGE CONTENT ─────────────────────────────────────────────────
 with content_col:
-    st.markdown('<div style="padding:1.75rem 2rem 3rem;">', unsafe_allow_html=True)
-    MOD = {
-        "Overview":"page_overview","Upload":"page_upload","Fraud":"page_fraud",
-        "ML_Insights":"page_ml","Security":"page_security","Observability":"page_observability",
-        "Merchant":"page_merchant","Integrations":"page_integrations","Settings":"page_settings",
-    }
+    st.markdown('<div style="padding:2rem 2.5rem 4rem;">', unsafe_allow_html=True)
+    page_key = st.session_state.page
+    mod_name = MOD_MAP.get(page_key, "page_overview")
     try:
-        mod = importlib.import_module(f"pages.{MOD.get(st.session_state.page,'page_overview')}")
+        mod = importlib.import_module(f"pages.{mod_name}")
         mod.render()
     except Exception as e:
         import traceback
-        st.error(f"Page error: {e}")
+        st.error(f"Page error on '{page_key}': {e}")
         st.code(traceback.format_exc())
     st.markdown('</div>', unsafe_allow_html=True)

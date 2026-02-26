@@ -196,7 +196,7 @@ def render():
         ))
         
         fig.update_layout(
-            template='plotly_dark',
+            template='plotly_dark' if st.session_state.get('theme','dark')=='dark' else 'plotly_white',
             height=400,
             margin=dict(l=0, r=0, t=20, b=0),
             paper_bgcolor='rgba(0,0,0,0)',
@@ -227,7 +227,7 @@ def render():
         )])
         
         fig.update_layout(
-            template='plotly_dark',
+            template='plotly_dark' if st.session_state.get('theme','dark')=='dark' else 'plotly_white',
             height=400,
             margin=dict(l=0, r=0, t=20, b=0),
             paper_bgcolor='rgba(0,0,0,0)',

@@ -1,5 +1,25 @@
 DARK_THEME = """
 <style>
+
+/* ═══ HIDE SIDEBAR COLLAPSE BUTTON - PERMANENT OPEN ══════════════
+   The close arrow inside the sidebar - hide every possible selector */
+[data-testid="stSidebarCollapseButton"],
+[data-testid="stSidebarCollapseButton"] button,
+button[data-testid="stSidebarCollapseButton"],
+[aria-label="Close sidebar"],
+[title="Close sidebar"],
+section[data-testid="stSidebar"] button[kind="header"],
+.stSidebarCollapseButton,
+/* The chevron/arrow icon button in sidebar header */
+section[data-testid="stSidebar"] > div > div > div > div > button:first-child {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    overflow: hidden !important;
+}
+
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
 
 :root {

@@ -125,10 +125,7 @@ def login_page():
     [data-testid="stTabs"] button[aria-selected="true"]{{
         color:#3b82f6!important;border-bottom:2px solid #3b82f6!important;
     }}
-    </style>
-    
-    <div class="login-grid"></div>
-    """, unsafe_allow_html=True)
+    </style>""", unsafe_allow_html=True)
 
     # Layout: centered card
     _, mid, _ = st.columns([1, 1.1, 1])

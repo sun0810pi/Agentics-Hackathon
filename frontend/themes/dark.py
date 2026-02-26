@@ -62,19 +62,34 @@ html,body { margin:0!important; padding:0!important; }
     70%{transform:translate(45px,-35px);}
 }
 
-/* ── FULLY FLUSH layout ── */
+/* ── FULLY FLUSH layout — aggressive ── */
 .stApp>[data-testid="stAppViewContainer"] {
     padding:0!important;margin:0!important;position:relative;z-index:1;
 }
-.stApp>[data-testid="stAppViewContainer"]>section.main {
+/* Cover ALL possible Streamlit main section selectors */
+.stApp>[data-testid="stAppViewContainer"]>section,
+.stApp>[data-testid="stAppViewContainer"]>section.main,
+[data-testid="stMain"],
+section[data-testid="stMain"] {
+    padding:0!important;margin:0!important;padding-top:0!important;
+}
+/* Block container - every known variant */
+.main .block-container,
+[data-testid="stMainBlockContainer"],
+[data-testid="block-container"],
+.block-container {
+    padding:0!important;padding-top:0!important;padding-left:0!important;
+    max-width:100%!important;margin:0!important;width:100%!important;
+    margin-top:0!important;margin-left:0!important;
+}
+/* Kill any first-child wrappers */
+.main>div:first-child,
+section.main>div:first-child,
+[data-testid="stMain"]>div:first-child {
     padding:0!important;margin:0!important;
 }
-.main { padding:0!important;margin:0!important; }
-.main .block-container {
-    padding:0!important;max-width:100%!important;
-    margin:0!important;width:100%!important;
-}
-section.main>div:first-child { padding:0!important;margin:0!important; }
+/* Nuclear: remove padding from every direct child of stAppViewContainer */
+[data-testid="stAppViewContainer"]>* { padding:0!important; }
 
 /* ── Columns ── */
 [data-testid="stHorizontalBlock"] {

@@ -26,6 +26,33 @@ try:
     st.markdown(DARK_THEME if IS_DARK else LIGHT_THEME, unsafe_allow_html=True)
 except Exception: pass
 
+# ── JS: Remove all top/left padding dynamically (works on all Streamlit versions) ──
+st.markdown("""<style>
+/* Ultra-aggressive padding removal */
+section[data-testid="stMain"] > div,
+div[data-testid="stVerticalBlock"],
+div[data-testid="stAppViewBlockContainer"] {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+}
+/* Remove Streamlit's default 6rem top padding */
+.css-1y4p8pa, .css-z5fcl4, .css-ocqkz7,
+.css-1544g2n, .css-zt5igj, .e1tzin5v3,
+div.block-container { 
+    padding-top: 0 !important; 
+    padding-left: 0 !important;
+    margin-top: 0 !important;
+}
+/* Target the actual app view container gap */
+[data-testid="stAppViewContainer"] {
+    padding: 0 !important;
+}
+/* Nuke the scrollable container padding */
+[data-testid="ScrollToBottomContainer"] > div {
+    padding: 0 !important;
+}
+</style>""", unsafe_allow_html=True)
+
 # ── LOGIN ────────────────────────────────────────────────────────
 if not st.session_state.logged_in:
     try:

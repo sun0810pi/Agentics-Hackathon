@@ -25,11 +25,80 @@ try:
 except Exception: pass
 
 
-# Ensure sidebar toggle button is always visible
-st.markdown("""<style>
-[data-testid="collapsedControl"] { display: flex !important; visibility: visible !important; }
-button[kind="header"] { display: flex !important; }
-</style>""", unsafe_allow_html=True)
+# Floating sidebar toggle button
+st.markdown("""
+<style>
+[data-testid="collapsedControl"] { display: flex !important; visibility: visible !important; opacity: 1 !important; }
+
+/* Floating toggle button - shows when sidebar is collapsed */
+#sidebar-float-btn {
+    position: fixed;
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+    z-index: 999999;
+    background: linear-gradient(135deg, #3b82f6, #06b6d4);
+    border: none;
+    border-radius: 0 10px 10px 0;
+    width: 28px;
+    height: 64px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 3px 0 15px rgba(59,130,246,0.4);
+    transition: all 0.2s ease;
+    opacity: 0;
+    pointer-events: none;
+}
+#sidebar-float-btn:hover {
+    width: 36px;
+    box-shadow: 4px 0 20px rgba(59,130,246,0.6);
+}
+#sidebar-float-btn svg { width: 14px; height: 14px; fill: white; }
+#sidebar-float-btn.visible { opacity: 1; pointer-events: all; }
+</style>
+
+<button id="sidebar-float-btn" title="Open sidebar" onclick="toggleSidebar()">
+  <svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+</button>
+
+<script>
+function toggleSidebar() {
+    // Find the native Streamlit sidebar toggle button and click it
+    const btns = window.parent.document.querySelectorAll('[data-testid="collapsedControl"] button, button[aria-label*="sidebar"], button[aria-label*="Sidebar"]');
+    if (btns.length > 0) {
+        btns[0].click();
+    } else {
+        // Fallback: find any button that controls sidebar
+        const sidebarBtns = window.parent.document.querySelectorAll('section[data-testid="stSidebarCollapsedControl"] button');
+        if (sidebarBtns.length > 0) sidebarBtns[0].click();
+    }
+}
+
+function checkSidebarState() {
+    const floatBtn = document.getElementById('sidebar-float-btn');
+    if (!floatBtn) return;
+    
+    // Check if sidebar is collapsed by looking at the main content width
+    const sidebar = window.parent.document.querySelector('[data-testid="stSidebar"]');
+    if (!sidebar) return;
+    
+    const sidebarWidth = sidebar.getBoundingClientRect().width;
+    const isCollapsed = sidebarWidth < 50;
+    
+    if (isCollapsed) {
+        floatBtn.classList.add('visible');
+    } else {
+        floatBtn.classList.remove('visible');
+    }
+}
+
+// Check sidebar state periodically
+setInterval(checkSidebarState, 300);
+setTimeout(checkSidebarState, 500);
+</script>
+""", unsafe_allow_html=True)
 
 # ── LOGIN PAGE ───────────────────────────────────────────────────
 if not st.session_state.logged_in:
@@ -63,12 +132,12 @@ PAGES = [
 with st.sidebar:
     st.markdown(
         '<div style="text-align:center;padding:1.5rem 0 1rem;">'
-        '<div style="font-size:2.5rem;">🛡️</div>'
-        '<div style="font-size:1.2rem;font-weight:800;'
+        '<div style="font-size:2.8rem;filter:drop-shadow(0 0 12px rgba(59,130,246,0.6));">🛡️</div>'
+        '<div style="font-size:1.3rem;font-weight:700;letter-spacing:-0.02em;'
         'background:linear-gradient(135deg,#3b82f6,#06b6d4);'
         '-webkit-background-clip:text;-webkit-text-fill-color:transparent;'
-        'background-clip:text;font-family:sans-serif;">AgentFlow</div>'
-        '<div style="font-size:0.68rem;opacity:0.45;text-transform:uppercase;letter-spacing:.1em;">'
+        'background-clip:text;">AgentFlow</div>'
+        '<div style="font-size:0.65rem;color:#4b5563;text-transform:uppercase;letter-spacing:.12em;margin-top:2px;">'
         'Finance Guard</div></div>', unsafe_allow_html=True)
     st.divider()
 

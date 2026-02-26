@@ -93,11 +93,5 @@ tr:hover td { background: rgba(37,99,235,0.03) !important; }
 code,.stCode { font-family: 'JetBrains Mono',monospace !important; background: var(--bg4) !important; color: var(--primary) !important; }
 ::-webkit-scrollbar { width: 5px; } ::-webkit-scrollbar-track { background: var(--bg3); } ::-webkit-scrollbar-thumb { background: rgba(37,99,235,0.2); border-radius: 3px; }
 
-/* ── Force sidebar always open ──────────────────────────── */
-/* Hide the collapse button inside sidebar (prevents closing) */
-[data-testid="stSidebarCollapseButton"] { display: none !important; }
-button[aria-label="Close sidebar"] { display: none !important; }
-/* Make sure sidebar toggle in header is visible for opening */
-[data-testid="stMainMenuPopover"] button { display: none !important; }
 </style>
 """

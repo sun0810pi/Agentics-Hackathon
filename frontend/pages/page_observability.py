@@ -245,7 +245,7 @@ def render():
                 xaxis_title='Time',
                 yaxis_title='Requests',
                 height=300,
-                template='plotly_dark' if st.session_state.get('theme') == 'dark' else 'plotly_white'
+                template='plotly_dark' if st.session_state.get('theme','dark')=='dark' else 'plotly_white' if st.session_state.get('theme') == 'dark' else 'plotly_white'
             )
 
             st.plotly_chart(fig, use_container_width=True)
@@ -284,7 +284,7 @@ def render():
                 xaxis_title='Time',
                 yaxis_title='Duration (ms)',
                 height=300,
-                template='plotly_dark' if st.session_state.get('theme') == 'dark' else 'plotly_white'
+                template='plotly_dark' if st.session_state.get('theme','dark')=='dark' else 'plotly_white' if st.session_state.get('theme') == 'dark' else 'plotly_white'
             )
 
             st.plotly_chart(fig, use_container_width=True)
@@ -323,7 +323,7 @@ def render():
                 xaxis_title='Time',
                 yaxis_title='Connections',
                 height=300,
-                template='plotly_dark' if st.session_state.get('theme') == 'dark' else 'plotly_white'
+                template='plotly_dark' if st.session_state.get('theme','dark')=='dark' else 'plotly_white' if st.session_state.get('theme') == 'dark' else 'plotly_white'
             )
 
             st.plotly_chart(fig, use_container_width=True)

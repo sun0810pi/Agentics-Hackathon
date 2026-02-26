@@ -210,7 +210,7 @@ def render():
         xaxis_title='Date',
         yaxis_title='Count',
         height=400,
-        template='plotly_dark' if st.session_state.get('theme') == 'dark' else 'plotly_white',
+        template='plotly_dark' if st.session_state.get('theme','dark')=='dark' else 'plotly_white' if st.session_state.get('theme') == 'dark' else 'plotly_white',
         hovermode='x unified'
     )
 

@@ -5,305 +5,167 @@ from utils.helpers import log_action
 from config import config
 
 
-def init_session_state():
-    """Initialize session state variables"""
-    defaults = {
-        'logged_in': False,
-        'user_email': None,
-        'user_name': None,
-        'user_role': None,
-        'access_token': None,
-        'id_token': None,
-        'refresh_token': None,
-        'theme': 'dark',
-        'language': 'EN'
-    }
-    
-    for key, value in defaults.items():
-        if key not in st.session_state:
-            st.session_state[key] = value
-
-
-def login_user(email: str, password: str, cognito: 'CognitoClient') -> bool:
-    """
-    Attempt to login user
-    
-    Args:
-        email: User email
-        password: User password
-        cognito: Cognito client
-        
-    Returns:
-        True if login successful
-    """
-    # Login via Cognito
+def login_user(email: str, password: str, cognito) -> bool:
     result = cognito.login(email, password)
-    
     if result['success']:
-        # Store tokens in session
         st.session_state.logged_in = True
         st.session_state.user_email = email
-        st.session_state.access_token = result.get('access_token')
-        st.session_state.id_token = result.get('id_token')
-        st.session_state.refresh_token = result.get('refresh_token')
-        
-        # Get user info
-        if result.get('access_token'):
-            user_info = cognito.get_user_info(result['access_token'])
-            if user_info.get('success'):
-                st.session_state.user_name = user_info.get('name', email.split('@')[0])
-        else:
-            # Demo mode - get from demo users
-            demo_user = config.DEMO_USERS.get(email, {})
-            st.session_state.user_name = demo_user.get('name', email.split('@')[0])
-            st.session_state.user_role = demo_user.get('role', 'user')
-        
-        # Log action
-        log_action('login', {'email': email})
-        
+        st.session_state.access_token = result.get('access_token', '')
+        # Demo mode: get user info from config
+        demo_user = config.DEMO_USERS.get(email, {})
+        st.session_state.user_name = demo_user.get('name', email.split('@')[0].title())
+        st.session_state.user_role = demo_user.get('role', 'viewer')
         return True
-    else:
-        return False
-
-
-def logout_user():
-    """Logout user and clear session"""
-    email = st.session_state.get('user_email')
-    
-    # Logout via Cognito
-    if st.session_state.get('access_token'):
-        cognito = get_cognito_client()
-        cognito.logout(st.session_state.access_token)
-    
-    # Log action
-    log_action('logout', {'email': email})
-    
-    # Clear session
-    st.session_state.logged_in = False
-    st.session_state.user_email = None
-    st.session_state.user_name = None
-    st.session_state.user_role = None
-    st.session_state.access_token = None
-    st.session_state.id_token = None
-    st.session_state.refresh_token = None
+    return False
 
 
 def login_page():
-    """Render login page"""
-    
-    # Get Cognito client
-    cognito = get_cognito_client()
-    
-    # Get translation
-    lang = st.session_state.get('language', 'EN')
-    t = config.TRANSLATIONS[lang]
-    
-    # Login container
-    st.markdown(f"""
-    <div class="login-container">
-        <div class="login-logo">{config.APP_ICON}</div>
+    IS_DARK = st.session_state.get('theme', 'dark') == 'dark'
+    BG      = "#060912" if IS_DARK else "#f0f4ff"
+    CARD_BG = "#0c1020" if IS_DARK else "#ffffff"
+    BORDER  = "rgba(59,130,246,0.2)" if IS_DARK else "rgba(37,99,235,0.12)"
+    TEXT    = "#e2e8f0" if IS_DARK else "#0f172a"
+    TEXT2   = "#64748b"
+    INPUT_BG= "#111827" if IS_DARK else "#f8faff"
+
+    # Full page login CSS
+    st.markdown(f"""<style>
+    .main .block-container {{
+        padding: 0 !important;
+        max-width: 100% !important;
+        background: {BG};
+        min-height: 100vh;
+    }}
+    /* Login card centering */
+    .login-wrap {{
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: {BG};
+        padding: 2rem;
+    }}
+    .login-card {{
+        width: 100%;
+        max-width: 460px;
+        background: {CARD_BG};
+        border: 1px solid {BORDER};
+        border-radius: 20px;
+        padding: 2.5rem 2.25rem 2rem;
+        box-shadow: 0 24px 64px rgba(0,0,0,0.4);
+    }}
+    .login-logo {{
+        text-align: center;
+        font-size: 3rem;
+        margin-bottom: 0.5rem;
+        filter: drop-shadow(0 0 20px rgba(59,130,246,0.6));
+    }}
+    .login-title {{
+        text-align: center;
+        font-size: 1.5rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #3b82f6, #06b6d4);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 0.25rem;
+    }}
+    .login-sub {{
+        text-align: center;
+        font-size: 0.78rem;
+        color: {TEXT2};
+        margin-bottom: 1.75rem;
+        letter-spacing: 0.02em;
+    }}
+    /* Inputs override */
+    .stTextInput > div > div > input {{
+        background: {INPUT_BG} !important;
+        border: 1px solid {BORDER} !important;
+        border-radius: 10px !important;
+        color: {TEXT} !important;
+        padding: 0.65rem 0.9rem !important;
+        font-size: 0.9rem !important;
+    }}
+    .stTextInput > div > div > input:focus {{
+        border-color: #3b82f6 !important;
+        box-shadow: 0 0 0 3px rgba(59,130,246,0.15) !important;
+    }}
+    .stTabs [data-testid="stTab"] {{
+        font-weight: 600 !important;
+        font-size: 0.9rem !important;
+    }}
+    /* Demo credential cards */
+    .demo-card {{
+        border-radius: 12px;
+        padding: 0.85rem 0.75rem;
+        text-align: center;
+        cursor: pointer;
+        transition: transform 0.15s;
+    }}
+    .demo-card:hover {{ transform: translateY(-2px); }}
+    </style>""", unsafe_allow_html=True)
+
+    # Center layout
+    _, center, _ = st.columns([1, 2, 1])
+    with center:
+        st.markdown(f"""
+        <div class="login-logo">🛡️</div>
         <div class="login-title">{config.APP_NAME}</div>
-        <div class="login-subtitle">{config.HACKATHON}</div>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # Tabs for login/signup
-    tab1, tab2 = st.tabs([f"🔐 {t['login']}", f"📝 {t['signup']}"])
-    
-    # =====================================================
-    # TAB 1: LOGIN
-    # =====================================================
-    with tab1:
-        with st.form("login_form", clear_on_submit=False):
-            email = st.text_input(
-                t['email'],
-                placeholder="admin@agentflow.ai",
-                key="login_email"
-            )
-            
-            password = st.text_input(
-                t['password'],
-                type="password",
-                placeholder="••••••••",
-                key="login_password"
-            )
-            
-            col1, col2 = st.columns([1, 1])
-            with col1:
-                remember = st.checkbox(t['remember'], value=True)
-            with col2:
-                st.markdown(
-                    f"<div style='text-align: right; padding-top: 5px;'>"
-                    f"<a href='#' style='color: var(--primary);'>{t['forgot_password']}</a>"
-                    f"</div>",
-                    unsafe_allow_html=True
-                )
-            
-            submitted = st.form_submit_button(
-                f"🔐 {t['login']}",
-                use_container_width=True,
-                type="primary"
-            )
-            
-            if submitted:
-                # Validate inputs
-                email_valid, email_error = validate_email(email)
-                
-                if not email:
-                    st.error("❌ Please enter your email")
-                elif not password:
-                    st.error("❌ Please enter your password")
-                elif not email_valid:
-                    st.error(f"❌ {email_error}")
-                else:
-                    # Attempt login
-                    with st.spinner("Logging in..."):
-                        if login_user(email, password, cognito):
-                            st.success("✅ Login successful!")
-                            st.balloons()
-                            st.rerun()
-                        else:
-                            st.error("❌ Invalid email or password")
-        
-        # Demo credentials
-        if config.get_demo_mode() == "demo" or not cognito.is_configured:
-            st.markdown("---")
-            st.markdown("**🔑 Quick Login — Demo Accounts**")
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                st.markdown("""
-<div style="background:rgba(59,130,246,0.12);border:1px solid rgba(59,130,246,0.3);border-radius:10px;padding:0.75rem;text-align:center;">
-<div style="font-size:1.2rem;">👑</div>
-<div style="font-weight:700;font-size:0.85rem;">Admin</div>
-<div style="font-size:0.75rem;opacity:0.7;">admin@agentflow.ai</div>
-<div style="font-size:0.75rem;opacity:0.7;">Admin@2026!</div>
-</div>""", unsafe_allow_html=True)
-            with col2:
-                st.markdown("""
-<div style="background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.3);border-radius:10px;padding:0.75rem;text-align:center;">
-<div style="font-size:1.2rem;">🔍</div>
-<div style="font-weight:700;font-size:0.85rem;">Analyst</div>
-<div style="font-size:0.75rem;opacity:0.7;">analyst@agentflow.ai</div>
-<div style="font-size:0.75rem;opacity:0.7;">Analyst@2026!</div>
-</div>""", unsafe_allow_html=True)
-            with col3:
-                st.markdown("""
-<div style="background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.3);border-radius:10px;padding:0.75rem;text-align:center;">
-<div style="font-size:1.2rem;">👤</div>
-<div style="font-weight:700;font-size:0.85rem;">Viewer</div>
-<div style="font-size:0.75rem;opacity:0.7;">viewer@agentflow.ai</div>
-<div style="font-size:0.75rem;opacity:0.7;">Viewer@2026!</div>
-</div>""", unsafe_allow_html=True)
-    
-    # =====================================================
-    # TAB 2: SIGNUP
-    # =====================================================
-    with tab2:
-        if not cognito.is_configured:
-            st.warning("⚠️ Signup is not available in demo mode. Use demo accounts above.")
-        else:
-            with st.form("signup_form", clear_on_submit=False):
-                signup_name = st.text_input(
-                    "Full Name",
-                    placeholder="John Doe",
-                    key="signup_name"
-                )
-                
-                signup_email = st.text_input(
-                    t['email'],
-                    placeholder="your.email@company.com",
-                    key="signup_email"
-                )
-                
-                signup_password = st.text_input(
-                    t['password'],
-                    type="password",
-                    key="signup_password",
-                    help="Min 8 chars, uppercase, lowercase, number, special character"
-                )
-                
-                signup_confirm = st.text_input(
-                    "Confirm Password",
-                    type="password",
-                    key="signup_confirm"
-                )
-                
-                submitted = st.form_submit_button(
-                    f"📝 {t['signup']}",
-                    use_container_width=True,
-                    type="primary"
-                )
-                
+        <div class="login-sub">{config.HACKATHON}</div>
+        """, unsafe_allow_html=True)
+
+        cognito = get_cognito_client()
+        tab1, tab2 = st.tabs(["🔐  Login", "📝  Sign Up"])
+
+        with tab1:
+            with st.form("login_form", clear_on_submit=False):
+                email = st.text_input("Email address", placeholder="admin@agentflow.ai", key="login_email")
+                password = st.text_input("Password", type="password", placeholder="••••••••", key="login_password")
+                submitted = st.form_submit_button("🔐  Sign In", use_container_width=True, type="primary")
+
                 if submitted:
-                    # Validate inputs
-                    email_valid, email_error = validate_email(signup_email)
-                    password_valid, password_error = validate_password(signup_password)
-                    
-                    if not signup_name:
-                        st.error("❌ Please enter your name")
-                    elif not email_valid:
-                        st.error(f"❌ {email_error}")
-                    elif not password_valid:
-                        st.error(f"❌ {password_error}")
-                    elif signup_password != signup_confirm:
-                        st.error("❌ Passwords don't match")
+                    if not email:
+                        st.error("Please enter your email")
+                    elif not password:
+                        st.error("Please enter your password")
                     else:
-                        # Attempt signup
-                        with st.spinner("Creating account..."):
-                            result = cognito.signup(
-                                signup_email,
-                                signup_password,
-                                signup_name
-                            )
-                            
-                            if result['success']:
-                                st.success(f"✅ {result['message']}")
-                                st.info("💡 After verifying your email, return to the Login tab")
+                        with st.spinner("Signing in..."):
+                            if login_user(email, password, cognito):
+                                st.rerun()
                             else:
-                                st.error(f"❌ {result['error']}")
-    
-    # =====================================================
-    # LANGUAGE SELECTOR
-    # =====================================================
-    st.markdown("---")
-    st.markdown("### 🌐 Language / Ngôn ngữ")
-    
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("🇬🇧 English", use_container_width=True):
-            st.session_state.language = 'EN'
-            st.rerun()
-    with col2:
-        if st.button("🇻🇳 Tiếng Việt", use_container_width=True):
-            st.session_state.language = 'VI'
-            st.rerun()
-    
-    # =====================================================
-    # FOOTER
-    # =====================================================
-    st.markdown("---")
-    st.markdown(
-        f"<div style='text-align: center; color: var(--text-secondary); font-size: 0.875rem;'>"
-        f"© 2026 {config.APP_NAME} | {config.HACKATHON}"
-        f"</div>",
-        unsafe_allow_html=True
-    )
-    
-def show_login_page():
-    return login_page()
+                                st.error("❌ Invalid email or password")
 
-def show_signup_page():
-    return login_page()
+            # Demo credentials
+            if config.get_demo_mode() == "demo" or not cognito.is_configured:
+                st.markdown(f'<div style="text-align:center;color:{TEXT2};font-size:0.72rem;'
+                           f'margin:1.25rem 0 0.6rem;font-weight:600;text-transform:uppercase;'
+                           f'letter-spacing:.08em;">Demo Accounts</div>', unsafe_allow_html=True)
+                c1, c2, c3 = st.columns(3)
+                accounts = [
+                    (c1, "👑", "Admin", "admin@agentflow.ai", "Admin@2026!", "rgba(59,130,246,0.12)", "rgba(59,130,246,0.3)"),
+                    (c2, "🔍", "Analyst", "analyst@agentflow.ai", "Analyst@2026!", "rgba(16,185,129,0.12)", "rgba(16,185,129,0.3)"),
+                    (c3, "👤", "Viewer", "viewer@agentflow.ai", "Viewer@2026!", "rgba(245,158,11,0.12)", "rgba(245,158,11,0.3)"),
+                ]
+                for col, icon, role, mail, pwd, bg, bor in accounts:
+                    with col:
+                        st.markdown(f"""<div class="demo-card" style="background:{bg};border:1px solid {bor};">
+                        <div style="font-size:1.4rem;">{icon}</div>
+                        <div style="font-weight:700;font-size:0.82rem;color:{TEXT};margin:3px 0;">{role}</div>
+                        <div style="font-size:0.68rem;color:{TEXT2};">{mail}</div>
+                        <div style="font-size:0.68rem;color:{TEXT2};font-family:monospace;">{pwd}</div>
+                        </div>""", unsafe_allow_html=True)
 
-def logout():
-    return logout_user()
-
-def is_logged_in() -> bool:
-    return st.session_state.get('logged_in', False)
-
-def get_current_user() -> dict:
-    return {
-        'email': st.session_state.get('user_email', ''),
-        'name':  st.session_state.get('user_name', ''),
-        'role':  st.session_state.get('user_role', 'viewer'),
-    }
+        with tab2:
+            if not cognito.is_configured:
+                st.info("Sign up not available in demo mode. Use a demo account above.")
+            else:
+                with st.form("signup_form", clear_on_submit=True):
+                    name  = st.text_input("Full Name", placeholder="John Doe")
+                    email = st.text_input("Email", placeholder="you@company.com")
+                    pwd   = st.text_input("Password", type="password")
+                    pwd2  = st.text_input("Confirm Password", type="password")
+                    if st.form_submit_button("Create Account", use_container_width=True, type="primary"):
+                        if pwd != pwd2:
+                            st.error("Passwords don't match")
+                        else:
+                            st.info("Registration coming soon")

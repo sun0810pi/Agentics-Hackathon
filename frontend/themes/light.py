@@ -48,6 +48,23 @@ section[data-testid="stSidebar"] > div > div > div > div > button:first-child {
     color: var(--text);
 }
 
+
+/* ── App background ─────────────────────────────────────────── */
+.stApp > [data-testid="stAppViewContainer"] {
+    background:
+        radial-gradient(ellipse 70% 40% at 15% 0%, rgba(37,99,235,0.05) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 30% at 85% 100%, rgba(8,145,178,0.04) 0%, transparent 60%),
+        #f0f4ff;
+}
+.login-container { text-align: center; padding: 2rem 0 1rem; }
+.login-logo { font-size: 3.5rem; }
+.login-title {
+    font-size: 1.6rem; font-weight: 700; margin: 0.5rem 0 0.25rem;
+    background: linear-gradient(135deg, #2563eb, #0891b2);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.login-subtitle { font-size: 0.78rem; color: #64748b; }
+
 [data-testid="collapsedControl"]{display:flex!important;visibility:visible!important;opacity:1!important;}
 
 [data-testid="stSidebar"] {

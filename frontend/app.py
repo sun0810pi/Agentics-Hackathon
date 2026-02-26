@@ -9,7 +9,7 @@ logging.basicConfig(level=logging.INFO)
 
 st.set_page_config(
     page_title=config.APP_NAME, page_icon="🛡️", layout="wide",
-    initial_sidebar_state="collapsed",
+    initial_sidebar_state="expanded",
     menu_items={"About": f"{config.APP_NAME} v{config.APP_VERSION}"},
 )
 
@@ -23,6 +23,13 @@ try:
     from themes.light import LIGHT_THEME
     st.markdown(DARK_THEME if st.session_state.theme=="dark" else LIGHT_THEME, unsafe_allow_html=True)
 except Exception: pass
+
+
+# Ensure sidebar toggle button is always visible
+st.markdown("""<style>
+[data-testid="collapsedControl"] { display: flex !important; visibility: visible !important; }
+button[kind="header"] { display: flex !important; }
+</style>""", unsafe_allow_html=True)
 
 # ── LOGIN PAGE ───────────────────────────────────────────────────
 if not st.session_state.logged_in:
@@ -43,13 +50,13 @@ if not st.session_state.logged_in:
 # ── SIDEBAR ──────────────────────────────────────────────────────
 PAGES = [
     ("Overview",      "📊", ["admin","analyst","viewer"]),
-    ("Upload",        "📄", ["admin","analyst"]),
-    ("Fraud",         "🚨", ["admin","analyst"]),
-    ("ML_Insights",   "🧠", ["admin","analyst"]),
-    ("Security",      "🛡️", ["admin"]),
-    ("Observability", "📈", ["admin","analyst"]),
+    ("Upload",        "📄", ["admin","analyst","viewer"]),
+    ("Fraud",         "🚨", ["admin","analyst","viewer"]),
+    ("ML_Insights",   "🧠", ["admin","analyst","viewer"]),
+    ("Security",      "🛡️", ["admin","analyst","viewer"]),
+    ("Observability", "📈", ["admin","analyst","viewer"]),
     ("Merchant",      "💼", ["admin","analyst","viewer"]),
-    ("Integrations",  "🔗", ["admin"]),
+    ("Integrations",  "🔗", ["admin","analyst","viewer"]),
     ("Settings",      "⚙️", ["admin","analyst","viewer"]),
 ]
 

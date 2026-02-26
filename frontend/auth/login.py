@@ -48,20 +48,15 @@ def login_user(email: str, password: str, cognito: 'CognitoClient') -> bool:
         st.session_state.refresh_token = result.get('refresh_token')
         
         # Get user info
-        demo_user = config.DEMO_USERS.get(email, {})
-
         if result.get('access_token'):
             user_info = cognito.get_user_info(result['access_token'])
             if user_info.get('success'):
-                st.session_state.user_name = user_info.get('name', demo_user.get('name', email.split('@')[0]))
-        # FIX: Set role!
-                st.session_state.user_role = user_info.get('role', demo_user.get('role', 'viewer'))
-            else:
-                st.session_state.user_name = demo_user.get('name', email.split('@')[0])
-                st.session_state.user_role = demo_user.get('role', 'viewer')
+                st.session_state.user_name = user_info.get('name', email.split('@')[0])
         else:
+            # Demo mode - get from demo users
+            demo_user = config.DEMO_USERS.get(email, {})
             st.session_state.user_name = demo_user.get('name', email.split('@')[0])
-            st.session_state.user_role = demo_user.get('role', 'viewer')
+            st.session_state.user_role = demo_user.get('role', 'user')
         
         # Log action
         log_action('login', {'email': email})
@@ -172,23 +167,33 @@ def login_page():
         
         # Demo credentials
         if config.get_demo_mode() == "demo" or not cognito.is_configured:
-            with st.expander("🔑 Demo Credentials"):
+            st.markdown("---")
+            st.markdown("**🔑 Quick Login — Demo Accounts**")
+            col1, col2, col3 = st.columns(3)
+            with col1:
                 st.markdown("""
-                **Demo accounts available:**
-```
-                Email: admin@agentflow.ai
-                Password: Admin@2026!
-                Role: Administrator
-                
-                Email: analyst@agentflow.ai
-                Password: Analyst@2026!
-                Role: Risk Analyst
-                
-                Email: viewer@agentflow.ai
-                Password: Viewer@2026!
-                Role: Viewer
-```
-                """)
+<div style="background:rgba(59,130,246,0.12);border:1px solid rgba(59,130,246,0.3);border-radius:10px;padding:0.75rem;text-align:center;">
+<div style="font-size:1.2rem;">👑</div>
+<div style="font-weight:700;font-size:0.85rem;">Admin</div>
+<div style="font-size:0.75rem;opacity:0.7;">admin@agentflow.ai</div>
+<div style="font-size:0.75rem;opacity:0.7;">Admin@2026!</div>
+</div>""", unsafe_allow_html=True)
+            with col2:
+                st.markdown("""
+<div style="background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.3);border-radius:10px;padding:0.75rem;text-align:center;">
+<div style="font-size:1.2rem;">🔍</div>
+<div style="font-weight:700;font-size:0.85rem;">Analyst</div>
+<div style="font-size:0.75rem;opacity:0.7;">analyst@agentflow.ai</div>
+<div style="font-size:0.75rem;opacity:0.7;">Analyst@2026!</div>
+</div>""", unsafe_allow_html=True)
+            with col3:
+                st.markdown("""
+<div style="background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.3);border-radius:10px;padding:0.75rem;text-align:center;">
+<div style="font-size:1.2rem;">👤</div>
+<div style="font-weight:700;font-size:0.85rem;">Viewer</div>
+<div style="font-size:0.75rem;opacity:0.7;">viewer@agentflow.ai</div>
+<div style="font-size:0.75rem;opacity:0.7;">Viewer@2026!</div>
+</div>""", unsafe_allow_html=True)
     
     # =====================================================
     # TAB 2: SIGNUP

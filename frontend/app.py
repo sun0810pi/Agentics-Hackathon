@@ -26,15 +26,36 @@ try:
     st.markdown(DARK_THEME if IS_DARK else LIGHT_THEME, unsafe_allow_html=True)
 except Exception: pass
 
-# Kill Streamlit chrome + layout reset
+# Kill ALL Streamlit chrome + full-height layout
 st.markdown("""<style>
 [data-testid="stSidebar"]{display:none!important;}
 [data-testid="collapsedControl"]{display:none!important;}
 [data-testid="stToolbar"]{display:none!important;}
+[data-testid="stDecoration"]{display:none!important;}
+[data-testid="stStatusWidget"]{display:none!important;}
 #MainMenu,footer,header{display:none!important;}
-.main .block-container{padding:0!important;max-width:100%!important;margin:0!important;}
-[data-testid="stHorizontalBlock"]{gap:0!important;}
-[data-testid="stHorizontalBlock"]>div{padding:0!important;}
+
+/* Remove ALL top padding from Streamlit's default layout */
+.stApp{overflow-x:hidden;}
+.stApp > [data-testid="stAppViewContainer"]{padding:0!important;}
+.stApp > [data-testid="stAppViewContainer"] > section.main{padding:0!important;}
+.main .block-container{
+    padding:0!important; max-width:100%!important;
+    margin:0!important; min-height:100vh!important;
+}
+.main .block-container > div:first-child{padding:0!important; margin:0!important;}
+
+/* Columns full height */
+[data-testid="stHorizontalBlock"]{
+    gap:0!important; margin:0!important; padding:0!important;
+    min-height:100vh!important; align-items:stretch!important;
+}
+[data-testid="stHorizontalBlock"]>div{
+    padding:0!important; margin:0!important; min-height:100vh!important;
+}
+[data-testid="stHorizontalBlock"]>div>div[data-testid="column"]{
+    min-height:100vh!important; height:100%!important;
+}
 </style>""", unsafe_allow_html=True)
 
 # ── LOGIN ────────────────────────────────────────────────────────
@@ -70,15 +91,15 @@ PAGES = [
 
 # Full-height nav via CSS on the column containers
 st.markdown(f"""<style>
-section.main>div>[data-testid="stHorizontalBlock"]>div:first-child>div:first-child{{
-    background:{NAV_BG};
-    border-right:1px solid {NAV_BOR};
-    min-height:100vh;
+[data-testid="column"]:first-child{{
+    background:{NAV_BG}!important;
+    border-right:1px solid {NAV_BOR}!important;
+    min-height:100vh!important;
     padding:0!important;
 }}
-section.main>div>[data-testid="stHorizontalBlock"]>div:last-child>div:first-child{{
-    background:{CONT_BG};
-    min-height:100vh;
+[data-testid="column"]:last-child{{
+    background:{CONT_BG}!important;
+    min-height:100vh!important;
     padding:0!important;
 }}
 </style>""", unsafe_allow_html=True)

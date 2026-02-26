@@ -42,8 +42,11 @@ LIGHT_THEME = """
 .stApp > [data-testid="stAppViewContainer"] > section.main { padding: 0 !important; }
 .main .block-container { padding: 0 !important; max-width: 100% !important; margin: 0 !important; }
 
-[data-testid="stHorizontalBlock"] { gap: 0 !important; padding: 0 !important; margin: 0 !important; align-items: stretch !important; }
+[data-testid="stHorizontalBlock"] { gap: 0 !important; padding: 0 !important; margin: 0 !important; align-items: stretch !important; width: 100% !important; }
 [data-testid="stHorizontalBlock"] > div { padding: 0 !important; margin: 0 !important; }
+.main { padding: 0 !important; margin: 0 !important; }
+.main .block-container { padding: 0 !important; max-width: 100% !important; margin: 0 !important; }
+section.main > div:first-child { padding: 0 !important; margin: 0 !important; }
 
 [data-testid="column"]:first-of-type {
     background: #ffffff !important;
@@ -108,6 +111,29 @@ hr { border: none !important; border-top: 1px solid var(--border) !important; ma
 .stProgress > div > div { background: var(--bg3) !important; border-radius:99px !important; }
 [data-testid="stSelectbox"] > div > div { background: var(--bg2) !important; border: 1px solid var(--border) !important; border-radius: 8px !important; }
 [data-testid="stCheckbox"] label, [data-testid="stRadio"] label { color: var(--text) !important; }
+
+/* ── Content spacing ────────────────────────────────────────── */
+/* Gap between metric cards */
+[data-testid="stMetric"] { margin-bottom: 0 !important; }
+/* Space between column groups */
+[data-testid="stVerticalBlock"] > [data-testid="stVerticalBlockBorderWrapper"],
+[data-testid="stVerticalBlock"] > div[data-testid] { 
+    margin-bottom: 0.5rem !important;
+}
+/* Bigger gap between sections (h3 headers) */
+h3 { margin-top: 1.75rem !important; margin-bottom: 0.5rem !important; }
+h2 { margin-top: 2rem !important; margin-bottom: 0.6rem !important; }
+/* Space after dividers */
+hr + * { margin-top: 1.5rem !important; }
+/* Dataframe spacing */
+[data-testid="stDataFrame"] { margin-top: 0.5rem !important; }
+/* Alert/warning box spacing */
+[data-testid="stAlert"] { margin-bottom: 1.25rem !important; }
+/* Caption spacing */
+[data-testid="stCaptionContainer"] { margin-top: 0.35rem !important; }
+/* Column gap inside content */
+[data-testid="column"] + [data-testid="column"] { padding-left: 1rem !important; }
+
 ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.12); border-radius: 2px; }
 
 .badge { display:inline-flex;align-items:center;gap:4px;padding:2px 10px;border-radius:99px;font-size:0.72rem;font-weight:600; }

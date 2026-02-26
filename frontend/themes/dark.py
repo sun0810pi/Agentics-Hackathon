@@ -48,25 +48,25 @@ DARK_THEME = """
         #060912 !important;
 }
 
-/* ── Layout: zero padding ───────────────────────────────────── */
-.stApp > [data-testid="stAppViewContainer"] > section.main { padding: 0 !important; }
+/* ── Layout: FULLY FLUSH ────────────────────────────────────── */
+.stApp > [data-testid="stAppViewContainer"] { padding: 0 !important; margin: 0 !important; }
+.stApp > [data-testid="stAppViewContainer"] > section.main { padding: 0 !important; margin: 0 !important; }
+.main { padding: 0 !important; margin: 0 !important; }
 .main .block-container {
     padding: 0 !important;
     max-width: 100% !important;
     margin: 0 !important;
+    min-height: 100vh !important;
 }
+section.main > div:first-child { padding: 0 !important; margin: 0 !important; }
 
-/* ── Columns: flush full height ─────────────────────────────── */
+/* ── Columns flush full height ──────────────────────────────── */
 [data-testid="stHorizontalBlock"] {
-    gap: 0 !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    align-items: stretch !important;
+    gap: 0 !important; padding: 0 !important;
+    margin: 0 !important; align-items: stretch !important;
+    width: 100% !important;
 }
-[data-testid="stHorizontalBlock"] > div {
-    padding: 0 !important;
-    margin: 0 !important;
-}
+[data-testid="stHorizontalBlock"] > div { padding: 0 !important; margin: 0 !important; }
 
 /* ── Sidebar (first column) ─────────────────────────────────── */
 [data-testid="column"]:first-of-type {
@@ -270,6 +270,29 @@ hr { border: none !important; border-top: 1px solid var(--border) !important; ma
 
 /* ── Checkbox / Radio ────────────────────────────────────────── */
 [data-testid="stCheckbox"] label, [data-testid="stRadio"] label { color: var(--text) !important; font-size: 0.9rem !important; }
+
+
+/* ── Content spacing ────────────────────────────────────────── */
+/* Gap between metric cards */
+[data-testid="stMetric"] { margin-bottom: 0 !important; }
+/* Space between column groups */
+[data-testid="stVerticalBlock"] > [data-testid="stVerticalBlockBorderWrapper"],
+[data-testid="stVerticalBlock"] > div[data-testid] { 
+    margin-bottom: 0.5rem !important;
+}
+/* Bigger gap between sections (h3 headers) */
+h3 { margin-top: 1.75rem !important; margin-bottom: 0.5rem !important; }
+h2 { margin-top: 2rem !important; margin-bottom: 0.6rem !important; }
+/* Space after dividers */
+hr + * { margin-top: 1.5rem !important; }
+/* Dataframe spacing */
+[data-testid="stDataFrame"] { margin-top: 0.5rem !important; }
+/* Alert/warning box spacing */
+[data-testid="stAlert"] { margin-bottom: 1.25rem !important; }
+/* Caption spacing */
+[data-testid="stCaptionContainer"] { margin-top: 0.35rem !important; }
+/* Column gap inside content */
+[data-testid="column"] + [data-testid="column"] { padding-left: 1rem !important; }
 
 /* ── Scrollbar ───────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 4px; height: 4px; }

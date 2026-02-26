@@ -143,7 +143,7 @@ with nav_col:
 
 # ── PAGE CONTENT ─────────────────────────────────────────────────
 with content_col:
-    st.markdown('<div style="padding:2rem 2.5rem 4rem;">', unsafe_allow_html=True)
+    st.markdown('<div style="padding:2.25rem 2.75rem 5rem;">', unsafe_allow_html=True)
     page_key = st.session_state.page
     mod_name = MOD_MAP.get(page_key, "page_overview")
     try:

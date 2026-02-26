@@ -184,4 +184,108 @@ input[type="password"] {
     border: 1px solid var(--border) !important;
 }
 </style>
+
+/* =====================================================
+   CRITICAL FIX - SIDEBAR TOGGLE BUTTON
+   Added by Claude - Fixes missing sidebar toggle button
+   ===================================================== */
+[data-testid="collapsedControl"] {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    position: fixed !important;
+    left: 0px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    z-index: 999999 !important;
+    
+    /* Blue neon button styling */
+    background: linear-gradient(135deg, rgba(74, 158, 255, 0.95), rgba(59, 130, 246, 0.95)) !important;
+    backdrop-filter: blur(12px) !important;
+    border-radius: 0 16px 16px 0 !important;
+    padding: 14px 10px !important;
+    border: 2px solid rgba(74, 158, 255, 0.4) !important;
+    border-left: none !important;
+    
+    box-shadow: 
+        4px 0 24px rgba(0, 0, 0, 0.7),
+        0 0 32px rgba(74, 158, 255, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+    
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+[data-testid="collapsedControl"]:hover {
+    background: linear-gradient(135deg, rgba(74, 158, 255, 1), rgba(59, 130, 246, 1)) !important;
+    border-color: rgba(74, 158, 255, 0.8) !important;
+    padding-right: 14px !important;
+    transform: translateY(-50%) scale(1.08) !important;
+    
+    box-shadow: 
+        6px 0 32px rgba(0, 0, 0, 0.9),
+        0 0 48px rgba(74, 158, 255, 0.8),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+}
+
+[data-testid="collapsedControl"]:active {
+    transform: translateY(-50%) scale(0.98) !important;
+}
+
+[data-testid="collapsedControl"] svg,
+[data-testid="collapsedControl"] path {
+    fill: white !important;
+    color: white !important;
+    width: 22px !important;
+    height: 22px !important;
+    display: block !important;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3)) !important;
+}
+
+[data-testid="collapsedControl"] button {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    height: 100% !important;
+}
+
+/* Force visibility overrides */
+button[kind="header"],
+[data-testid*="sidebar"][data-testid*="button"],
+[class*="collapsedControl"],
+[aria-label*="sidebar" i] {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* Pulsing animation for discoverability */
+@keyframes sidebar-pulse {
+    0%, 100% {
+        box-shadow: 
+            4px 0 24px rgba(0, 0, 0, 0.7),
+            0 0 32px rgba(74, 158, 255, 0.5);
+    }
+    50% {
+        box-shadow: 
+            4px 0 24px rgba(0, 0, 0, 0.7),
+            0 0 48px rgba(74, 158, 255, 0.8);
+    }
+}
+
+[data-testid="collapsedControl"] {
+    animation: sidebar-pulse 3s ease-in-out infinite;
+}
+
+[data-testid="collapsedControl"]:hover {
+    animation: none;
+}
+
+</style>
 """

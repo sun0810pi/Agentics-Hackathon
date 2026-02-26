@@ -189,16 +189,36 @@ def login_page():
                     ("👤","Viewer","viewer@agentflow.ai","Viewer@2026!",
                      "rgba(245,158,11,0.1)","rgba(245,158,11,0.2)","#fbbf24"),
                 ]
+                
+                # FIX: Responsive grid with proper spacing
+                st.markdown("""<style>
+                .stColumn {
+                    padding: 0 0.75rem !important;
+                }
+                .stColumn:first-child {
+                    padding-left: 0 !important;
+                }
+                .stColumn:last-child {
+                    padding-right: 0 !important;
+                }
+                @media (max-width: 768px) {
+                    .stColumn {
+                        padding: 0 0 1rem 0 !important;
+                    }
+                }
+                </style>""", unsafe_allow_html=True)
+                
                 c1,c2,c3 = st.columns(3)
                 for col,(icon,role,mail,pwd,bg,bor,clr) in zip([c1,c2,c3], accounts):
                     with col:
                         st.markdown(f"""
 <div style="background:{bg};border:1px solid {bor};border-radius:12px;
-    padding:1rem 0.6rem;text-align:center;cursor:default;">
-  <div style="font-size:1.5rem;line-height:1;">{icon}</div>
-  <div style="font-weight:700;font-size:0.8rem;color:{clr};margin:6px 0 4px;">{role}</div>
-  <div style="font-size:0.65rem;color:{TEXT2};line-height:1.5;">{mail}<br>
-    <span style="font-family:monospace;font-size:0.62rem;">{pwd}</span></div>
+    padding:1.25rem 1rem;text-align:center;cursor:default;
+    transition:all 0.3s ease;height:100%;">
+  <div style="font-size:1.8rem;line-height:1;margin-bottom:0.5rem;">{icon}</div>
+  <div style="font-weight:700;font-size:0.85rem;color:{clr};margin:8px 0 6px;">{role}</div>
+  <div style="font-size:0.7rem;color:{TEXT2};line-height:1.6;word-break:break-all;">{mail}<br>
+    <span style="font-family:monospace;font-size:0.65rem;background:rgba(0,0,0,0.2);padding:2px 4px;border-radius:4px;display:inline-block;margin-top:4px;">{pwd}</span></div>
 </div>""", unsafe_allow_html=True)
 
         with tab2:

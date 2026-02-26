@@ -243,5 +243,118 @@ code,.stCode { font-family:'JetBrains Mono',monospace!important; background:var(
     h1 { font-size:1.4rem!important; }
     .main .block-container { padding:0!important; }
 }
+
+/* ═══════════════════════════════════════════════════════
+   FIX 4: SIDEBAR SÁT VIỀN - Remove all gaps
+   ═══════════════════════════════════════════════════════ */
+[data-testid="stSidebar"] {
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+[data-testid="stSidebar"] > div {
+    padding: 1.5rem 1rem !important;
+}
+
+section[data-testid="stSidebar"] {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    margin-left: 0 !important;
+}
+
+[data-testid="stSidebarNav"] {
+    padding-left: 0 !important;
+}
+
+/* ═══════════════════════════════════════════════════════
+   FIX 5: PAGE FEATURES SPACING - Generous breathing room
+   ═══════════════════════════════════════════════════════ */
+
+/* Section headers */
+.main h1,
+.main h2,
+.main h3 {
+    margin-top: 2.5rem !important;
+    margin-bottom: 1.5rem !important;
+}
+
+.main h1:first-child,
+.main h2:first-child {
+    margin-top: 1rem !important;
+}
+
+/* Metric containers */
+[data-testid="metric-container"],
+[data-testid="stMetric"] {
+    margin-bottom: 1.5rem !important;
+}
+
+/* Charts */
+[data-testid="stPlotlyChart"],
+.element-container:has(iframe) {
+    margin-bottom: 2rem !important;
+}
+
+/* Data frames */
+[data-testid="stDataFrame"] {
+    margin: 2rem 0 !important;
+}
+
+/* Expanders */
+[data-testid="stExpander"] {
+    margin: 1.5rem 0 !important;
+}
+
+/* Tabs */
+[data-testid="stTabs"] {
+    margin: 2rem 0 !important;
+}
+
+/* Forms */
+[data-testid="stForm"] {
+    margin: 2rem 0 !important;
+}
+
+/* Alerts */
+[data-testid="stAlert"] {
+    margin: 1.5rem 0 !important;
+}
+
+/* Column gaps */
+[data-testid="column"] {
+    padding: 0 1rem !important;
+}
+
+[data-testid="column"]:first-child {
+    padding-left: 0 !important;
+}
+
+[data-testid="column"]:last-child {
+    padding-right: 0 !important;
+}
+
+/* Dividers */
+hr {
+    margin: 3rem 0 !important;
+    opacity: 0.2 !important;
+}
+
+/* General element spacing */
+.element-container {
+    margin-bottom: 1.5rem !important;
+}
+
+/* Buttons */
+.stButton {
+    margin: 1rem 0 !important;
+}
+
+/* Inputs */
+.stTextInput,
+.stSelectbox,
+.stMultiSelect {
+    margin-bottom: 1.5rem !important;
+}
+
 </style>
 """

@@ -27,13 +27,25 @@ try:
     st.markdown(DARK_THEME if IS_DARK else LIGHT_THEME, unsafe_allow_html=True)
 except Exception: pass
 
-# Kill native Streamlit sidebar/toolbar
-st.markdown("""<style>
-[data-testid="stSidebar"],[data-testid="collapsedControl"]{display:none!important;}
-</style>""", unsafe_allow_html=True)
-
 # ── LOGIN ────────────────────────────────────────────────────────
 if not st.session_state.logged_in:
+    # FIX: Hide sidebar ONLY on login page (prevents flash on reload)
+    st.markdown("""<style>
+    [data-testid="stSidebar"],
+    [data-testid="stSidebarNav"],
+    [data-testid="collapsedControl"],
+    button[kind="header"],
+    section[data-testid="stSidebar"] {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+    }
+    .main .block-container {
+        max-width: 100% !important;
+        padding: 0 !important;
+    }
+    </style>""", unsafe_allow_html=True)
+    
     try:
         from auth.login import login_page
         login_page()

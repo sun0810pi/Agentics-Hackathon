@@ -86,5 +86,83 @@ hr{border:none!important;border-top:1px solid var(--border)!important;margin:1.7
 [data-testid="column"]:first-of-type{position:relative!important;max-height:none!important;min-height:auto!important;border-right:none!important;border-bottom:1px solid var(--border)!important;}
 [data-testid="stMetricValue"]{font-size:1.6rem!important;}h1{font-size:1.4rem!important;}
 }
+
+/* ═══════════════════════════════════════════════════════
+   FIX 4: SIDEBAR SÁT VIỀN
+   ═══════════════════════════════════════════════════════ */
+[data-testid="stSidebar"] {
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+[data-testid="stSidebar"] > div {
+    padding: 1.5rem 1rem !important;
+}
+
+section[data-testid="stSidebar"] {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    margin-left: 0 !important;
+}
+
+/* ═══════════════════════════════════════════════════════
+   FIX 5: PAGE FEATURES SPACING
+   ═══════════════════════════════════════════════════════ */
+.main h1, .main h2, .main h3 {
+    margin-top: 2.5rem !important;
+    margin-bottom: 1.5rem !important;
+}
+
+.main h1:first-child, .main h2:first-child {
+    margin-top: 1rem !important;
+}
+
+[data-testid="metric-container"],
+[data-testid="stMetric"] {
+    margin-bottom: 1.5rem !important;
+}
+
+[data-testid="stPlotlyChart"],
+.element-container:has(iframe) {
+    margin-bottom: 2rem !important;
+}
+
+[data-testid="stDataFrame"] {
+    margin: 2rem 0 !important;
+}
+
+[data-testid="stExpander"] {
+    margin: 1.5rem 0 !important;
+}
+
+[data-testid="stTabs"] {
+    margin: 2rem 0 !important;
+}
+
+[data-testid="stAlert"] {
+    margin: 1.5rem 0 !important;
+}
+
+[data-testid="column"] {
+    padding: 0 1rem !important;
+}
+
+[data-testid="column"]:first-child {
+    padding-left: 0 !important;
+}
+
+[data-testid="column"]:last-child {
+    padding-right: 0 !important;
+}
+
+hr {
+    margin: 3rem 0 !important;
+    opacity: 0.15 !important;
+}
+
+.element-container {
+    margin-bottom: 1.5rem !important;
+}
+
 </style>
 """

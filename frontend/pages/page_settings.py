@@ -1,5 +1,17 @@
 import streamlit as st
 
+def gap(size="1rem"):
+    st.markdown(f'<div style="height:{size}"></div>', unsafe_allow_html=True)
+
+def section_header(icon, title, subtitle=None):
+    TEXT = '#f1f5f9' if st.session_state.get('theme','dark')=='dark' else '#0f172a'
+    TEXT2 = '#94a3b8' if st.session_state.get('theme','dark')=='dark' else '#64748b'
+    st.markdown(f"""<div style="margin:1.25rem 0 0.5rem;">
+  <div style="font-size:1.05rem;font-weight:700;color:{TEXT};display:flex;align-items:center;gap:.4rem;">{icon} {title}</div>
+  {f'<div style="font-size:.8rem;color:{TEXT2};margin-top:2px;">{subtitle}</div>' if subtitle else ''}
+</div>""", unsafe_allow_html=True)
+
+
 def render():
     from components.widgets import (
         success_box,
@@ -29,7 +41,7 @@ def render():
         st.markdown("### 👤 Profile Settings")
 
         with card_container("User Information", "ℹ️", variant='primary'):
-            col1, col2 = st.columns(2)
+            col1, col2 = st.columns(2, gap="medium")
 
             with col1:
                 name = st.text_input(
@@ -174,7 +186,7 @@ def render():
             ]
 
             for i, session in enumerate(sessions):
-                col1, col2 = st.columns([3, 1])
+                col1, col2 = st.columns([3, 1], gap="medium")
 
                 with col1:
                     st.markdown(f"""
@@ -232,7 +244,7 @@ def render():
     st.markdown("### ⚠️ Danger Zone")
 
     with card_container("Logout & Reset", "🚪", variant='danger'):
-        col1, col2 = st.columns(2)
+        col1, col2 = st.columns(2, gap="medium")
 
         with col1:
             if st.button("🚪 Logout", use_container_width=True, type="secondary"):

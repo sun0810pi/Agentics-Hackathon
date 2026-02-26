@@ -1,5 +1,17 @@
 import streamlit as st
 
+def gap(size="1rem"):
+    st.markdown(f'<div style="height:{size}"></div>', unsafe_allow_html=True)
+
+def section_header(icon, title, subtitle=None):
+    TEXT = '#f1f5f9' if st.session_state.get('theme','dark')=='dark' else '#0f172a'
+    TEXT2 = '#94a3b8' if st.session_state.get('theme','dark')=='dark' else '#64748b'
+    st.markdown(f"""<div style="margin:1.25rem 0 0.5rem;">
+  <div style="font-size:1.05rem;font-weight:700;color:{TEXT};display:flex;align-items:center;gap:.4rem;">{icon} {title}</div>
+  {f'<div style="font-size:.8rem;color:{TEXT2};margin-top:2px;">{subtitle}</div>' if subtitle else ''}
+</div>""", unsafe_allow_html=True)
+
+
 def render():
     from components.widgets import alert_box, success_box, error_box, warning_box
     from services.data_provider import process_invoice
@@ -13,7 +25,7 @@ def render():
     # Upload section
     st.markdown("### 📤 Upload File")
 
-    col1, col2 = st.columns([2, 1])
+    col1, col2 = st.columns([2, 1], gap="medium")
 
     with col1:
         uploaded_file = st.file_uploader(
@@ -74,7 +86,7 @@ def render():
                         warning_box(f"⚠️ **REVIEW** - Risk: {result.get('risk_score', 0)}")
 
                     # Metrics
-                    col1, col2, col3 = st.columns(3)
+                    col1, col2, col3 = st.columns(3, gap="medium")
                     col1.metric("Risk Score", f"{result.get('risk_score', 0)}/100")
                     col2.metric("Confidence", f"{result.get('confidence', 0)*100:.1f}%")
                     col3.metric("Duration", f"{result.get('total_duration_ms', 0):.0f}ms")

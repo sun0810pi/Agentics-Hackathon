@@ -1,5 +1,17 @@
 import streamlit as st
 
+def gap(size="1rem"):
+    st.markdown(f'<div style="height:{size}"></div>', unsafe_allow_html=True)
+
+def section_header(icon, title, subtitle=None):
+    TEXT = '#f1f5f9' if st.session_state.get('theme','dark')=='dark' else '#0f172a'
+    TEXT2 = '#94a3b8' if st.session_state.get('theme','dark')=='dark' else '#64748b'
+    st.markdown(f"""<div style="margin:1.25rem 0 0.5rem;">
+  <div style="font-size:1.05rem;font-weight:700;color:{TEXT};display:flex;align-items:center;gap:.4rem;">{icon} {title}</div>
+  {f'<div style="font-size:.8rem;color:{TEXT2};margin-top:2px;">{subtitle}</div>' if subtitle else ''}
+</div>""", unsafe_allow_html=True)
+
+
 def render():
     from components.widgets import (
         alert_box,
@@ -37,7 +49,7 @@ def render():
     # System health overview
     st.markdown("### 🏥 System Health")
 
-    col1, col2, col3, col4 = st.columns(4)
+    col1, col2, col3, col4 = st.columns(4, gap="medium")
 
     with col1:
         kpi_card(
@@ -102,7 +114,7 @@ def render():
         )
     else:
         # Filter options
-        col1, col2, col3 = st.columns(3)
+        col1, col2, col3 = st.columns(3, gap="medium")
 
         with col1:
             status_filter = st.selectbox(
@@ -149,7 +161,7 @@ def render():
                 expanded=False
             ):
                 # Trace summary
-                col1, col2, col3 = st.columns(3)
+                col1, col2, col3 = st.columns(3, gap="medium")
 
                 with col1:
                     st.metric("Total Duration", f"{duration}ms")
@@ -174,7 +186,7 @@ def render():
                         # Calculate percentage of total
                         percentage = (seg_duration / duration * 100) if duration > 0 else 0
 
-                        col1, col2 = st.columns([3, 1])
+                        col1, col2 = st.columns([3, 1], gap="medium")
 
                         with col1:
                             st.markdown(f"**{seg_name}** - {seg_duration}ms")
@@ -211,7 +223,7 @@ def render():
         with card_container("API Gateway Metrics", "🌐", variant='primary'):
             st.markdown("**Request Metrics (Last 1 Hour)**")
 
-            col1, col2, col3 = st.columns(3)
+            col1, col2, col3 = st.columns(3, gap="medium")
 
             with col1:
                 st.metric("Total Requests", "4,523", "+12%")
@@ -254,7 +266,7 @@ def render():
         with card_container("Lambda Metrics", "λ", variant='warning'):
             st.markdown("**Function Performance (Last 1 Hour)**")
 
-            col1, col2, col3 = st.columns(3)
+            col1, col2, col3 = st.columns(3, gap="medium")
 
             with col1:
                 st.metric("Invocations", "3,892", "+8%")
@@ -293,7 +305,7 @@ def render():
         with card_container("Database Metrics", "🗄️", variant='success'):
             st.markdown("**RDS Performance (Last 1 Hour)**")
 
-            col1, col2, col3 = st.columns(3)
+            col1, col2, col3 = st.columns(3, gap="medium")
 
             with col1:
                 st.metric("CPU Usage", "42%", "-8%")

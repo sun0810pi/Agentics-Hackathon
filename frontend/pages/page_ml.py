@@ -1,5 +1,17 @@
 import streamlit as st
 
+def gap(size="1rem"):
+    st.markdown(f'<div style="height:{size}"></div>', unsafe_allow_html=True)
+
+def section_header(icon, title, subtitle=None):
+    TEXT = '#f1f5f9' if st.session_state.get('theme','dark')=='dark' else '#0f172a'
+    TEXT2 = '#94a3b8' if st.session_state.get('theme','dark')=='dark' else '#64748b'
+    st.markdown(f"""<div style="margin:1.25rem 0 0.5rem;">
+  <div style="font-size:1.05rem;font-weight:700;color:{TEXT};display:flex;align-items:center;gap:.4rem;">{icon} {title}</div>
+  {f'<div style="font-size:.8rem;color:{TEXT2};margin-top:2px;">{subtitle}</div>' if subtitle else ''}
+</div>""", unsafe_allow_html=True)
+
+
 def render():
     from components.widgets import alert_box, stat_card, progress_bar_animated, card_container
     from components.charts import plot_agent_performance
@@ -31,7 +43,7 @@ def render():
     # Model performance overview
     st.markdown("### 🎯 Model Performance Overview")
 
-    col1, col2, col3, col4 = st.columns(4)
+    col1, col2, col3, col4 = st.columns(4, gap="medium")
 
     # Calculate aggregate metrics
     if agents:
@@ -109,7 +121,7 @@ def render():
                     icon="🧠",
                     variant='primary'
                 ):
-                    col1, col2, col3 = st.columns(3)
+                    col1, col2, col3 = st.columns(3, gap="medium")
 
                     with col1:
                         st.metric(
@@ -180,7 +192,7 @@ def render():
     # Model statistics
     st.markdown("### 📈 Model Statistics")
 
-    col1, col2 = st.columns(2)
+    col1, col2 = st.columns(2, gap="medium")
 
     with col1:
         with card_container("Confusion Matrix", "📊", variant='default'):
@@ -217,7 +229,7 @@ def render():
     # Training & optimization
     st.markdown("### 🔧 Model Training & Optimization")
 
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3 = st.columns(3, gap="medium")
 
     with col1:
         if st.button("🔄 Retrain Models", use_container_width=True, type="primary"):

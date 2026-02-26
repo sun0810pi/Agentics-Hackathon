@@ -1,5 +1,17 @@
 import streamlit as st
 
+def gap(size="1rem"):
+    st.markdown(f'<div style="height:{size}"></div>', unsafe_allow_html=True)
+
+def section_header(icon, title, subtitle=None):
+    TEXT = '#f1f5f9' if st.session_state.get('theme','dark')=='dark' else '#0f172a'
+    TEXT2 = '#94a3b8' if st.session_state.get('theme','dark')=='dark' else '#64748b'
+    st.markdown(f"""<div style="margin:1.25rem 0 0.5rem;">
+  <div style="font-size:1.05rem;font-weight:700;color:{TEXT};display:flex;align-items:center;gap:.4rem;">{icon} {title}</div>
+  {f'<div style="font-size:.8rem;color:{TEXT2};margin-top:2px;">{subtitle}</div>' if subtitle else ''}
+</div>""", unsafe_allow_html=True)
+
+
 def render():
     from components.widgets import (
         alert_box,
@@ -87,7 +99,7 @@ def render():
     st.markdown("### 🔍 Active Fraud Scenarios")
 
     # Filter options
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3 = st.columns(3, gap="medium")
 
     with col1:
         severity_filter = st.selectbox(
@@ -157,7 +169,7 @@ def render():
                 icon="🚨" if severity in ['CRITICAL', 'HIGH'] else "⚠️",
                 variant=severity_color
             ):
-                col1, col2, col3, col4 = st.columns(4)
+                col1, col2, col3, col4 = st.columns(4, gap="medium")
 
                 with col1:
                     st.markdown("**Severity**")
@@ -183,7 +195,7 @@ def render():
                 st.markdown(f"**Confidence:** {confidence*100:.1f}% | **Detected:** {time_ago(detected_at)}")
 
                 # Action buttons
-                col1, col2, col3 = st.columns(3)
+                col1, col2, col3 = st.columns(3, gap="medium")
 
                 with col1:
                     if st.button("🔍 Investigate", key=f"investigate_{i}", use_container_width=True):
@@ -212,7 +224,7 @@ def render():
     # Investigation tools
     st.markdown("### 🔧 Investigation Tools")
 
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3 = st.columns(3, gap="medium")
 
     with col1:
         if st.button("🔍 Pattern Analysis", use_container_width=True, type="primary"):

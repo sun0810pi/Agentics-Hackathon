@@ -1,404 +1,183 @@
 import streamlit as st
-from components.metrics import metric_card_group, kpi_card
-from components.charts import plot_time_series, plot_risk_distribution
-from components.widgets import alert_box
 from services.data_provider import get_dashboard_metrics, get_agent_metrics, get_data_provider
 from utils.helpers import format_currency, format_percentage, format_number
 import plotly.graph_objects as go
-import plotly.express as px
 from datetime import datetime, timedelta
+import pandas as pd
 
 @st.cache_data(ttl=60)
 def _load():
     try:
-        metrics = get_dashboard_metrics()
-        agents = get_agent_metrics()
+        from services.data_provider import get_data_provider
+        m = get_dashboard_metrics()
+        a = get_agent_metrics()
         ts = get_data_provider().get_time_series(days=30)
-        return {"ok": True, "metrics": metrics, "agents": agents, "ts": ts}
+        return {"ok": True, "m": m, "a": a, "ts": ts}
     except Exception as e:
         return {"ok": False, "error": str(e)}
 
+def gap(size="1rem"):
+    st.markdown(f'<div style="height:{size}"></div>', unsafe_allow_html=True)
+
+def section_header(icon, title, subtitle=None):
+    st.markdown(f"""
+<div style="margin:1.5rem 0 0.6rem;">
+  <div style="font-size:1.1rem;font-weight:700;color:var(--text,#f1f5f9);display:flex;align-items:center;gap:.5rem;">
+    {icon} {title}
+  </div>
+  {f'<div style="font-size:.82rem;color:var(--text2,#94a3b8);margin-top:2px;">{subtitle}</div>' if subtitle else ''}
+</div>""", unsafe_allow_html=True)
+
 def render():
-    """
-    📊 Dashboard Overview - Comprehensive fraud detection dashboard
-    Shows KPIs, charts, agent status, and system health
-    """
-    
-    # ═══════════════════════════════════════════════════════════
-    # HEADER SECTION
-    # ═══════════════════════════════════════════════════════════
-    st.markdown("🏠 **Home** / **Dashboard**")
-    st.title("📊 Dashboard Overview")
-    st.markdown("**Real-time fraud detection insights and analytics**")
-    st.markdown("Last updated: " + datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-    
-    # Spacing
-    
-    # Backend status check
+    IS_DARK = st.session_state.get('theme','dark') == 'dark'
+    TPL = 'plotly_dark' if IS_DARK else 'plotly_white'
+    BG  = 'rgba(0,0,0,0)' if IS_DARK else 'rgba(0,0,0,0)'
+    CARD = '#0c1020' if IS_DARK else '#ffffff'
+    TEXT = '#f1f5f9' if IS_DARK else '#0f172a'
+    TEXT2 = '#94a3b8' if IS_DARK else '#64748b'
+    BORDER = 'rgba(59,130,246,0.13)' if IS_DARK else 'rgba(0,0,0,0.07)'
+
+    # ── Header ──────────────────────────────────────────────────
+    st.markdown(f"""
+<div style="margin-bottom:1rem;">
+  <div style="font-size:1.65rem;font-weight:700;letter-spacing:-.025em;color:{TEXT};">
+    📊 Dashboard Overview
+  </div>
+  <div style="font-size:.83rem;color:{TEXT2};margin-top:3px;">
+    Real-time fraud detection insights &nbsp;·&nbsp; {datetime.now().strftime("%b %d, %Y  %H:%M")}
+  </div>
+</div>""", unsafe_allow_html=True)
+
     provider = get_data_provider()
     if not provider.backend_available:
         st.warning("⚠️ Backend unavailable — showing demo data.")
-    
-    # Load data
+
     data = _load()
     if not data["ok"]:
-        st.error(f"❌ Failed to load data: {data['error']}")
-        return
-    
-    m = data["metrics"]
-    agents = data["agents"]
-    ts_data = data["ts"]
-    
-    # ═══════════════════════════════════════════════════════════
-    # SECTION 1: KEY PERFORMANCE INDICATORS
-    # ═══════════════════════════════════════════════════════════
-    st.markdown("### 🎯 Key Performance Indicators")
-    st.markdown("Core metrics for fraud detection performance")
-    
-    col1, col2, col3, col4 = st.columns(4)
-    
-    with col1:
-        st.metric(
-            label="TOTAL PROCESSED",
-            value=f"{m.get('total_processed', 0):,}",
-            delta="+5.2%",
-            help="Total invoices processed today"
-        )
-    
-    with col2:
-        st.metric(
-            label="ACCURACY",
-            value=f"{m.get('accuracy', 0):.1f}%",
-            delta="+2.1%",
-            help="Model detection accuracy"
-        )
-    
-    with col3:
-        st.metric(
-            label="FRAUD PREVENTED",
-            value=format_currency(m.get('fraud_prevented_usd', 0)),
-            delta="+12.3%",
-            help="Total fraud amount prevented"
-        )
-    
-    with col4:
-        st.metric(
-            label="AVG LATENCY",
-            value=f"{m.get('avg_latency_ms', 0):.0f}ms",
-            delta="-8.5ms",
-            help="Average processing time"
-        )
-    
-    # Spacing
-    
-    # ═══════════════════════════════════════════════════════════
-    # SECTION 2: PROCESSING STATISTICS
-    # ═══════════════════════════════════════════════════════════
-    st.markdown("### 📈 Processing Statistics")
-    st.markdown("Breakdown of processed transactions")
-    
-    col1, col2, col3, col4 = st.columns(4)
-    
-    with col1:
-        st.metric(
-            label="APPROVED",
-            value=format_number(m.get('total_approved', 0)),
-            delta="+3.2%",
-            help="Transactions approved"
-        )
-    
-    with col2:
-        st.metric(
-            label="BLOCKED",
-            value=format_number(m.get('total_blocked', 0)),
-            delta="+15.8%",
-            help="Fraudulent transactions blocked"
-        )
-    
-    with col3:
-        st.metric(
-            label="PENDING",
-            value=format_number(m.get('total_pending', 0)),
-            delta="-5.1%",
-            help="Awaiting manual review"
-        )
-    
-    with col4:
-        st.metric(
-            label="AUTOMATION RATE",
-            value=format_percentage(m.get('automation_rate', 0)),
-            delta="+2.3%",
-            help="Automated decision rate"
-        )
-    
+        st.error(f"❌ {data['error']}"); return
+
+    m  = data["m"]
+    ag = data["a"]
+    ts = data["ts"]
+
+    # ── KPI Row ──────────────────────────────────────────────────
+    section_header("🎯", "Key Performance Indicators", "Core fraud detection metrics")
+    c1,c2,c3,c4 = st.columns(4, gap="medium")
+    with c1: st.metric("Total Processed", f"{m.get('total_processed',0):,}", "+5.2%")
+    with c2: st.metric("Accuracy", f"{m.get('accuracy',0):.1f}%", "+2.1%")
+    with c3: st.metric("Fraud Prevented", format_currency(m.get('fraud_prevented_usd',0)), "+12.3%")
+    with c4: st.metric("Avg Latency", f"{m.get('avg_latency_ms',0):.0f}ms", "-8.5ms")
+
+    gap("1rem")
+
+    # ── Stats Row ────────────────────────────────────────────────
+    section_header("📈", "Processing Statistics", "Transaction breakdown")
+    c1,c2,c3,c4 = st.columns(4, gap="medium")
+    with c1: st.metric("Approved", format_number(m.get('total_approved',0)), "+3.2%")
+    with c2: st.metric("Blocked", format_number(m.get('total_blocked',0)), "+15.8%")
+    with c3: st.metric("Pending", format_number(m.get('total_pending',0)), "-5.1%")
+    with c4: st.metric("Automation", format_percentage(m.get('automation_rate',0)), "+2.3%")
+
+    gap("1rem")
     st.divider()
-    
-    # ═══════════════════════════════════════════════════════════
-    # SECTION 3: TRANSACTION ANALYSIS CHARTS
-    # ═══════════════════════════════════════════════════════════
-    st.markdown("### 📊 Transaction Analysis")
-    st.markdown("Volume trends and risk distribution over the past 30 days")
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.markdown("#### Processing Volume (30 Days)")
-        if ts_data:
-            plot_time_series(
-                data=ts_data,
-                title="Invoice Trend",
-                height=400
-            )
+
+    # ── Charts Row 1 ─────────────────────────────────────────────
+    section_header("📊", "Transaction Analysis", "Volume trends and risk distribution — 30 days")
+    c1, c2 = st.columns(2, gap="large")
+
+    with c1:
+        st.markdown(f'<div style="font-size:.82rem;font-weight:600;color:{TEXT2};text-transform:uppercase;letter-spacing:.08em;margin-bottom:.5rem;">Processing Volume</div>', unsafe_allow_html=True)
+        if ts:
+            from components.charts import plot_time_series
+            plot_time_series(data=ts, title="Invoice Trend", height=340)
         else:
-            st.info("📊 No time series data available")
-    
-    with col2:
-        st.markdown("#### Risk Distribution")
-        plot_risk_distribution(
-            data=[
-                {"risk_level": "LOW", "count": m.get('total_approved', 0), "pct": 75.2},
-                {"risk_level": "MEDIUM", "count": m.get('total_pending', 0), "pct": 12.8},
-                {"risk_level": "HIGH", "count": m.get('total_blocked', 0), "pct": 12.0},
-            ],
-            title="Risk Scores",
-            height=400
-        )
-    
+            st.info("No time series data")
+
+    with c2:
+        st.markdown(f'<div style="font-size:.82rem;font-weight:600;color:{TEXT2};text-transform:uppercase;letter-spacing:.08em;margin-bottom:.5rem;">Risk Distribution</div>', unsafe_allow_html=True)
+        from components.charts import plot_risk_distribution
+        plot_risk_distribution(data=[
+            {"risk_level":"LOW","count":m.get('total_approved',0),"pct":75.2},
+            {"risk_level":"MEDIUM","count":m.get('total_pending',0),"pct":12.8},
+            {"risk_level":"HIGH","count":m.get('total_blocked',0),"pct":12.0},
+        ], title="Risk Scores", height=340)
+
+    gap("0.5rem")
     st.divider()
-    
-    # ═══════════════════════════════════════════════════════════
-    # SECTION 4: DETECTION PERFORMANCE
-    # ═══════════════════════════════════════════════════════════
-    st.markdown("### 🎯 Detection Performance")
-    st.markdown("Model accuracy and fraud type breakdown")
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.markdown("#### Accuracy Trend (7 Days)")
-        
-        # Generate accuracy trend data
-        days = [(datetime.now() - timedelta(days=i)).strftime("%b %d") for i in range(6, -1, -1)]
-        accuracy = [95.2, 96.1, 97.3, 96.8, 97.6, 98.1, 98.3]
-        
+
+    # ── Charts Row 2 ─────────────────────────────────────────────
+    section_header("🎯", "Detection Performance", "Model accuracy and fraud type breakdown")
+    c1, c2 = st.columns(2, gap="large")
+
+    with c1:
+        st.markdown(f'<div style="font-size:.82rem;font-weight:600;color:{TEXT2};text-transform:uppercase;letter-spacing:.08em;margin-bottom:.5rem;">Accuracy Trend (7 Days)</div>', unsafe_allow_html=True)
+        days = [(datetime.now()-timedelta(days=i)).strftime("%b %d") for i in range(6,-1,-1)]
+        acc  = [95.2,96.1,97.3,96.8,97.6,98.1,98.3]
         fig = go.Figure()
-        fig.add_trace(go.Scatter(
-            x=days,
-            y=accuracy,
-            mode='lines+markers',
-            name='Accuracy',
-            line=dict(color='#3b82f6', width=3),
-            marker=dict(size=8),
-            fill='tozeroy',
-            fillcolor='rgba(59, 130, 246, 0.1)'
-        ))
-        
-        fig.update_layout(
-            template='plotly_dark' if st.session_state.get('theme','dark')=='dark' else 'plotly_white' if st.session_state.get('theme','dark')=='dark' else 'plotly_white',
-            height=400,
-            margin=dict(l=0, r=0, t=20, b=0),
-            paper_bgcolor='rgba(0,0,0,0)',
-            plot_bgcolor='rgba(0,0,0,0)',
-            yaxis=dict(range=[94, 100], ticksuffix='%'),
-            hovermode='x unified'
-        )
-        
-        st.plotly_chart(fig, use_container_width=True)
-    
-    with col2:
-        st.markdown("#### Fraud Types Detected")
-        
-        # Fraud type distribution
-        fraud_types = {
-            'Identity Theft': 35,
-            'Account Takeover': 25,
-            'Synthetic Identity': 18,
-            'Card Fraud': 12,
-            'Other': 10
-        }
-        
-        fig = go.Figure(data=[go.Pie(
-            labels=list(fraud_types.keys()),
-            values=list(fraud_types.values()),
-            hole=0.4,
-            marker=dict(colors=['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'])
-        )])
-        
-        fig.update_layout(
-            template='plotly_dark' if st.session_state.get('theme','dark')=='dark' else 'plotly_white' if st.session_state.get('theme','dark')=='dark' else 'plotly_white',
-            height=400,
-            margin=dict(l=0, r=0, t=20, b=0),
-            paper_bgcolor='rgba(0,0,0,0)',
-            plot_bgcolor='rgba(0,0,0,0)',
-            showlegend=True
-        )
-        
-        st.plotly_chart(fig, use_container_width=True)
-    
+        fig.add_trace(go.Scatter(x=days,y=acc,mode='lines+markers',name='Accuracy',
+            line=dict(color='#3b82f6',width=2.5),marker=dict(size=7),
+            fill='tozeroy',fillcolor='rgba(59,130,246,0.08)'))
+        fig.update_layout(template=TPL,height=320,margin=dict(l=0,r=0,t=10,b=0),
+            paper_bgcolor=BG,plot_bgcolor=BG,yaxis=dict(range=[94,100],ticksuffix='%'),hovermode='x unified')
+        st.plotly_chart(fig,use_container_width=True)
+
+    with c2:
+        st.markdown(f'<div style="font-size:.82rem;font-weight:600;color:{TEXT2};text-transform:uppercase;letter-spacing:.08em;margin-bottom:.5rem;">Fraud Types</div>', unsafe_allow_html=True)
+        ftypes = {'Identity Theft':35,'Account Takeover':25,'Synthetic Identity':18,'Card Fraud':12,'Other':10}
+        fig2 = go.Figure(data=[go.Pie(labels=list(ftypes.keys()),values=list(ftypes.values()),hole=0.42,
+            marker=dict(colors=['#3b82f6','#10b981','#f59e0b','#ef4444','#8b5cf6']))])
+        fig2.update_layout(template=TPL,height=320,margin=dict(l=0,r=0,t=10,b=0),
+            paper_bgcolor=BG,plot_bgcolor=BG,showlegend=True)
+        st.plotly_chart(fig2,use_container_width=True)
+
+    gap("0.5rem")
     st.divider()
-    
-    # ═══════════════════════════════════════════════════════════
-    # SECTION 5: AGENT STATUS
-    # ═══════════════════════════════════════════════════════════
-    st.markdown("### 🤖 Agent Status")
-    st.markdown("Real-time status of fraud detection agents")
-    
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        total_agents = agents.get('total', 17)
-        active_agents = agents.get('active', 15)
-        st.metric(
-            label="ACTIVE AGENTS",
-            value=f"{active_agents}/{total_agents}",
-            delta=f"{(active_agents/total_agents*100):.1f}%",
-            help="Currently active detection agents"
-        )
-    
-    with col2:
-        avg_confidence = agents.get('avg_confidence', 0.94)
-        st.metric(
-            label="AVG CONFIDENCE",
-            value=f"{avg_confidence*100:.1f}%",
-            delta="+1.2%",
-            help="Average agent confidence score"
-        )
-    
-    with col3:
-        alerts_triggered = agents.get('alerts_24h', 23)
-        st.metric(
-            label="ALERTS (24H)",
-            value=f"{alerts_triggered}",
-            delta="+5",
-            help="Alerts triggered in last 24 hours"
-        )
-    
-    # Agent tier breakdown
-    st.markdown("#### Agent Distribution by Tier")
-    tier_col1, tier_col2, tier_col3, tier_col4 = st.columns(4)
-    
-    with tier_col1:
-        st.info("**Core Detection**\n\n8 agents active")
-    
-    with tier_col2:
-        st.success("**ML Intelligence**\n\n3 agents active")
-    
-    with tier_col3:
-        st.warning("**Merchant Success**\n\n3 agents active")
-    
-    with tier_col4:
-        st.error("**Security**\n\n3 agents active")
-    
+
+    # ── Agent Status ─────────────────────────────────────────────
+    section_header("🤖", "Agent Status", "Real-time fraud detection agents")
+    c1,c2,c3 = st.columns(3, gap="medium")
+    total = ag.get('total',17); active = ag.get('active',15)
+    with c1: st.metric("Active Agents", f"{active}/{total}", f"{active/total*100:.1f}%")
+    with c2: st.metric("Avg Confidence", f"{ag.get('avg_confidence',0.94)*100:.1f}%", "+1.2%")
+    with c3: st.metric("Alerts (24h)", str(ag.get('alerts_24h',23)), "+5")
+
+    gap("0.75rem")
+    c1,c2,c3,c4 = st.columns(4, gap="medium")
+    with c1: st.info("**Core Detection**\n\n8 agents active")
+    with c2: st.success("**ML Intelligence**\n\n3 agents active")
+    with c3: st.warning("**Merchant Success**\n\n3 agents active")
+    with c4: st.error("**Security**\n\n3 agents active")
+
+    gap("0.5rem")
     st.divider()
-    
-    # ═══════════════════════════════════════════════════════════
-    # SECTION 6: RECENT ALERTS
-    # ═══════════════════════════════════════════════════════════
-    st.markdown("### 🚨 Recent High-Priority Alerts")
-    st.markdown("Latest fraud attempts and suspicious activities")
-    
-    # Sample alert data
-    import pandas as pd
-    alerts_data = pd.DataFrame([
-        {
-            "Time": "2 min ago",
-            "Type": "🔴 Account Takeover",
-            "Amount": "$12,450",
-            "Risk": "HIGH",
-            "Status": "Blocked"
-        },
-        {
-            "Time": "15 min ago",
-            "Type": "🟡 Suspicious Pattern",
-            "Amount": "$3,200",
-            "Risk": "MEDIUM",
-            "Status": "Review"
-        },
-        {
-            "Time": "32 min ago",
-            "Type": "🔴 Identity Theft",
-            "Amount": "$8,900",
-            "Risk": "HIGH",
-            "Status": "Blocked"
-        },
-        {
-            "Time": "1 hour ago",
-            "Type": "🟡 Velocity Check",
-            "Amount": "$1,500",
-            "Risk": "MEDIUM",
-            "Status": "Approved"
-        },
-        {
-            "Time": "2 hours ago",
-            "Type": "🔴 Card Fraud",
-            "Amount": "$5,670",
-            "Risk": "HIGH",
-            "Status": "Blocked"
-        }
+
+    # ── Recent Alerts ────────────────────────────────────────────
+    section_header("🚨", "Recent High-Priority Alerts", "Latest fraud attempts")
+    alerts_df = pd.DataFrame([
+        {"Time":"2 min ago","Type":"🔴 Account Takeover","Amount":"$12,450","Risk":"HIGH","Status":"Blocked"},
+        {"Time":"15 min ago","Type":"🟡 Suspicious Pattern","Amount":"$3,200","Risk":"MEDIUM","Status":"Review"},
+        {"Time":"32 min ago","Type":"🔴 Identity Theft","Amount":"$8,900","Risk":"HIGH","Status":"Blocked"},
+        {"Time":"1 hr ago","Type":"🟡 Velocity Check","Amount":"$1,500","Risk":"MEDIUM","Status":"Approved"},
+        {"Time":"2 hrs ago","Type":"🔴 Card Fraud","Amount":"$5,670","Risk":"HIGH","Status":"Blocked"},
     ])
-    
-    st.dataframe(
-        alerts_data,
-        use_container_width=True,
-        hide_index=True
-    )
-    
+    st.dataframe(alerts_df, use_container_width=True, hide_index=True)
+
+    gap("0.5rem")
     st.divider()
-    
-    # ═══════════════════════════════════════════════════════════
-    # SECTION 7: SYSTEM HEALTH
-    # ═══════════════════════════════════════════════════════════
-    st.markdown("### ⚡ System Health & Performance")
-    st.markdown("Infrastructure and resource utilization")
-    
-    col1, col2, col3, col4 = st.columns(4)
-    
-    with col1:
-        st.metric(
-            label="P50 LATENCY",
-            value="187ms",
-            delta="-8ms",
-            help="50th percentile response time"
-        )
-    
-    with col2:
-        st.metric(
-            label="P95 LATENCY",
-            value="534ms",
-            delta="-15ms",
-            help="95th percentile response time"
-        )
-    
-    with col3:
-        st.metric(
-            label="P99 LATENCY",
-            value="1.2s",
-            delta="-200ms",
-            help="99th percentile response time"
-        )
-    
-    with col4:
-        st.metric(
-            label="THROUGHPUT",
-            value="450/min",
-            delta="+25/min",
-            help="Transactions per minute"
-        )
-    
-    # System resources
-    st.markdown("#### Resource Utilization")
-    resource_col1, resource_col2, resource_col3 = st.columns(3)
-    
-    with resource_col1:
-        st.progress(0.67, text="**CPU Usage:** 67%")
-    
-    with resource_col2:
-        st.progress(0.52, text="**Memory:** 52%")
-    
-    with resource_col3:
-        st.progress(0.34, text="**Network:** 34%")
-    
-    # Spacing at end
-    
-    # Footer info
-    st.caption("💡 Dashboard auto-refreshes every 60 seconds")
+
+    # ── System Health ────────────────────────────────────────────
+    section_header("⚡", "System Health", "Infrastructure and resource utilization")
+    c1,c2,c3,c4 = st.columns(4, gap="medium")
+    with c1: st.metric("P50 Latency","187ms","-8ms")
+    with c2: st.metric("P95 Latency","534ms","-15ms")
+    with c3: st.metric("P99 Latency","1.2s","-200ms")
+    with c4: st.metric("Throughput","450/min","+25/min")
+
+    gap("0.75rem")
+    st.markdown(f'<div style="font-size:.82rem;font-weight:600;color:{TEXT2};text-transform:uppercase;letter-spacing:.08em;margin-bottom:.5rem;">Resource Utilization</div>', unsafe_allow_html=True)
+    st.progress(0.67, text="**CPU Usage:** 67%")
+    st.progress(0.52, text="**Memory:** 52%")
+    st.progress(0.34, text="**Network I/O:** 34%")
+
+    gap("1rem")
+    st.caption("💡 Dashboard auto-refreshes every 60 seconds · Data sourced from AgentFlow backend")

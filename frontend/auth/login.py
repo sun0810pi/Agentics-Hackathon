@@ -48,15 +48,20 @@ def login_user(email: str, password: str, cognito: 'CognitoClient') -> bool:
         st.session_state.refresh_token = result.get('refresh_token')
         
         # Get user info
+        demo_user = config.DEMO_USERS.get(email, {})
+
         if result.get('access_token'):
             user_info = cognito.get_user_info(result['access_token'])
             if user_info.get('success'):
-                st.session_state.user_name = user_info.get('name', email.split('@')[0])
+                st.session_state.user_name = user_info.get('name', demo_user.get('name', email.split('@')[0]))
+        # FIX: Set role!
+                st.session_state.user_role = user_info.get('role', demo_user.get('role', 'viewer'))
+            else:
+                st.session_state.user_name = demo_user.get('name', email.split('@')[0])
+                st.session_state.user_role = demo_user.get('role', 'viewer')
         else:
-            # Demo mode - get from demo users
-            demo_user = config.DEMO_USERS.get(email, {})
             st.session_state.user_name = demo_user.get('name', email.split('@')[0])
-            st.session_state.user_role = demo_user.get('role', 'user')
+            st.session_state.user_role = demo_user.get('role', 'viewer')
         
         # Log action
         log_action('login', {'email': email})

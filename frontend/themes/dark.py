@@ -240,5 +240,12 @@ code, .stCode { font-family: 'JetBrains Mono', monospace !important; background:
     background: rgba(245,158,11,0.1) !important;
     border-color: var(--yellow) !important;
 }
+
+/* ── Force sidebar always open ──────────────────────────── */
+/* Hide the collapse button inside sidebar (prevents closing) */
+[data-testid="stSidebarCollapseButton"] { display: none !important; }
+button[aria-label="Close sidebar"] { display: none !important; }
+/* Make sure sidebar toggle in header is visible for opening */
+[data-testid="stMainMenuPopover"] button { display: none !important; }
 </style>
 """

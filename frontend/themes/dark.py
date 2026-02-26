@@ -121,11 +121,11 @@ section.main>div:first-child,
 h1 { font-size:1.75rem!important;font-weight:700!important;color:var(--text)!important;
      letter-spacing:-.025em!important;line-height:1.2!important;margin:0 0 .4rem!important; }
 h2 { font-size:1.3rem!important;font-weight:600!important;color:var(--text)!important;
-     margin:2.25rem 0 .6rem!important; }
+     margin:1.5rem 0 .5rem!important; }
 h3 { font-size:1.05rem!important;font-weight:600!important;color:var(--text)!important;
-     margin:1.75rem 0 .5rem!important; }
+     margin:1.25rem 0 .4rem!important; }
 h4 { font-size:.88rem!important;font-weight:600!important;color:var(--text2)!important;
-     text-transform:uppercase;letter-spacing:.07em;margin:1.25rem 0 .4rem!important; }
+     text-transform:uppercase;letter-spacing:.07em;margin:1rem 0 .35rem!important; }
 p,span,li { color:var(--text)!important;line-height:1.65; }
 label { color:var(--text2)!important;font-size:.78rem!important;
         font-weight:500!important;text-transform:uppercase;letter-spacing:.06em; }
@@ -134,7 +134,7 @@ label { color:var(--text2)!important;font-size:.78rem!important;
 /* ── Metric cards ── */
 [data-testid="stMetric"] {
     background:var(--bg2)!important;border:1px solid var(--border)!important;
-    border-radius:var(--radius)!important;padding:1.35rem 1.5rem 1.25rem!important;
+    border-radius:var(--radius)!important;padding:1.1rem 1.25rem 1rem!important;
     position:relative;overflow:hidden;
     transition:border-color .2s,box-shadow .2s;
 }
@@ -156,9 +156,9 @@ label { color:var(--text2)!important;font-size:.78rem!important;
 }
 [data-testid="stMetricDelta"]>div { font-size:.8rem!important;margin-top:.3rem; }
 
-/* Spacing between metric rows */
+/* Metric row gap - consistent */
 [data-testid="stHorizontalBlock"]+[data-testid="stHorizontalBlock"] {
-    margin-top:1rem!important;
+    margin-top:0.75rem!important;
 }
 
 /* ── Buttons ── */
@@ -202,7 +202,7 @@ label { color:var(--text2)!important;font-size:.78rem!important;
 }
 
 /* ── Divider ── */
-hr { border:none!important;border-top:1px solid var(--border)!important;margin:1.75rem 0!important; }
+hr { border:none!important;border-top:1px solid var(--border)!important;margin:1.25rem 0!important; }
 
 /* ── Tabs ── */
 [data-testid="stTabs"] { border-bottom:1px solid var(--border)!important; }
@@ -237,6 +237,33 @@ hr { border:none!important;border-top:1px solid var(--border)!important;margin:1
 .stSpinner>div { border-top-color:var(--primary)!important; }
 [data-testid="stCheckbox"] label,[data-testid="stRadio"] label { color:var(--text)!important; }
 code { background:var(--bg3)!important;color:var(--cyan)!important;border-radius:4px;padding:1px 6px; }
+
+/* ── Vertical block gap control ─────────────────────────────── */
+/* Remove excessive gap Streamlit adds between st.columns groups */
+[data-testid="stVerticalBlock"] > [data-testid="stHorizontalBlock"],
+[data-testid="stVerticalBlock"] > div > [data-testid="stHorizontalBlock"] {
+    margin-bottom: 0.75rem !important;
+}
+/* Gap between non-metric elements */
+[data-testid="stVerticalBlock"] > div {
+    gap: 0 !important;
+}
+/* Plotly chart container - remove extra padding */
+[data-testid="stPlotlyChart"] {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+/* stInfo/stSuccess/stWarning/stError gap */
+[data-testid="stAlert"] { margin-top: 0.5rem !important; margin-bottom: 0.75rem !important; }
+/* DataFrame margin */
+[data-testid="stDataFrame"] { margin-top: 0.5rem !important; }
+/* Progress bars */
+.stProgress { margin-bottom: 0.5rem !important; }
+/* Columns gap inside content - add breathing room between chart cols */
+[data-testid="column"]:last-of-type [data-testid="stHorizontalBlock"] > div + div {
+    padding-left: 1.25rem !important;
+}
+
 ::-webkit-scrollbar { width:4px;height:4px; }
 ::-webkit-scrollbar-track { background:transparent; }
 ::-webkit-scrollbar-thumb { background:rgba(59,130,246,.25);border-radius:2px; }

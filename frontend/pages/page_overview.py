@@ -33,7 +33,6 @@ def render():
     st.markdown("Last updated: " + datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     
     # Spacing
-    st.markdown("<div style='height:1.5rem'></div>", unsafe_allow_html=True)
     
     # Backend status check
     provider = get_data_provider()
@@ -91,7 +90,6 @@ def render():
         )
     
     # Spacing
-    st.markdown("<div style='height:2rem'></div>", unsafe_allow_html=True)
     
     # ═══════════════════════════════════════════════════════════
     # SECTION 2: PROCESSING STATISTICS
@@ -401,7 +399,6 @@ def render():
         st.progress(0.34, text="**Network:** 34%")
     
     # Spacing at end
-    st.markdown("<div style='height:2rem'></div>", unsafe_allow_html=True)
     
     # Footer info
     st.caption("💡 Dashboard auto-refreshes every 60 seconds")

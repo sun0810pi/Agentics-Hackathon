@@ -262,4 +262,389 @@ code, .stCode { font-family: 'JetBrains Mono', monospace !important; background:
 }
 
 </style>
+
+
+/* =====================================================
+   🎨 COMPREHENSIVE UI/UX IMPROVEMENTS
+   Added for beautiful, spacious, professional design
+   ===================================================== */
+
+/* ─── ANIMATED GRADIENT BACKGROUND ─────────────────── */
+.main {
+    background: linear-gradient(
+        135deg,
+        #0a0e1a 0%,
+        #0f172a 15%,
+        #1e1b4b 35%,
+        #0f172a 55%,
+        #1a1f2e 75%,
+        #0f172a 100%
+    ) !important;
+    background-size: 400% 400% !important;
+    animation: gradient-shift 20s ease infinite !important;
+}
+
+@keyframes gradient-shift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+
+/* Animated mesh overlay */
+.main::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: 
+        radial-gradient(circle at 20% 30%, rgba(59, 130, 246, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 80% 70%, rgba(16, 185, 129, 0.06) 0%, transparent 40%),
+        radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.05) 0%, transparent 50%),
+        radial-gradient(circle at 10% 80%, rgba(59, 130, 246, 0.04) 0%, transparent 35%);
+    pointer-events: none;
+    z-index: 0;
+    animation: mesh-float 30s ease-in-out infinite;
+}
+
+@keyframes mesh-float {
+    0%, 100% { transform: translate(0, 0); }
+    33% { transform: translate(30px, -30px); }
+    66% { transform: translate(-20px, 20px); }
+}
+
+/* ─── GENEROUS SPACING ─────────────────────────────── */
+
+/* Main container - WIDE and SPACIOUS */
+.block-container {
+    padding: 3rem 5rem 4rem 5rem !important;
+    max-width: 1800px !important;
+    margin: 0 auto !important;
+}
+
+/* Section spacing */
+section {
+    margin-bottom: 3rem !important;
+}
+
+.element-container {
+    margin-bottom: 1.5rem !important;
+}
+
+/* Column spacing */
+[data-testid="column"] {
+    padding: 0 1rem !important;
+}
+
+[data-testid="column"]:first-child {
+    padding-left: 0 !important;
+}
+
+[data-testid="column"]:last-child {
+    padding-right: 0 !important;
+}
+
+/* Divider spacing */
+hr {
+    margin: 3rem 0 !important;
+    opacity: 0.2 !important;
+    border-color: rgba(59, 130, 246, 0.3) !important;
+}
+
+/* ─── BEAUTIFUL METRIC CARDS ────────────────────────── */
+[data-testid="stMetric"],
+[data-testid="metric-container"] {
+    background: linear-gradient(
+        135deg,
+        rgba(30, 41, 59, 0.6) 0%,
+        rgba(30, 41, 59, 0.4) 100%
+    ) !important;
+    border: 1px solid rgba(59, 130, 246, 0.2) !important;
+    border-radius: 20px !important;
+    padding: 2rem 1.5rem !important;
+    backdrop-filter: blur(20px) !important;
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+/* Shine effect on hover */
+[data-testid="stMetric"]::before,
+[data-testid="metric-container"]::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.05) 50%,
+        transparent 100%
+    );
+    transition: left 0.6s ease;
+}
+
+[data-testid="stMetric"]:hover::before,
+[data-testid="metric-container"]:hover::before {
+    left: 100%;
+}
+
+[data-testid="stMetric"]:hover,
+[data-testid="metric-container"]:hover {
+    transform: translateY(-6px) scale(1.02) !important;
+    border-color: rgba(59, 130, 246, 0.5) !important;
+    box-shadow: 
+        0 16px 48px rgba(0, 0, 0, 0.4),
+        0 0 60px rgba(59, 130, 246, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Metric labels */
+[data-testid="stMetric"] label,
+[data-testid="metric-container"] label {
+    font-size: 0.75rem !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.1em !important;
+    color: rgba(148, 163, 184, 0.9) !important;
+    font-weight: 600 !important;
+    margin-bottom: 0.75rem !important;
+}
+
+/* Metric values */
+[data-testid="stMetric"] [data-testid="stMetricValue"],
+[data-testid="metric-container"] [data-testid="stMetricValue"] {
+    font-size: 2rem !important;
+    font-weight: 800 !important;
+    background: linear-gradient(135deg, #3b82f6, #06b6d4) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+}
+
+/* Metric delta */
+[data-testid="stMetric"] [data-testid="stMetricDelta"],
+[data-testid="metric-container"] [data-testid="stMetricDelta"] {
+    font-size: 0.85rem !important;
+    font-weight: 600 !important;
+    padding: 0.25rem 0.5rem !important;
+    border-radius: 6px !important;
+    background: rgba(16, 185, 129, 0.15) !important;
+}
+
+/* ─── CHART CONTAINERS ─────────────────────────────── */
+.element-container:has(iframe),
+.element-container:has([data-testid="stPlotlyChart"]) {
+    background: rgba(30, 41, 59, 0.4) !important;
+    border: 1px solid rgba(59, 130, 246, 0.15) !important;
+    border-radius: 20px !important;
+    padding: 2rem !important;
+    backdrop-filter: blur(20px) !important;
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+}
+
+/* ─── HEADINGS & TEXT ──────────────────────────────── */
+h1, h2, h3 {
+    margin-top: 2rem !important;
+    margin-bottom: 1.5rem !important;
+}
+
+h1 {
+    font-size: 2.5rem !important;
+    font-weight: 900 !important;
+    background: linear-gradient(135deg, #3b82f6, #06b6d4) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+    letter-spacing: -0.02em !important;
+}
+
+h2 {
+    font-size: 1.75rem !important;
+    font-weight: 800 !important;
+    color: #e2e8f0 !important;
+}
+
+h3 {
+    font-size: 1.25rem !important;
+    font-weight: 700 !important;
+    color: #cbd5e1 !important;
+}
+
+/* Caption/subtitle */
+.caption,
+[data-testid="stCaption"] {
+    color: #94a3b8 !important;
+    font-size: 0.95rem !important;
+    margin-bottom: 2rem !important;
+}
+
+/* ─── SIDEBAR IMPROVEMENTS ─────────────────────────── */
+[data-testid="stSidebar"] {
+    background: linear-gradient(
+        180deg,
+        rgba(15, 23, 42, 0.95) 0%,
+        rgba(30, 41, 59, 0.95) 100%
+    ) !important;
+    backdrop-filter: blur(20px) !important;
+    border-right: 1px solid rgba(59, 130, 246, 0.1) !important;
+    padding: 1.5rem 1rem !important;
+}
+
+/* Sidebar content spacing */
+[data-testid="stSidebar"] > div {
+    padding: 0 !important;
+}
+
+/* User info card */
+[data-testid="stSidebar"] > div > div:first-child {
+    margin-bottom: 2rem !important;
+}
+
+/* Navigation buttons */
+[data-testid="stSidebar"] button {
+    margin: 0.5rem 0 !important;
+    padding: 0.75rem 1rem !important;
+    border-radius: 12px !important;
+    transition: all 0.3s ease !important;
+}
+
+[data-testid="stSidebar"] button:hover {
+    transform: translateX(4px) !important;
+}
+
+/* Theme toggle section - push to bottom */
+[data-testid="stSidebar"] .row-widget.stButton {
+    margin-top: auto !important;
+    padding-top: 2rem !important;
+}
+
+/* ─── BUTTONS ───────────────────────────────────────── */
+button {
+    border-radius: 12px !important;
+    font-weight: 600 !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+button:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25) !important;
+}
+
+button:active {
+    transform: translateY(0) !important;
+}
+
+button[kind="primary"] {
+    background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+    border: none !important;
+    box-shadow: 
+        0 4px 12px rgba(59, 130, 246, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+}
+
+button[kind="primary"]:hover {
+    box-shadow: 
+        0 8px 24px rgba(59, 130, 246, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
+}
+
+/* ─── TABLES ────────────────────────────────────────── */
+table {
+    border-collapse: separate !important;
+    border-spacing: 0 0.5rem !important;
+}
+
+thead th {
+    background: rgba(30, 41, 59, 0.6) !important;
+    padding: 1rem !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    font-size: 0.75rem !important;
+    letter-spacing: 0.1em !important;
+    border: none !important;
+}
+
+tbody td {
+    background: rgba(30, 41, 59, 0.3) !important;
+    padding: 1rem !important;
+    border: none !important;
+}
+
+tbody tr {
+    transition: all 0.2s ease !important;
+}
+
+tbody tr:hover {
+    background: rgba(59, 130, 246, 0.05) !important;
+    transform: scale(1.01) !important;
+}
+
+/* ─── ALERTS ────────────────────────────────────────── */
+[data-testid="stAlert"] {
+    border-radius: 16px !important;
+    padding: 1.5rem !important;
+    border-width: 1px !important;
+    backdrop-filter: blur(10px) !important;
+    margin: 1.5rem 0 !important;
+}
+
+/* ─── LOADING & ANIMATIONS ─────────────────────────── */
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.stSpinner > div {
+    border-color: #3b82f6 transparent transparent transparent !important;
+}
+
+/* ─── RESPONSIVE ────────────────────────────────────── */
+@media (max-width: 1400px) {
+    .block-container {
+        padding: 2rem 3rem !important;
+    }
+}
+
+@media (max-width: 1024px) {
+    .block-container {
+        padding: 1.5rem 2rem !important;
+    }
+    
+    [data-testid="stMetric"] [data-testid="stMetricValue"] {
+        font-size: 1.5rem !important;
+    }
+}
+
+/* ─── FIXES FOR SPECIFIC ISSUES ────────────────────── */
+
+/* Ensure full width usage */
+.main .block-container > div {
+    width: 100% !important;
+}
+
+/* Remove default Streamlit padding conflicts */
+.main .block-container .element-container {
+    width: 100% !important;
+}
+
+/* Chart full width */
+[data-testid="stPlotlyChart"] {
+    width: 100% !important;
+}
+
+/* Column gap */
+.row-widget {
+    gap: 2rem !important;
+}
+
+</style>
+
 """

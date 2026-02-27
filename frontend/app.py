@@ -20,33 +20,23 @@ for k, v in {"logged_in":False,"user_email":"","user_name":"","user_role":"viewe
 
 IS_DARK = st.session_state.theme == "dark"
 
-# Load theme FIRST - before anything else
 try:
     from themes.dark import DARK_THEME
     from themes.light import LIGHT_THEME
     st.markdown(DARK_THEME if IS_DARK else LIGHT_THEME, unsafe_allow_html=True)
 except Exception: pass
 
-# ── Padding removal ──────────────────────────────────────────────
 st.markdown("""<style>
 section[data-testid="stMain"] > div,
 div[data-testid="stVerticalBlock"],
-div[data-testid="stAppViewBlockContainer"] {
-    padding-top: 0 !important;
-    margin-top: 0 !important;
-}
-.css-1y4p8pa, .css-z5fcl4, .css-ocqkz7,
-.css-1544g2n, .css-zt5igj, .e1tzin5v3,
-div.block-container { 
-    padding-top: 0 !important; 
-    padding-left: 0 !important;
-    margin-top: 0 !important;
-}
-[data-testid="stAppViewContainer"] { padding: 0 !important; }
-[data-testid="ScrollToBottomContainer"] > div { padding: 0 !important; }
+div[data-testid="stAppViewBlockContainer"] { padding-top:0!important; margin-top:0!important; }
+.css-1y4p8pa,.css-z5fcl4,.css-ocqkz7,.css-1544g2n,.css-zt5igj,.e1tzin5v3,div.block-container {
+    padding-top:0!important; padding-left:0!important; margin-top:0!important; }
+[data-testid="stAppViewContainer"] { padding:0!important; }
+[data-testid="ScrollToBottomContainer"] > div { padding:0!important; }
 </style>""", unsafe_allow_html=True)
 
-# ── LOGIN ────────────────────────────────────────────────────────
+# ── LOGIN ─────────────────────────────────────────────────────────
 if not st.session_state.logged_in:
     try:
         from auth.login import login_page
@@ -55,22 +45,33 @@ if not st.session_state.logged_in:
         import traceback; st.error(f"Login error: {e}"); st.code(traceback.format_exc())
     st.stop()
 
-# ── LOGGED IN LAYOUT ─────────────────────────────────────────────
-IS_DARK   = st.session_state.theme == "dark"
-ACC       = "#10b981"
-ACC2      = "#059669"
-NAV_TEXT  = "#f5f5f5" if IS_DARK else "#0a0a0a"
-NAV_TEXT2 = "#a3a3a3" if IS_DARK else "#737373"
-NAV_TEXT3 = "#737373" if IS_DARK else "#a3a3a3"
-NAV_BOR   = "#262626" if IS_DARK else "#e5e0da"
-ACTIVE_BG = "rgba(16,185,129,.12)" if IS_DARK else "rgba(16,185,129,.08)"
-HOVER_BG  = "rgba(16,185,129,.07)" if IS_DARK else "rgba(16,185,129,.05)"
-ROLE_CLR  = {"Admin":"#3b82f6","Analyst":"#10b981","Viewer":"#f59e0b"}
+# ── LOGGED IN ─────────────────────────────────────────────────────
+IS_DARK  = st.session_state.theme == "dark"
+
+# Portfolio palette
+BLACK   = "#0a0a0a"
+WHITE   = "#ffffff"
+ACC     = "#10b981"
+G100    = "#f5f5f5"
+G200    = "#e5e5e5"
+G300    = "#d4d4d4"
+G400    = "#a3a3a3"
+G500    = "#737373"
+G700    = "#404040"
+G800    = "#262626"
+G900    = "#171717"
+
+NAV_BG  = "#141414" if IS_DARK else WHITE
+NAV_BOR = G800 if IS_DARK else BLACK
+TEXT    = WHITE if IS_DARK else BLACK
+TEXT2   = G400 if IS_DARK else G500
+TEXT3   = G500 if IS_DARK else G400
+ROLE_CLR = {"Admin":"#3b82f6","Analyst":ACC,"Viewer":"#f59e0b"}
 
 nm = st.session_state.user_name or "User"
 rl = (st.session_state.user_role or "viewer").title()
 em = st.session_state.user_email or ""
-rc = ROLE_CLR.get(rl, "#a3a3a3")
+rc = ROLE_CLR.get(rl, G400)
 
 PAGES = [
     ("Overview","📊"),("Upload","📄"),("Fraud","🚨"),
@@ -89,65 +90,113 @@ PAGE_LABELS = {
     "Integrations":"integrations","Settings":"settings",
 }
 
-# Nav button styling
+SHADOW_SM = f"2px 2px 0px {BLACK}"
+ACT_BG = "rgba(16,185,129,.1)" if IS_DARK else "rgba(16,185,129,.07)"
+
+# Nav button override CSS — portfolio style
 st.markdown(f"""<style>
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+/* All nav column buttons */
 [data-testid="column"]:first-of-type .stButton>button {{
-  font-family:'DM Sans',sans-serif!important;font-weight:500!important;font-size:.82rem!important;
-  text-align:left!important;justify-content:flex-start!important;border-radius:9px!important;
-  border:1.5px solid transparent!important;background:transparent!important;color:{NAV_TEXT2}!important;
-  padding:.5rem .75rem!important;transition:all .15s ease!important;box-shadow:none!important;margin-bottom:1px!important;
+  font-family:'DM Sans',sans-serif!important;font-weight:500!important;
+  font-size:.82rem!important;text-align:left!important;justify-content:flex-start!important;
+  border-radius:0!important;border:2px solid transparent!important;
+  background:transparent!important;color:{TEXT2}!important;
+  padding:.5rem .875rem!important;transition:all .15s ease!important;
+  box-shadow:none!important;margin-bottom:2px!important;
 }}
 [data-testid="column"]:first-of-type .stButton>button:hover {{
-  background:{HOVER_BG}!important;border-color:{ACC}!important;color:{ACC}!important;transform:none!important;
+  background:{ACT_BG}!important;border-color:{ACC}!important;
+  color:{ACC}!important;transform:none!important;
 }}
+
+/* Active nav button */
 [data-testid="column"]:first-of-type .stButton>button[kind="primary"] {{
-  background:{ACTIVE_BG}!important;border:1.5px solid rgba(16,185,129,.35)!important;
-  color:{ACC}!important;font-weight:700!important;box-shadow:2px 2px 0px rgba(16,185,129,.12)!important;
+  font-family:'Syne',sans-serif!important;font-weight:700!important;
+  background:{ACT_BG}!important;
+  border:2px solid {ACC}!important;
+  color:{ACC}!important;
+  box-shadow:2px 2px 0px rgba(16,185,129,0.25)!important;
 }}
 [data-testid="column"]:first-of-type .stButton>button[kind="primary"]:hover {{
-  background:{ACTIVE_BG}!important;transform:none!important;color:{ACC}!important;
+  background:{ACT_BG}!important;transform:none!important;color:{ACC}!important;
 }}
+
+/* Small utility row buttons (theme/lang) */
+[data-testid="column"]:first-of-type [data-testid="stColumns"] .stButton>button {{
+  font-size:.72rem!important;padding:.35rem .4rem!important;
+  border:2px solid {NAV_BOR}!important;background:{'rgba(255,255,255,.04)' if IS_DARK else G100}!important;
+  color:{TEXT2}!important;box-shadow:none!important;
+}}
+[data-testid="column"]:first-of-type [data-testid="stColumns"] .stButton>button:hover {{
+  background:{ACC}!important;color:{BLACK}!important;border-color:{ACC}!important;
+}}
+[data-testid="column"]:first-of-type [data-testid="stColumns"] .stButton>button[kind="primary"] {{
+  background:{BLACK if not IS_DARK else WHITE}!important;
+  color:{WHITE if not IS_DARK else BLACK}!important;
+  border:2px solid {BLACK if not IS_DARK else WHITE}!important;
+  font-weight:700!important;
+}}
+[data-testid="column"]:first-of-type [data-testid="stColumns"] .stButton>button[kind="primary"]:hover {{
+  background:{BLACK if not IS_DARK else WHITE}!important;transform:none!important;
+}}
+
+/* Logout button */
+[data-testid="column"]:first-of-type .stButton>button:last-of-type:not([kind="primary"]) {{
+  border-color:{'rgba(255,255,255,.1)' if IS_DARK else G200}!important;
+}}
+
 [data-testid="column"]:first-of-type hr {{
-  border:none!important;border-top:1.5px solid {NAV_BOR}!important;margin:.75rem 0!important;
+  border:none!important;
+  border-top:2px solid {NAV_BOR}!important;
+  margin:.75rem 0!important;
 }}
 </style>""", unsafe_allow_html=True)
 
 nav_col, content_col = st.columns([1, 4], gap="small")
 
 with nav_col:
-    # Logo
-    st.markdown(f"""<div style="padding:1.5rem .875rem 1.25rem;text-align:center;
+    # Logo — portfolio nav-logo style
+    st.markdown(f"""<div style="padding:1.25rem .875rem 1rem;
       border-bottom:2px solid {NAV_BOR};margin-bottom:.875rem;">
-      <div style="display:inline-flex;align-items:center;justify-content:center;
-        width:52px;height:52px;border-radius:12px;
-        background:linear-gradient(135deg,{ACC},{ACC2});
-        border:2px solid {ACC2};box-shadow:3px 3px 0px {ACC2};
-        font-size:1.6rem;margin-bottom:.6rem;">🛡️</div>
-      <div style="font-family:'Syne',sans-serif;font-size:1.05rem;font-weight:800;
-        color:{NAV_TEXT};letter-spacing:-.02em;">AgentFlow</div>
-      <div style="font-family:'DM Sans',sans-serif;font-size:.58rem;color:{NAV_TEXT3};
-        text-transform:uppercase;letter-spacing:.12em;margin-top:2px;">Finance Guard</div>
+      <div style="display:flex;align-items:center;gap:.75rem;">
+        <div style="width:40px;height:40px;background:{ACC};color:{BLACK};
+          display:flex;align-items:center;justify-content:center;
+          border:2px solid {NAV_BOR};box-shadow:{SHADOW_SM};
+          font-size:1.2rem;flex-shrink:0;">🛡️</div>
+        <div>
+          <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:.95rem;
+            color:{TEXT};letter-spacing:-.02em;">AgentFlow</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:.55rem;
+            color:{TEXT3};letter-spacing:.1em;text-transform:uppercase;">Finance Guard</div>
+        </div>
+      </div>
     </div>""", unsafe_allow_html=True)
 
-    # User card
-    st.markdown(f"""<div style="margin:0 .75rem .875rem;padding:.75rem;
-      background:{ACTIVE_BG};border:1.5px solid rgba(16,185,129,.25);border-radius:10px;
-      box-shadow:2px 2px 0px rgba(16,185,129,.08);">
-      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:.82rem;
-        color:{NAV_TEXT};">{nm}</div>
-      <div style="font-family:'DM Sans',sans-serif;font-size:.68rem;color:{rc};
-        font-weight:600;margin-top:2px;display:flex;align-items:center;gap:.35rem;">
-        <span style="width:5px;height:5px;background:{rc};border-radius:50%;display:inline-block;"></span>{rl}
+    # User card — stats-grid style from portfolio
+    st.markdown(f"""<div style="margin:0 .75rem .875rem;
+      border:2px solid {NAV_BOR};box-shadow:{SHADOW_SM};">
+      <div style="background:{ACC};padding:.6rem .875rem;display:flex;align-items:center;gap:.6rem;">
+        <div style="width:28px;height:28px;background:{BLACK};color:{WHITE};
+          display:flex;align-items:center;justify-content:center;
+          font-family:'Syne',sans-serif;font-weight:800;font-size:.7rem;flex-shrink:0;">
+          {nm[0].upper() if nm else 'U'}
+        </div>
+        <div>
+          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:.8rem;color:{BLACK};line-height:1.2;">{nm}</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:.58rem;color:rgba(0,0,0,0.6);">{rl.lower()}</div>
+        </div>
       </div>
-      <div style="font-family:'DM Sans',sans-serif;font-size:.6rem;color:{NAV_TEXT3};
-        margin-top:2px;word-break:break-all;">{em}</div>
+      <div style="background:{'#111' if IS_DARK else G100};padding:.5rem .875rem;">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:.58rem;color:{TEXT3};word-break:break-all;">{em}</div>
+      </div>
     </div>""", unsafe_allow_html=True)
 
     # Nav label
-    st.markdown(f"""<div style="padding:0 .875rem .35rem;font-family:'Syne',sans-serif;
-      font-size:.58rem;font-weight:700;color:{NAV_TEXT3};text-transform:uppercase;
-      letter-spacing:.12em;">{t('navigation')}</div>""", unsafe_allow_html=True)
+    st.markdown(f"""<div style="padding:0 .875rem .35rem;font-family:'JetBrains Mono',monospace;
+      font-size:.58rem;font-weight:500;color:{TEXT3};text-transform:uppercase;letter-spacing:.12em;">{t('navigation')}</div>""",
+      unsafe_allow_html=True)
 
     # Nav buttons
     for pname, icon in PAGES:
@@ -162,7 +211,7 @@ with nav_col:
 
     st.divider()
 
-    # Theme + Lang
+    # Theme + Language
     lang = st.session_state.get("language","en")
     c1, c2 = st.columns(2)
     with c1:
@@ -201,9 +250,9 @@ with nav_col:
             if st.button(t("no"), use_container_width=True, key="lo_n"):
                 st.session_state.show_logout_confirm = False; st.rerun()
 
-    st.markdown(f'<div style="text-align:center;color:{NAV_TEXT3};font-family:\'DM Sans\',sans-serif;'
-                f'font-size:.58rem;padding:.75rem 0 .5rem;">v{config.APP_VERSION}</div>',
-                unsafe_allow_html=True)
+    st.markdown(f"""<div style="text-align:center;font-family:'JetBrains Mono',monospace;
+      color:{TEXT3};font-size:.55rem;padding:.75rem 0 .5rem;border-top:2px solid {NAV_BOR};
+      margin-top:.5rem;">v{config.APP_VERSION}</div>""", unsafe_allow_html=True)
 
 with content_col:
     st.markdown('<div style="padding:1.75rem 2rem 4rem 2.25rem;">', unsafe_allow_html=True)

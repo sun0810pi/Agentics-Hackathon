@@ -17,26 +17,22 @@ def _load():
         return {"ok": False, "error": str(e)}
 
 def card(col, label, value, delta=None, up=True, dark=True):
-    """Render card inside a st.column with inner padding to create gap."""
-    C  = '#0b101e' if dark else '#ffffff'
-    B  = 'rgba(59,130,246,0.18)' if dark else 'rgba(37,99,235,0.15)'
-    T  = '#f1f5f9' if dark else '#0f172a'
-    T2 = '#94a3b8' if dark else '#475569'
-    dc = '#10b981' if up else '#ef4444'
-    ar = '↑' if up else '↓'
-    d  = f'<div style="font-size:.78rem;color:{dc};margin-top:.35rem;font-weight:600;">{ar} {delta}</div>' if delta else ''
-    # Outer wrapper: padding on sides creates the gap between cards
-    # Since st.columns already exist, we just add padding on the div
-    shadow = '0 2px 12px rgba(0,0,0,0.18)' if dark else '0 2px 10px rgba(37,99,235,0.08)'
-    html = f'''<div style="background:{C};border:1px solid {B};border-radius:11px;
-    padding:1rem 1.1rem .9rem;position:relative;overflow:hidden;box-shadow:{shadow};">
-    <div style="position:absolute;top:0;left:0;right:0;height:2px;
-      background:linear-gradient(90deg,#3b82f6,#06b6d4);opacity:.8;"></div>
-    <div style="font-size:.62rem;font-weight:700;color:{T2};text-transform:uppercase;
-      letter-spacing:.12em;margin-bottom:.4rem;">{label}</div>
-    <div style="font-size:1.8rem;font-weight:700;color:{T};letter-spacing:-.02em;
-      line-height:1.1;">{value}</div>
-    {d}
+    """Neo-brutalist card — portfolio_v7 style."""
+    BG  = '#141414' if dark else '#ffffff'
+    BOR = '#262626'  if dark else '#0a0a0a'
+    T   = '#f5f5f5' if dark else '#0a0a0a'
+    T2  = '#a3a3a3' if dark else '#737373'
+    SHD = '2px 2px 0px rgba(255,255,255,0.08)' if dark else '4px 4px 0px #0a0a0a'
+    dc  = '#10b981' if up else '#ef4444'
+    ar  = '&#8593;' if up else '&#8595;'
+    d   = f'<div style="font-size:.78rem;color:{dc};margin-top:.4rem;font-weight:600;">{ar} {delta}</div>' if delta else ''
+    html = f'''<div style="background:{BG};border:2px solid {BOR};border-radius:0;
+padding:1rem 1.1rem .9rem;position:relative;overflow:hidden;box-shadow:{SHD};">
+<div style="position:absolute;top:0;left:0;right:0;height:3px;background:#10b981;"></div>
+<div style="font-size:.6rem;font-weight:500;color:{T2};text-transform:uppercase;
+  letter-spacing:.12em;margin-bottom:.4rem;">{label}</div>
+<div style="font-size:1.85rem;font-weight:800;color:{T};letter-spacing:-.02em;line-height:1.1;">{value}</div>
+{d}
 </div>'''
     col.markdown(html, unsafe_allow_html=True)
 

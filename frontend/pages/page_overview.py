@@ -17,14 +17,14 @@ def _load():
 
 def metric_card(label, value, delta=None, up=True, dark=True):
     C  = '#0b101e' if dark else '#fff'
-    B  = 'rgba(59,130,246,0.2)' if dark else 'rgba(0,0,0,0.08)'
+    B  = 'rgba(59,130,246,0.14)' if dark else 'rgba(0,0,0,0.06)'
     T  = '#f1f5f9' if dark else '#0f172a'
     T2 = '#94a3b8' if dark else '#64748b'
     dc = '#10b981' if up else '#ef4444'
     arrow = '▲' if up else '▼'
     d = f'<p style="font-size:.78rem;color:{dc};margin:4px 0 0;font-weight:600;">{arrow} {delta}</p>' if delta else ''
     return (
-        f'<td style="padding:0 6px 0 0;vertical-align:top;">' +
+        f'<td style="vertical-align:top;">' +
         f'<div style="background:{C};border:1px solid {B};border-radius:12px;' +
         f'padding:1.1rem 1.1rem .9rem;position:relative;overflow:hidden;">' +
         f'<div style="position:absolute;top:0;left:0;right:0;height:2px;' +
@@ -47,7 +47,7 @@ def metric_row(cards_html):
     col_w = f'{100//n}%'
     cols = ''.join(f'<col style="width:{col_w}">' for _ in range(n))
     return (
-        f'<table style="width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed">' +
+        f'<table style="width:100%;border-collapse:separate;border-spacing:10px 0;margin:0 -10px;table-layout:fixed">' +
         f'<colgroup>{cols}</colgroup>' +
         '<tr>' + ''.join(cards) + '</tr>' +
         '</table>'

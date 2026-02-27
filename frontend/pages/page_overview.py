@@ -22,19 +22,36 @@ def metric_card(label, value, delta=None, up=True, dark=True):
     T2 = '#94a3b8' if dark else '#64748b'
     dc = '#10b981' if up else '#ef4444'
     arrow = '▲' if up else '▼'
-    d = f'<div style="font-size:.78rem;color:{dc};margin-top:.4rem;font-weight:600;">{arrow} {delta}</div>' if delta else ''
-    return f'''<div style="background:{C};border:1px solid {B};border-radius:12px;
-padding:1.1rem 1.25rem 1rem;position:relative;overflow:hidden;flex:1;min-width:0;">
-<div style="position:absolute;top:0;left:0;right:0;height:2px;
-  background:linear-gradient(90deg,#3b82f6,#06b6d4);"></div>
-<div style="font-size:.65rem;font-weight:700;color:{T2};text-transform:uppercase;
-  letter-spacing:.12em;margin-bottom:.45rem;">{label}</div>
-<div style="font-size:1.85rem;font-weight:700;color:{T};letter-spacing:-.025em;
-  line-height:1.1;">{value}</div>{d}</div>'''
+    d = f'<p style="font-size:.78rem;color:{dc};margin:4px 0 0;font-weight:600;">{arrow} {delta}</p>' if delta else ''
+    return (
+        f'<td style="padding:0 6px 0 0;vertical-align:top;">' +
+        f'<div style="background:{C};border:1px solid {B};border-radius:12px;' +
+        f'padding:1.1rem 1.1rem .9rem;position:relative;overflow:hidden;">' +
+        f'<div style="position:absolute;top:0;left:0;right:0;height:2px;' +
+        f'background:linear-gradient(90deg,#3b82f6,#06b6d4);"></div>' +
+        f'<p style="font-size:.62rem;font-weight:700;color:{T2};text-transform:uppercase;' +
+        f'letter-spacing:.12em;margin:0 0 6px;">{label}</p>' +
+        f'<p style="font-size:1.8rem;font-weight:700;color:{T};letter-spacing:-.02em;' +
+        f'line-height:1.1;margin:0;">{value}</p>' +
+        d +
+        f'</div></td>'
+    )
 
-def metric_row(cards_html, dark=True):
-    """Wrap cards in a flex row with gap — pure HTML, no st.columns"""
-    return f'<div style="display:flex;gap:12px;margin-bottom:0;">' + ''.join(cards_html) + '</div>'
+def metric_row(cards_html):
+    """Table layout — works everywhere, no CSS flex/gap needed."""
+    cards = list(cards_html)
+    # Last cell: no right padding
+    if cards:
+        cards[-1] = cards[-1].replace("padding:0 6px 0 0", "padding:0")
+    n = len(cards)
+    col_w = f'{100//n}%'
+    cols = ''.join(f'<col style="width:{col_w}">' for _ in range(n))
+    return (
+        f'<table style="width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed">' +
+        f'<colgroup>{cols}</colgroup>' +
+        '<tr>' + ''.join(cards) + '</tr>' +
+        '</table>'
+    )
 
 def spacer(h="1rem"):
     st.markdown(f'<div style="height:{h}"></div>', unsafe_allow_html=True)
@@ -75,7 +92,7 @@ def render():
         metric_card("Accuracy", f"{m.get('accuracy',0):.1f}%", "+2.1%", True, D),
         metric_card("Fraud Prevented", format_currency(m.get('fraud_prevented_usd',0)), "+12.3%", True, D),
         metric_card("Avg Latency", f"{m.get('avg_latency_ms',0):.0f}ms", "-8.5ms", True, D),
-    ], D), unsafe_allow_html=True)
+    ]), unsafe_allow_html=True)
 
     spacer("1.25rem")
 
@@ -86,7 +103,7 @@ def render():
         metric_card("Blocked",        format_number(m.get('total_blocked',0)),   "+15.8%", True, D),
         metric_card("Pending",        format_number(m.get('total_pending',0)),   "-5.1%",  False, D),
         metric_card("Automation Rate",format_percentage(m.get('automation_rate',0)), "+2.3%", True, D),
-    ], D), unsafe_allow_html=True)
+    ]), unsafe_allow_html=True)
 
     spacer("1.5rem")
     divider(D)
@@ -146,7 +163,7 @@ def render():
         metric_card("Active Agents",  f"{active}/{total}", f"{active/total*100:.1f}%", True, D),
         metric_card("Avg Confidence", f"{ag.get('avg_confidence',0.94)*100:.1f}%", "+1.2%", True, D),
         metric_card("Alerts (24h)",   str(ag.get('alerts_24h',23)), "+5", True, D),
-    ], D), unsafe_allow_html=True)
+    ]), unsafe_allow_html=True)
     spacer(".75rem")
     t1,t2,t3,t4 = st.columns(4)
     with t1: st.info("**Core Detection**\n8 agents")
@@ -177,7 +194,7 @@ def render():
         metric_card("P95 Latency","534ms","-15ms",True,D),
         metric_card("P99 Latency","1.2s","-200ms",True,D),
         metric_card("Throughput","450/min","+25/min",True,D),
-    ], D), unsafe_allow_html=True)
+    ]), unsafe_allow_html=True)
     spacer(".75rem")
     st.markdown(f'<div style="font-size:.8rem;font-weight:600;color:{TEXT2};margin-bottom:.4rem;">Resource Utilization</div>', unsafe_allow_html=True)
     st.progress(0.67, text="CPU: 67%")

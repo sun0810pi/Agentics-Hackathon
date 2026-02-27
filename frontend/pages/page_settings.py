@@ -1,259 +1,158 @@
 import streamlit as st
+from i18n import t
 
-def gap(size="1rem"):
-    st.markdown(f'<div style="height:{size}"></div>', unsafe_allow_html=True)
+def sp(h="1rem"):
+    st.markdown(f'<div style="height:{h}"></div>', unsafe_allow_html=True)
 
-def section_header(icon, title, subtitle=None):
-    TEXT = '#f1f5f9' if st.session_state.get('theme','dark')=='dark' else '#0f172a'
-    TEXT2 = '#94a3b8' if st.session_state.get('theme','dark')=='dark' else '#64748b'
-    st.markdown(f"""<div style="margin:1.25rem 0 0.5rem;">
-  <div style="font-size:1.05rem;font-weight:700;color:{TEXT};display:flex;align-items:center;gap:.4rem;">{icon} {title}</div>
-  {f'<div style="font-size:.8rem;color:{TEXT2};margin-top:2px;">{subtitle}</div>' if subtitle else ''}
-</div>""", unsafe_allow_html=True)
-
+def section_card(title, icon, dark=True):
+    BG  = 'rgba(12,16,32,0.6)' if dark else '#ffffff'
+    BOR = 'rgba(59,130,246,0.14)' if dark else 'rgba(0,0,0,0.07)'
+    T   = '#f1f5f9' if dark else '#0f172a'
+    st.markdown(f'''<div style="background:{BG};border:1px solid {BOR};border-radius:12px;
+padding:1.1rem 1.25rem .25rem;margin-bottom:.75rem;position:relative;overflow:hidden;">
+<div style="position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,#3b82f6,#06b6d4);opacity:.6;"></div>
+<div style="font-size:.85rem;font-weight:700;color:{T};margin-bottom:.75rem;">{icon} {title}</div>
+''', unsafe_allow_html=True)
 
 def render():
-    from components.widgets import (
-        success_box,
-        warning_box,
-        card_container,
-        alert_box
-    )
-    def logout():
-        for k in ["logged_in","user_email","user_name","user_role","access_token"]:
-            st.session_state[k] = False if k=="logged_in" else ""
-        st.session_state.page = "Overview"
     import logging
-
     logger = logging.getLogger(__name__)
 
-    # Page header
-    st.markdown('<h1 class="main-header">⚙️ Settings</h1>', unsafe_allow_html=True)
-    st.markdown('<p class="sub-header">Manage your account and preferences</p>', unsafe_allow_html=True)
+    IS_DARK = st.session_state.get('theme','dark') == 'dark'
+    D   = IS_DARK
+    T   = '#f1f5f9' if D else '#0f172a'
+    T2  = '#94a3b8' if D else '#64748b'
+    BOR = 'rgba(59,130,246,0.13)' if D else 'rgba(0,0,0,0.07)'
+    lang = st.session_state.get('language','en')
 
-    # Settings tabs
-    tab1, tab2, tab3, tab4, tab5 = st.tabs([
-        "👤 Profile",
-        "🎨 Appearance",
-        "🔔 Notifications",
-        "🔐 Security",
-        "🌐 Advanced"
-    ])
+    st.markdown(f'<div style="font-size:1.55rem;font-weight:700;color:{T};margin-bottom:3px;">⚙️ {t("settings")}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="font-size:.82rem;color:{T2};margin-bottom:1.25rem;">App configuration & preferences</div>', unsafe_allow_html=True)
 
+    tab1, tab2, tab3, tab4 = st.tabs(["👤 Profile", "🎨 Appearance", "🔔 Notifications", "🔐 Security"])
+
+    # ── Profile tab ──────────────────────────────────────────────
     with tab1:
-        st.markdown("### 👤 Profile Settings")
+        sp(".5rem")
+        st.markdown(f'<div style="font-size:.65rem;font-weight:700;color:{T2};text-transform:uppercase;letter-spacing:.12em;margin-bottom:.6rem;">User Information</div>', unsafe_allow_html=True)
 
-        with card_container("User Information", "ℹ️", variant='primary'):
-            col1, col2 = st.columns(2, gap="medium")
+        c1, c2 = st.columns(2)
+        with c1:
+            name = st.text_input("Full Name", value=st.session_state.get('user_name',''))
+            email = st.text_input("Email", value=st.session_state.get('user_email',''), disabled=True)
+        with c2:
+            role = st.session_state.get('user_role','viewer').title()
+            st.markdown(f'<div style="font-size:.72rem;color:{T2};text-transform:uppercase;font-weight:600;margin-bottom:.3rem;">Role</div><div style="background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:.65rem 1rem;font-size:.9rem;font-weight:600;color:#60a5fa;">{role}</div>', unsafe_allow_html=True)
+            dept = st.text_input("Department", value="Finance Security")
 
-            with col1:
-                name = st.text_input(
-                    "Full Name",
-                    value=st.session_state.get('user_name', 'Admin User')
-                )
+        sp(".5rem")
+        if st.button("💾 Save Profile", type="primary"):
+            if name: st.session_state.user_name = name
+            st.success("✅ Profile updated successfully!")
 
-                email = st.text_input(
-                    "Email",
-                    value=st.session_state.get('user_email', 'admin@agentflow.ai'),
-                    disabled=True,
-                    help="Email cannot be changed"
-                )
+        sp(".75rem")
+        st.markdown(f'<hr style="border:none;border-top:1px solid {BOR};margin:.5rem 0 1rem;">', unsafe_allow_html=True)
+        st.markdown(f'<div style="font-size:.65rem;font-weight:700;color:{T2};text-transform:uppercase;letter-spacing:.12em;margin-bottom:.6rem;">Danger Zone</div>', unsafe_allow_html=True)
+        if st.button("🚪 Sign Out", type="secondary"):
+            for k in ["logged_in","user_email","user_name","user_role","access_token"]:
+                st.session_state[k] = False if k=="logged_in" else ""
+            st.session_state.page = "Overview"
+            st.rerun()
 
-            with col2:
-                role = st.text_input(
-                    "Role",
-                    value=(st.session_state.get('user_role') or 'viewer').title(),
-                    disabled=True,
-                    help="Role is assigned by administrators"
-                )
-
-                timezone = st.selectbox(
-                    "Timezone",
-                    options=['UTC', 'America/New_York', 'Europe/London', 'Asia/Tokyo'],
-                    index=0
-                )
-
-            language = st.selectbox(
-                "Language",
-                options=['English', 'Vietnamese', 'Spanish', 'French'],
-                index=0
-            )
-
-            if st.button("💾 Save Profile", type="primary"):
-                st.session_state.user_name = name
-                success_box("✅ Profile updated successfully!")
-
+    # ── Appearance tab ───────────────────────────────────────────
     with tab2:
-        st.markdown("### 🎨 Appearance Settings")
+        sp(".5rem")
 
-        with card_container("Theme", "🌓", variant='primary'):
-            current_theme = st.session_state.get('theme', 'dark')
+        # Theme
+        st.markdown(f'<div style="font-size:.65rem;font-weight:700;color:{T2};text-transform:uppercase;letter-spacing:.12em;margin-bottom:.6rem;">🌓 {t("theme")}</div>', unsafe_allow_html=True)
+        tc1, tc2, tc3 = st.columns([1,1,2])
+        with tc1:
+            if st.button(f"🌙 {t('dark_mode')}", type="primary" if D else "secondary", use_container_width=True):
+                st.session_state.theme = "dark"; st.rerun()
+        with tc2:
+            if st.button(f"☀️ {t('light_mode')}", type="primary" if not D else "secondary", use_container_width=True):
+                st.session_state.theme = "light"; st.rerun()
 
-            theme_option = st.radio(
-                "Select Theme",
-                options=['dark', 'light'],
-                format_func=lambda x: '🌙 Dark Mode' if x == 'dark' else '☀️ Light Mode',
-                index=0 if current_theme == 'dark' else 1,
-                horizontal=True
-            )
+        sp("1rem")
 
-            if theme_option != current_theme:
-                if st.button("Apply Theme", type="primary"):
-                    st.session_state.theme = theme_option
-                    success_box(f"✅ Switched to {theme_option} theme!")
-                    st.rerun()
+        # Language
+        st.markdown(f'<div style="font-size:.65rem;font-weight:700;color:{T2};text-transform:uppercase;letter-spacing:.12em;margin-bottom:.6rem;">🌐 {t("language")}</div>', unsafe_allow_html=True)
+        lc1, lc2, lc3 = st.columns([1,1,2])
+        with lc1:
+            if st.button("🇬🇧 English", type="primary" if lang=="en" else "secondary", use_container_width=True):
+                st.session_state.language = "en"; st.rerun()
+        with lc2:
+            if st.button("🇻🇳 Tiếng Việt", type="primary" if lang=="vi" else "secondary", use_container_width=True):
+                st.session_state.language = "vi"; st.rerun()
 
-        with card_container("Display Options", "👁️", variant='default'):
-            compact_mode = st.checkbox("Compact Mode", value=False, help="Reduce spacing for more content")
-            show_animations = st.checkbox("Enable Animations", value=True)
-            show_tooltips = st.checkbox("Show Tooltips", value=True)
+        sp("1rem")
 
-            if st.button("💾 Save Display Settings"):
-                success_box("✅ Display settings saved!")
+        # Display
+        st.markdown(f'<div style="font-size:.65rem;font-weight:700;color:{T2};text-transform:uppercase;letter-spacing:.12em;margin-bottom:.6rem;">👁️ Display Options</div>', unsafe_allow_html=True)
+        compact = st.toggle("Compact mode", value=False)
+        animations = st.toggle("Enable animations", value=True)
+        if st.button("💾 Save Display Settings", type="primary"):
+            st.success("✅ Display settings saved!")
 
+    # ── Notifications tab ────────────────────────────────────────
     with tab3:
-        st.markdown("### 🔔 Notification Settings")
+        sp(".5rem")
+        st.markdown(f'<div style="font-size:.65rem;font-weight:700;color:{T2};text-transform:uppercase;letter-spacing:.12em;margin-bottom:.6rem;">📧 Email Notifications</div>', unsafe_allow_html=True)
+        st.toggle("High-risk fraud alerts", value=True)
+        st.toggle("Daily summary report", value=True)
+        st.toggle("Weekly analytics digest", value=False)
+        st.toggle("System downtime alerts", value=True)
 
-        with card_container("Email Notifications", "📧", variant='info'):
-            st.markdown("**Receive email notifications for:**")
+        sp(".75rem")
+        st.markdown(f'<div style="font-size:.65rem;font-weight:700;color:{T2};text-transform:uppercase;letter-spacing:.12em;margin-bottom:.6rem;">🔔 In-App Notifications</div>', unsafe_allow_html=True)
+        st.toggle("Real-time fraud alerts", value=True)
+        st.toggle("Agent status changes", value=True)
+        st.toggle("Performance threshold alerts", value=False)
 
-            email_fraud_alerts = st.checkbox("🚨 Fraud Alerts", value=True)
-            email_high_risk = st.checkbox("⚠️ High Risk Invoices", value=True)
-            email_system_updates = st.checkbox("🔄 System Updates", value=False)
-            email_weekly_report = st.checkbox("📊 Weekly Reports", value=True)
+        sp(".5rem")
+        if st.button("💾 Save Notification Preferences", type="primary"):
+            st.success("✅ Notification preferences saved!")
 
-            email_frequency = st.selectbox(
-                "Email Frequency",
-                options=['Immediate', 'Daily Digest', 'Weekly Digest'],
-                index=0
-            )
-
-        with card_container("In-App Notifications", "🔔", variant='info'):
-            st.markdown("**Show in-app notifications for:**")
-
-            app_fraud_detected = st.checkbox("🚨 Fraud Detected", value=True, key="app_fraud")
-            app_processing_complete = st.checkbox("✅ Processing Complete", value=True, key="app_complete")
-            app_system_alerts = st.checkbox("⚠️ System Alerts", value=True, key="app_alerts")
-
-        if st.button("💾 Save Notification Settings", type="primary"):
-            success_box("✅ Notification preferences saved!")
-
+    # ── Security tab ─────────────────────────────────────────────
     with tab4:
-        st.markdown("### 🔐 Security Settings")
+        sp(".5rem")
+        st.markdown(f'<div style="font-size:.65rem;font-weight:700;color:{T2};text-transform:uppercase;letter-spacing:.12em;margin-bottom:.6rem;">🔑 Change Password</div>', unsafe_allow_html=True)
+        c1, c2 = st.columns(2)
+        with c1:
+            cur_pwd = st.text_input("Current Password", type="password")
+            new_pwd = st.text_input("New Password", type="password")
+        with c2:
+            st.markdown('<div style="height:1.4rem"></div>', unsafe_allow_html=True)
+            conf_pwd = st.text_input("Confirm New Password", type="password")
 
-        with card_container("Change Password", "🔑", variant='warning'):
-            st.markdown("Update your password to keep your account secure.")
-
-            current_password = st.text_input("Current Password", type="password")
-            new_password = st.text_input("New Password", type="password")
-            confirm_password = st.text_input("Confirm New Password", type="password")
-
-            if st.button("🔒 Change Password", type="primary"):
-                if not current_password or not new_password or not confirm_password:
-                    warning_box("⚠️ Please fill in all password fields")
-                elif new_password != confirm_password:
-                    warning_box("⚠️ New passwords don't match")
-                elif len(new_password) < 8:
-                    warning_box("⚠️ Password must be at least 8 characters")
-                else:
-                    success_box("✅ Password changed successfully!")
-
-        with card_container("Two-Factor Authentication", "🔐", variant='success'):
-            mfa_enabled = st.session_state.get('mfa_enabled', False)
-
-            st.markdown(f"**Status:** {'✅ Enabled' if mfa_enabled else '❌ Disabled'}")
-
-            if not mfa_enabled:
-                st.markdown("""
-                Two-factor authentication adds an extra layer of security to your account.
-                You'll need your password and a verification code to sign in.
-                """)
-
-                if st.button("🔐 Enable 2FA", type="primary"):
-                    st.session_state.mfa_enabled = True
-                    success_box("✅ 2FA enabled! Scan this QR code with your authenticator app:")
-                    st.image("https://via.placeholder.com/200x200?text=QR+Code", width=200)
+        if st.button("🔐 Update Password", type="primary"):
+            if not all([cur_pwd, new_pwd, conf_pwd]):
+                st.warning("⚠️ Please fill in all password fields")
+            elif new_pwd != conf_pwd:
+                st.warning("⚠️ New passwords don't match")
+            elif len(new_pwd) < 8:
+                st.warning("⚠️ Password must be at least 8 characters")
             else:
-                st.markdown("Two-factor authentication is currently enabled for your account.")
+                st.success("✅ Password changed successfully!")
 
-                if st.button("🔓 Disable 2FA"):
-                    st.session_state.mfa_enabled = False
-                    warning_box("⚠️ 2FA has been disabled")
+        sp(".75rem")
+        st.markdown(f'<div style="font-size:.65rem;font-weight:700;color:{T2};text-transform:uppercase;letter-spacing:.12em;margin-bottom:.6rem;">🔐 Two-Factor Authentication</div>', unsafe_allow_html=True)
+        tfa_enabled = st.toggle("Enable 2FA", value=False)
+        if tfa_enabled:
+            st.info("📱 Scan the QR code below with your authenticator app")
+            st.code("otpauth://totp/AgentFlow:user@example.com?secret=JBSWY3DPEHPK3PXP&issuer=AgentFlow")
 
-        with card_container("Active Sessions", "📱", variant='default'):
-            st.markdown("**Current Sessions:**")
+        sp(".75rem")
+        st.markdown(f'<div style="font-size:.65rem;font-weight:700;color:{T2};text-transform:uppercase;letter-spacing:.12em;margin-bottom:.6rem;">📋 Active Sessions</div>', unsafe_allow_html=True)
+        import pandas as pd
+        st.dataframe(pd.DataFrame([
+            {"Device":"MacBook Pro","Location":"Ho Chi Minh City, VN","Last Active":"Just now","Status":"🟢 Active"},
+            {"Device":"iPhone 15","Location":"Ho Chi Minh City, VN","Last Active":"2 hrs ago","Status":"🟢 Active"},
+            {"Device":"Unknown Device","Location":"Unknown","Last Active":"3 days ago","Status":"🔴 Suspicious"},
+        ]), use_container_width=True, hide_index=True)
 
-            sessions = [
-                {'device': 'Chrome on Windows', 'location': 'Pleiku, VN', 'last_active': 'Now'},
-                {'device': 'Safari on iPhone', 'location': 'Pleiku, VN', 'last_active': '2 hours ago'},
-            ]
-
-            for i, session in enumerate(sessions):
-                col1, col2 = st.columns([3, 1], gap="medium")
-
-                with col1:
-                    st.markdown(f"""
-                    **{session['device']}**  
-                    {session['location']} • {session['last_active']}
-                    """)
-
-                with col2:
-                    if session['last_active'] != 'Now':
-                        if st.button("🚫 Revoke", key=f"revoke_{i}"):
-                            success_box(f"✅ Session revoked")
-
-    with tab5:
-        st.markdown("### 🌐 Advanced Settings")
-
-        with card_container("Developer Options", "🔧", variant='warning'):
-            st.markdown("**API Access:**")
-
-            enable_api = st.checkbox("Enable API Access", value=True)
-
-            if enable_api:
-                st.code("API Endpoint: https://api.agentflow.ai/v1", language="text")
-                st.code(f"API Key: agf_{st.session_state.get('user_email', 'user').split('@')[0]}_***", language="text")
-
-                if st.button("🔄 Regenerate API Key"):
-                    success_box("✅ New API key generated!")
-
-        with card_container("Data & Privacy", "🔒", variant='info'):
-            st.markdown("**Data Management:**")
-
-            if st.button("📥 Export My Data"):
-                st.info("Data export will be emailed to you within 24 hours")
-
-            if st.button("🗑️ Delete My Account", type="secondary"):
-                st.error("⚠️ This action cannot be undone!")
-
-                confirm = st.checkbox("I understand that deleting my account is permanent")
-
-                if confirm:
-                    if st.button("⚠️ Confirm Deletion"):
-                        alert_box("Account deletion requested. You will be logged out.", "error")
-
-        with card_container("System Information", "ℹ️", variant='default'):
-            st.markdown(f"""
-            **Frontend Version:** {st.session_state.get('app_version', '3.1.0')}  
-            **Backend Version:** 3.1.0  
-            **Last Updated:** 2026-02-24  
-            **Build:** production  
-            **Region:** ap-southeast-1
-            """)
-
-    st.divider()
-
-    # Danger zone
-    st.markdown("### ⚠️ Danger Zone")
-
-    with card_container("Logout & Reset", "🚪", variant='danger'):
-        col1, col2 = st.columns(2, gap="medium")
-
-        with col1:
-            if st.button("🚪 Logout", use_container_width=True, type="secondary"):
-                logout()
-                st.rerun()
-
-        with col2:
-            if st.button("🔄 Reset All Settings", use_container_width=True):
-                st.warning("⚠️ All settings will be reset to defaults")
+        sp(".5rem")
+        if st.button("🔒 Revoke All Other Sessions", type="secondary"):
+            st.success("✅ All other sessions revoked")
+    
+    sp("1.5rem")

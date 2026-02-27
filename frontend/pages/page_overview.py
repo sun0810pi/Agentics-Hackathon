@@ -1,3 +1,4 @@
+from i18n import t
 import streamlit as st
 from services.data_provider import get_dashboard_metrics, get_agent_metrics, get_data_provider
 from utils.helpers import format_currency, format_percentage, format_number
@@ -18,16 +19,17 @@ def _load():
 def card(col, label, value, delta=None, up=True, dark=True):
     """Render card inside a st.column with inner padding to create gap."""
     C  = '#0b101e' if dark else '#ffffff'
-    B  = 'rgba(59,130,246,0.15)' if dark else 'rgba(0,0,0,0.07)'
+    B  = 'rgba(59,130,246,0.18)' if dark else 'rgba(37,99,235,0.15)'
     T  = '#f1f5f9' if dark else '#0f172a'
-    T2 = '#94a3b8' if dark else '#64748b'
+    T2 = '#94a3b8' if dark else '#475569'
     dc = '#10b981' if up else '#ef4444'
     ar = '↑' if up else '↓'
     d  = f'<div style="font-size:.78rem;color:{dc};margin-top:.35rem;font-weight:600;">{ar} {delta}</div>' if delta else ''
     # Outer wrapper: padding on sides creates the gap between cards
     # Since st.columns already exist, we just add padding on the div
+    shadow = '0 2px 12px rgba(0,0,0,0.18)' if dark else '0 2px 10px rgba(37,99,235,0.08)'
     html = f'''<div style="background:{C};border:1px solid {B};border-radius:11px;
-    padding:1rem 1.1rem .9rem;position:relative;overflow:hidden;">
+    padding:1rem 1.1rem .9rem;position:relative;overflow:hidden;box-shadow:{shadow};">
     <div style="position:absolute;top:0;left:0;right:0;height:2px;
       background:linear-gradient(90deg,#3b82f6,#06b6d4);opacity:.8;"></div>
     <div style="font-size:.62rem;font-weight:700;color:{T2};text-transform:uppercase;
@@ -62,7 +64,7 @@ def render():
     m = data["m"]; ag = data["a"]; ts = data["ts"]
 
     if not get_data_provider().backend_available:
-        st.warning("⚠️ Backend unavailable — showing demo data.")
+        st.warning(t("backend_demo"))
         sp(".25rem")
 
     # Header
@@ -70,22 +72,22 @@ def render():
     st.markdown(f'<div style="font-size:.82rem;color:{T2};margin-bottom:1.1rem;">Real-time fraud detection · {datetime.now().strftime("%b %d %Y, %H:%M")}</div>', unsafe_allow_html=True)
 
     # ── KPI row ──────────────────────────────────────────────────
-    label("🎯 Key Performance Indicators")
+    label(t("kpi_section"))
     c1,c2,c3,c4 = st.columns(4)
-    card(c1, "Total Processed", f"{m.get('total_processed',0):,}", "+5.2%", True, D)
-    card(c2, "Accuracy", f"{m.get('accuracy',0):.1f}%", "+2.1%", True, D)
-    card(c3, "Fraud Prevented", format_currency(m.get('fraud_prevented_usd',0)), "+12.3%", True, D)
-    card(c4, "Avg Latency", f"{m.get('avg_latency_ms',0):.0f}ms", "-8.5ms", True, D)
+    card(c1, t("total_processed"), f"{m.get('total_processed',0):,}", "+5.2%", True, D)
+    card(c2, t("accuracy"), f"{m.get('accuracy',0):.1f}%", "+2.1%", True, D)
+    card(c3, t("fraud_prevented"), format_currency(m.get('fraud_prevented_usd',0)), "+12.3%", True, D)
+    card(c4, t("avg_latency"), f"{m.get('avg_latency_ms',0):.0f}ms", "-8.5ms", True, D)
 
     sp("1.1rem")
 
     # ── Stats row ────────────────────────────────────────────────
-    label("📈 Processing Statistics")
+    label(t("stats_section"))
     s1,s2,s3,s4 = st.columns(4)
-    card(s1, "Approved",        format_number(m.get('total_approved',0)),  "+3.2%",  True,  D)
-    card(s2, "Blocked",         format_number(m.get('total_blocked',0)),   "+15.8%", True,  D)
-    card(s3, "Pending",         format_number(m.get('total_pending',0)),   "-5.1%",  False, D)
-    card(s4, "Automation Rate", format_percentage(m.get('automation_rate',0)), "+2.3%", True, D)
+    card(s1, t("approved"),        format_number(m.get('total_approved',0)),  "+3.2%",  True,  D)
+    card(s2, t("blocked"),         format_number(m.get('total_blocked',0)),   "+15.8%", True,  D)
+    card(s3, t("pending"),         format_number(m.get('total_pending',0)),   "-5.1%",  False, D)
+    card(s4, t("automation"), format_percentage(m.get('automation_rate',0)), "+2.3%", True, D)
 
     sp("1.4rem")
     hr(D)
@@ -160,11 +162,11 @@ border-radius:11px;padding:1rem 1.1rem .9rem;">
     # ── Alerts ───────────────────────────────────────────────────
     label("🚨 Recent High-Priority Alerts")
     st.dataframe(pd.DataFrame([
-        {"Time":"2 min ago","Type":"🔴 Account Takeover","Amount":"$12,450","Risk":"HIGH","Status":"Blocked"},
+        {"Time":"2 min ago","Type":"🔴 Account Takeover","Amount":"$12,450","Risk":"HIGH","Status":t("blocked")},
         {"Time":"15 min ago","Type":"🟡 Suspicious Pattern","Amount":"$3,200","Risk":"MEDIUM","Status":"Review"},
-        {"Time":"32 min ago","Type":"🔴 Identity Theft","Amount":"$8,900","Risk":"HIGH","Status":"Blocked"},
-        {"Time":"1 hr ago","Type":"🟡 Velocity Check","Amount":"$1,500","Risk":"MEDIUM","Status":"Approved"},
-        {"Time":"2 hrs ago","Type":"🔴 Card Fraud","Amount":"$5,670","Risk":"HIGH","Status":"Blocked"},
+        {"Time":"32 min ago","Type":"🔴 Identity Theft","Amount":"$8,900","Risk":"HIGH","Status":t("blocked")},
+        {"Time":"1 hr ago","Type":"🟡 Velocity Check","Amount":"$1,500","Risk":"MEDIUM","Status":t("approved")},
+        {"Time":"2 hrs ago","Type":"🔴 Card Fraud","Amount":"$5,670","Risk":"HIGH","Status":t("blocked")},
     ]), use_container_width=True, hide_index=True)
 
     sp(".9rem")

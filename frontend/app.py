@@ -5,6 +5,7 @@ import streamlit as st
 
 sys.path.insert(0, str(Path(__file__).parent))
 from config import config
+from i18n import t
 logging.basicConfig(level=logging.INFO)
 
 st.set_page_config(
@@ -14,7 +15,7 @@ st.set_page_config(
 )
 
 for k, v in {"logged_in":False,"user_email":"","user_name":"","user_role":"viewer",
-              "access_token":"","theme":"dark","page":"Overview","show_logout_confirm":False}.items():
+              "access_token":"","theme":"dark","language":"en","page":"Overview","show_logout_confirm":False}.items():
     if k not in st.session_state: st.session_state[k] = v
 
 IS_DARK = st.session_state.theme == "dark"

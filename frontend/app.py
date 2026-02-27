@@ -20,23 +20,33 @@ for k, v in {"logged_in":False,"user_email":"","user_name":"","user_role":"viewe
 
 IS_DARK = st.session_state.theme == "dark"
 
+# Load theme FIRST - before anything else
 try:
     from themes.dark import DARK_THEME
     from themes.light import LIGHT_THEME
     st.markdown(DARK_THEME if IS_DARK else LIGHT_THEME, unsafe_allow_html=True)
 except Exception: pass
 
-# Padding nuker
+# ── Padding removal ──────────────────────────────────────────────
 st.markdown("""<style>
-section[data-testid="stMain"]>div,div[data-testid="stVerticalBlock"],
-div[data-testid="stAppViewBlockContainer"] { padding-top:0!important; margin-top:0!important; }
-.css-1y4p8pa,.css-z5fcl4,.css-ocqkz7,.css-1544g2n,.css-zt5igj,.e1tzin5v3,div.block-container {
-    padding-top:0!important; padding-left:0!important; margin-top:0!important; }
-[data-testid="stAppViewContainer"] { padding:0!important; }
-[data-testid="ScrollToBottomContainer"]>div { padding:0!important; }
+section[data-testid="stMain"] > div,
+div[data-testid="stVerticalBlock"],
+div[data-testid="stAppViewBlockContainer"] {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+}
+.css-1y4p8pa, .css-z5fcl4, .css-ocqkz7,
+.css-1544g2n, .css-zt5igj, .e1tzin5v3,
+div.block-container { 
+    padding-top: 0 !important; 
+    padding-left: 0 !important;
+    margin-top: 0 !important;
+}
+[data-testid="stAppViewContainer"] { padding: 0 !important; }
+[data-testid="ScrollToBottomContainer"] > div { padding: 0 !important; }
 </style>""", unsafe_allow_html=True)
 
-# ── LOGIN ─────────────────────────────────────────────────────────
+# ── LOGIN ────────────────────────────────────────────────────────
 if not st.session_state.logged_in:
     try:
         from auth.login import login_page
@@ -45,19 +55,17 @@ if not st.session_state.logged_in:
         import traceback; st.error(f"Login error: {e}"); st.code(traceback.format_exc())
     st.stop()
 
-# ── LOGGED IN ────────────────────────────────────────────────────
-IS_DARK  = st.session_state.theme == "dark"
-ACC      = "#10b981"
-ACC2     = "#059669"
-BG_NAV   = "#141414" if IS_DARK else "#ffffff"
-TEXT     = "#f5f5f5" if IS_DARK else "#0a0a0a"
-TEXT2    = "#a3a3a3" if IS_DARK else "#737373"
-TEXT3    = "#737373" if IS_DARK else "#a3a3a3"
-BOR      = "#262626" if IS_DARK else "#e5e0da"
-ACTIVE_BG= "rgba(16,185,129,.12)" if IS_DARK else "rgba(16,185,129,.08)"
-HOVER_BG = "rgba(16,185,129,.07)" if IS_DARK else "rgba(16,185,129,.05)"
-BTN_BG   = "#1f1f1f" if IS_DARK else "#f7f4f0"
-ROLE_CLR = {"Admin":"#3b82f6","Analyst":"#10b981","Viewer":"#f59e0b"}
+# ── LOGGED IN LAYOUT ─────────────────────────────────────────────
+IS_DARK   = st.session_state.theme == "dark"
+ACC       = "#10b981"
+ACC2      = "#059669"
+NAV_TEXT  = "#f5f5f5" if IS_DARK else "#0a0a0a"
+NAV_TEXT2 = "#a3a3a3" if IS_DARK else "#737373"
+NAV_TEXT3 = "#737373" if IS_DARK else "#a3a3a3"
+NAV_BOR   = "#262626" if IS_DARK else "#e5e0da"
+ACTIVE_BG = "rgba(16,185,129,.12)" if IS_DARK else "rgba(16,185,129,.08)"
+HOVER_BG  = "rgba(16,185,129,.07)" if IS_DARK else "rgba(16,185,129,.05)"
+ROLE_CLR  = {"Admin":"#3b82f6","Analyst":"#10b981","Viewer":"#f59e0b"}
 
 nm = st.session_state.user_name or "User"
 rl = (st.session_state.user_role or "viewer").title()
@@ -74,96 +82,71 @@ PAGE_TO_MOD = {
     "ML_Insights":"page_ml","Security":"page_security","Observability":"page_observability",
     "Merchant":"page_merchant","Integrations":"page_integrations","Settings":"page_settings",
 }
-PAGE_KEY = {p: p.replace(" ","_") for p,_ in PAGES}
+PAGE_KEY    = {p: p.replace(" ","_") for p,_ in PAGES}
 PAGE_LABELS = {
     "Overview":"overview","Upload":"upload","Fraud":"fraud","ML Insights":"ml_insights",
     "Security":"security","Observability":"observability","Merchant":"merchant",
     "Integrations":"integrations","Settings":"settings",
 }
 
-# Override nav button styles
+# Nav button styling
 st.markdown(f"""<style>
 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap');
-
-/* Nav column overrides */
 [data-testid="column"]:first-of-type .stButton>button {{
-  font-family:'DM Sans',sans-serif!important;
-  font-weight:500!important;
-  font-size:.82rem!important;
-  text-align:left!important;
-  justify-content:flex-start!important;
-  border-radius:9px!important;
-  border:1.5px solid transparent!important;
-  background:transparent!important;
-  color:{TEXT2}!important;
-  padding:.5rem .75rem!important;
-  transition:all .15s ease!important;
-  box-shadow:none!important;
-  margin-bottom:1px!important;
+  font-family:'DM Sans',sans-serif!important;font-weight:500!important;font-size:.82rem!important;
+  text-align:left!important;justify-content:flex-start!important;border-radius:9px!important;
+  border:1.5px solid transparent!important;background:transparent!important;color:{NAV_TEXT2}!important;
+  padding:.5rem .75rem!important;transition:all .15s ease!important;box-shadow:none!important;margin-bottom:1px!important;
 }}
 [data-testid="column"]:first-of-type .stButton>button:hover {{
-  background:{HOVER_BG}!important;
-  border-color:{ACC}!important;
-  color:{ACC}!important;
-  transform:none!important;
+  background:{HOVER_BG}!important;border-color:{ACC}!important;color:{ACC}!important;transform:none!important;
 }}
 [data-testid="column"]:first-of-type .stButton>button[kind="primary"] {{
-  background:{ACTIVE_BG}!important;
-  border:1.5px solid rgba(16,185,129,.4)!important;
-  color:{ACC}!important;
-  font-weight:700!important;
-  box-shadow:2px 2px 0px rgba(16,185,129,.15)!important;
+  background:{ACTIVE_BG}!important;border:1.5px solid rgba(16,185,129,.35)!important;
+  color:{ACC}!important;font-weight:700!important;box-shadow:2px 2px 0px rgba(16,185,129,.12)!important;
 }}
 [data-testid="column"]:first-of-type .stButton>button[kind="primary"]:hover {{
-  background:{ACTIVE_BG}!important;
-  transform:none!important;
-}}
-/* Small utility buttons (theme/lang/logout) in nav */
-[data-testid="column"]:first-of-type div[data-testid="stColumns"] .stButton>button {{
-  font-size:.75rem!important;
-  padding:.35rem .5rem!important;
+  background:{ACTIVE_BG}!important;transform:none!important;color:{ACC}!important;
 }}
 [data-testid="column"]:first-of-type hr {{
-  border:none!important;
-  border-top:1.5px solid {BOR}!important;
-  margin:.75rem 0!important;
+  border:none!important;border-top:1.5px solid {NAV_BOR}!important;margin:.75rem 0!important;
 }}
 </style>""", unsafe_allow_html=True)
 
 nav_col, content_col = st.columns([1, 4], gap="small")
 
 with nav_col:
-    # Logo block
+    # Logo
     st.markdown(f"""<div style="padding:1.5rem .875rem 1.25rem;text-align:center;
-      border-bottom:2px solid {BOR};margin-bottom:.875rem;">
+      border-bottom:2px solid {NAV_BOR};margin-bottom:.875rem;">
       <div style="display:inline-flex;align-items:center;justify-content:center;
         width:52px;height:52px;border-radius:12px;
         background:linear-gradient(135deg,{ACC},{ACC2});
         border:2px solid {ACC2};box-shadow:3px 3px 0px {ACC2};
         font-size:1.6rem;margin-bottom:.6rem;">🛡️</div>
       <div style="font-family:'Syne',sans-serif;font-size:1.05rem;font-weight:800;
-        color:{TEXT};letter-spacing:-.02em;">AgentFlow</div>
-      <div style="font-family:'DM Sans',sans-serif;font-size:.58rem;color:{TEXT3};
+        color:{NAV_TEXT};letter-spacing:-.02em;">AgentFlow</div>
+      <div style="font-family:'DM Sans',sans-serif;font-size:.58rem;color:{NAV_TEXT3};
         text-transform:uppercase;letter-spacing:.12em;margin-top:2px;">Finance Guard</div>
     </div>""", unsafe_allow_html=True)
 
     # User card
     st.markdown(f"""<div style="margin:0 .75rem .875rem;padding:.75rem;
       background:{ACTIVE_BG};border:1.5px solid rgba(16,185,129,.25);border-radius:10px;
-      box-shadow:2px 2px 0px rgba(16,185,129,.1);">
+      box-shadow:2px 2px 0px rgba(16,185,129,.08);">
       <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:.82rem;
-        color:{TEXT};">{nm}</div>
+        color:{NAV_TEXT};">{nm}</div>
       <div style="font-family:'DM Sans',sans-serif;font-size:.68rem;color:{rc};
         font-weight:600;margin-top:2px;display:flex;align-items:center;gap:.35rem;">
         <span style="width:5px;height:5px;background:{rc};border-radius:50%;display:inline-block;"></span>{rl}
       </div>
-      <div style="font-family:'DM Sans',sans-serif;font-size:.6rem;color:{TEXT3};
+      <div style="font-family:'DM Sans',sans-serif;font-size:.6rem;color:{NAV_TEXT3};
         margin-top:2px;word-break:break-all;">{em}</div>
     </div>""", unsafe_allow_html=True)
 
     # Nav label
     st.markdown(f"""<div style="padding:0 .875rem .35rem;font-family:'Syne',sans-serif;
-      font-size:.58rem;font-weight:700;color:{TEXT3};text-transform:uppercase;
+      font-size:.58rem;font-weight:700;color:{NAV_TEXT3};text-transform:uppercase;
       letter-spacing:.12em;">{t('navigation')}</div>""", unsafe_allow_html=True)
 
     # Nav buttons
@@ -179,7 +162,7 @@ with nav_col:
 
     st.divider()
 
-    # Theme + Lang toggles
+    # Theme + Lang
     lang = st.session_state.get("language","en")
     c1, c2 = st.columns(2)
     with c1:
@@ -218,7 +201,7 @@ with nav_col:
             if st.button(t("no"), use_container_width=True, key="lo_n"):
                 st.session_state.show_logout_confirm = False; st.rerun()
 
-    st.markdown(f'<div style="text-align:center;color:{TEXT3};font-family:\'DM Sans\',sans-serif;'
+    st.markdown(f'<div style="text-align:center;color:{NAV_TEXT3};font-family:\'DM Sans\',sans-serif;'
                 f'font-size:.58rem;padding:.75rem 0 .5rem;">v{config.APP_VERSION}</div>',
                 unsafe_allow_html=True)
 

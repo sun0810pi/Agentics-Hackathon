@@ -4,6 +4,15 @@ from config import config
 from i18n import t
 
 
+def logout():
+    """Clear all session state and log out the current user."""
+    for k in ["logged_in", "user_email", "user_name", "user_role", "access_token"]:
+        st.session_state[k] = False if k == "logged_in" else ""
+    st.session_state.page = "Overview"
+    st.session_state.show_logout_confirm = False
+    st.rerun()
+
+
 def login_user(email: str, password: str, cognito) -> bool:
     result = cognito.login(email, password)
     if result['success']:

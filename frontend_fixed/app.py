@@ -87,6 +87,12 @@ PAGE_TO_MOD = {
 }
 PAGE_KEY = {p: p.replace(" ","_") for p,_ in PAGES}
 
+PAGE_LABELS = {
+    "Overview": "overview", "Upload": "upload", "Fraud": "fraud",
+    "ML Insights": "ml_insights", "Security": "security", "Observability": "observability",
+    "Merchant": "merchant", "Integrations": "integrations", "Settings": "settings",
+}
+
 nav_col, content_col = st.columns([1, 4], gap="small")
 
 with nav_col:
@@ -109,44 +115,62 @@ with nav_col:
     </div>""", unsafe_allow_html=True)
 
     st.markdown(f"""<div style="padding:0 0.875rem 0.375rem;font-size:0.6rem;font-weight:600;
-      color:{NAV_TEXT2};text-transform:uppercase;letter-spacing:.1em;">Navigation</div>""",
+      color:{NAV_TEXT2};text-transform:uppercase;letter-spacing:.1em;">{t('navigation')}</div>""",
       unsafe_allow_html=True)
 
     for pname, icon in PAGES:
         pkey = PAGE_KEY[pname]
         is_active = st.session_state.page == pkey
-        if st.button(f"{icon}  {pname}", key=f"nav_{pkey}",
+        label_key = PAGE_LABELS.get(pname, pname.lower())
+        display_name = t(label_key)
+        if st.button(f"{icon}  {display_name}", key=f"nav_{pkey}",
                      use_container_width=True,
                      type="primary" if is_active else "secondary"):
             st.session_state.page = pkey; st.rerun()
 
     st.divider()
+
+    # ── Theme toggle ─────────────────────────────────────────────
+    lang = st.session_state.get("language", "en")
     c1, c2 = st.columns(2)
     with c1:
         if st.button("☀️", use_container_width=True, key="th_l",
-                     type="primary" if not IS_DARK else "secondary"):
+                     type="primary" if not IS_DARK else "secondary",
+                     help="Light mode"):
             st.session_state.theme = "light"; st.rerun()
     with c2:
         if st.button("🌙", use_container_width=True, key="th_d",
-                     type="primary" if IS_DARK else "secondary"):
+                     type="primary" if IS_DARK else "secondary",
+                     help="Dark mode"):
             st.session_state.theme = "dark"; st.rerun()
+
+    # ── Language toggle ──────────────────────────────────────────
+    l1, l2 = st.columns(2)
+    with l1:
+        if st.button("🇬🇧", use_container_width=True, key="lang_en",
+                     type="primary" if lang == "en" else "secondary",
+                     help="English"):
+            st.session_state.language = "en"; st.rerun()
+    with l2:
+        if st.button("🇻🇳", use_container_width=True, key="lang_vi",
+                     type="primary" if lang == "vi" else "secondary",
+                     help="Tiếng Việt"):
+            st.session_state.language = "vi"; st.rerun()
 
     st.markdown('<div style="height:.25rem"></div>', unsafe_allow_html=True)
 
     if not st.session_state.show_logout_confirm:
-        if st.button("🚪 Logout", use_container_width=True, key="lo_btn"):
+        if st.button(f"🚪 {t('logout')}", use_container_width=True, key="lo_btn"):
             st.session_state.show_logout_confirm = True; st.rerun()
     else:
-        st.warning("Confirm logout?")
+        st.warning(t("confirm_logout"))
         a, b = st.columns(2)
         with a:
-            if st.button("Yes", type="primary", use_container_width=True, key="lo_y"):
-                for k in ["logged_in","user_email","user_name","user_role","access_token"]:
-                    st.session_state[k] = False if k=="logged_in" else ""
-                st.session_state.page = "Overview"
-                st.session_state.show_logout_confirm = False; st.rerun()
+            if st.button(t("yes"), type="primary", use_container_width=True, key="lo_y"):
+                from auth.login import logout
+                logout()
         with b:
-            if st.button("No", use_container_width=True, key="lo_n"):
+            if st.button(t("no"), use_container_width=True, key="lo_n"):
                 st.session_state.show_logout_confirm = False; st.rerun()
 
     st.markdown(f'<div style="text-align:center;color:{NAV_TEXT2};font-size:.58rem;padding:.75rem 0 .5rem;">v{config.APP_VERSION}</div>',

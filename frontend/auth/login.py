@@ -16,15 +16,6 @@ def login_user(email: str, password: str, cognito) -> bool:
     return False
 
 
-def logout():
-    """
-    Logout user and clear session state
-    """
-    for key in ["logged_in", "user_email", "user_name", "user_role", "access_token"]:
-        st.session_state[key] = False if key == "logged_in" else ""
-    st.session_state.page = "Overview"
-
-
 def login_page():
     IS_DARK = st.session_state.get('theme', 'dark') == 'dark'
     CARD    = "#0b101e" if IS_DARK else "#ffffff"

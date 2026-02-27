@@ -1,4 +1,5 @@
 import streamlit as st
+from components.ui_helpers import page_header
 
 def gap(size="1rem"):
     st.markdown(f'<div style="height:{size}"></div>', unsafe_allow_html=True)
@@ -30,8 +31,7 @@ def render():
     logger = logging.getLogger(__name__)
 
     # Page header
-    st.markdown('<h1 class="main-header">🛡️ Security Center</h1>', unsafe_allow_html=True)
-    st.markdown('<p class="sub-header">Security monitoring and attack simulation</p>', unsafe_allow_html=True)
+    page_header("🛡️", "Security Center", "Security monitoring and attack simulation")
 
     # Security overview
     st.markdown("### 📊 Security Overview")

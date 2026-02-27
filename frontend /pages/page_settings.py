@@ -1,18 +1,19 @@
 import streamlit as st
 from i18n import t
+from components.ui_helpers import page_header, spacer as sp, is_dark
 
-def sp(h="1rem"):
-    st.markdown(f'<div style="height:{h}"></div>', unsafe_allow_html=True)
-
-def section_card(title, icon, dark=True):
-    BG  = 'rgba(12,16,32,0.6)' if dark else '#ffffff'
-    BOR = 'rgba(59,130,246,0.14)' if dark else 'rgba(0,0,0,0.07)'
-    T   = '#f1f5f9' if dark else '#0f172a'
-    st.markdown(f'''<div style="background:{BG};border:1px solid {BOR};border-radius:12px;
-padding:1.1rem 1.25rem .25rem;margin-bottom:.75rem;position:relative;overflow:hidden;">
-<div style="position:absolute;top:0;left:0;right:0;height:2px;
-  background:linear-gradient(90deg,#3b82f6,#06b6d4);opacity:.6;"></div>
-<div style="font-size:.85rem;font-weight:700;color:{T};margin-bottom:.75rem;">{icon} {title}</div>
+def section_card(title, icon, dark=None):
+    D   = is_dark() if dark is None else dark
+    BG  = '#141414' if D else '#ffffff'
+    BOR = '#262626' if D else '#e5e0da'
+    T   = '#f5f5f5' if D else '#0a0a0a'
+    st.markdown(f'''<div style="background:{BG};border:2px solid {BOR};border-radius:12px;
+padding:1.1rem 1.25rem .25rem;margin-bottom:.75rem;position:relative;overflow:hidden;
+box-shadow:3px 3px 0px {'rgba(0,0,0,.35)' if D else 'rgba(0,0,0,.06)'};">
+<div style="position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,#10b981,#34d399);"></div>
+<div style="font-family:'Syne',sans-serif;font-size:.88rem;font-weight:700;
+  color:{T};margin-bottom:.75rem;">{icon} {title}</div>
 ''', unsafe_allow_html=True)
 
 def render():
@@ -26,8 +27,7 @@ def render():
     BOR = 'rgba(59,130,246,0.13)' if D else 'rgba(0,0,0,0.07)'
     lang = st.session_state.get('language','en')
 
-    st.markdown(f'<div style="font-size:1.55rem;font-weight:700;color:{T};margin-bottom:3px;">⚙️ {t("settings")}</div>', unsafe_allow_html=True)
-    st.markdown(f'<div style="font-size:.82rem;color:{T2};margin-bottom:1.25rem;">App configuration & preferences</div>', unsafe_allow_html=True)
+    page_header("⚙️", t("settings"), "App configuration & preferences")
 
     tab1, tab2, tab3, tab4 = st.tabs(["👤 Profile", "🎨 Appearance", "🔔 Notifications", "🔐 Security"])
 

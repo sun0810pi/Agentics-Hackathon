@@ -1,4 +1,5 @@
 import streamlit as st
+from components.ui_helpers import page_header
 
 def gap(size="1rem"):
     st.markdown(f'<div style="height:{size}"></div>', unsafe_allow_html=True)
@@ -29,8 +30,7 @@ def render():
     logger = logging.getLogger(__name__)
 
     # Page header
-    st.markdown('<h1 class="main-header">💼 Merchant Insights</h1>', unsafe_allow_html=True)
-    st.markdown('<p class="sub-header">Merchant performance and risk analysis</p>', unsafe_allow_html=True)
+    page_header("💼", "Merchant Insights", "Merchant performance and risk analysis")
 
     # Check backend
     provider = get_data_provider()

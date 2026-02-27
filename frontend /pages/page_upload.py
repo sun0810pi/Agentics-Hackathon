@@ -1,4 +1,5 @@
 import streamlit as st
+from components.ui_helpers import page_header
 
 def gap(size="1rem"):
     st.markdown(f'<div style="height:{size}"></div>', unsafe_allow_html=True)
@@ -19,8 +20,7 @@ def render():
     from utils.helpers import sanitize_filename
     import time
 
-    st.markdown('<h1 class="main-header">📄 Upload Invoice</h1>', unsafe_allow_html=True)
-    st.markdown('<p class="sub-header">Upload and analyze invoices</p>', unsafe_allow_html=True)
+    page_header("📄", "Upload Invoice", "Upload and analyze invoices")
 
     # Upload section
     st.markdown("### 📤 Upload File")

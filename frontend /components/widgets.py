@@ -8,8 +8,8 @@ from typing import Any, List, Optional
 
 _VARIANT_STYLES = {
     "primary": {
-        "bg":     "rgba(74, 158, 255, 0.12)",
-        "border": "#4A9EFF",
+        "bg":     "rgba(16, 185, 129, 0.12)",
+        "border": "#10b981",
         "icon":   "ℹ️",
     },
     "success": {
@@ -28,7 +28,7 @@ _VARIANT_STYLES = {
         "icon":   "🚨",
     },
     "info": {
-        "bg":     "rgba(74, 158, 255, 0.08)",
+        "bg":     "rgba(16, 185, 129, 0.08)",
         "border": "#718096",
         "icon":   "💡",
     },
@@ -43,13 +43,13 @@ _BADGE_COLORS = {
     "success": ("#00d68f", "#0a2e1f"),
     "warning": ("#ffab00", "#2e2200"),
     "danger":  ("#ff5252", "#2e0a0a"),
-    "primary": ("#4A9EFF", "#0a1a2e"),
+    "primary": ("#10b981", "#062018"),
     "info":    ("#718096", "#1a1e26"),
     "default": ("#a0aec0", "#1a1e26"),
 }
 
 _BAR_COLORS = {
-    "primary": "#4A9EFF",
+    "primary": "#10b981",
     "success": "#00d68f",
     "warning": "#ffab00",
     "danger":  "#ff5252",

@@ -152,7 +152,7 @@ with nav_col:
                 unsafe_allow_html=True)
 
 with content_col:
-    st.markdown('<div class="page-content">', unsafe_allow_html=True)
+    st.markdown('<div style="padding:1.75rem 2rem 4rem 2.25rem;">', unsafe_allow_html=True)
     mod_name = PAGE_TO_MOD.get(st.session_state.page, "page_overview")
     try:
         mod = importlib.import_module(f"pages.{mod_name}")

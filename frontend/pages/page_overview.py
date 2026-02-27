@@ -47,27 +47,31 @@ def render():
 
     # ── KPI ROW ──────────────────────────────────────────────────
     st.markdown("**🎯 Key Performance Indicators**")
-    k1,k2,k3,k4 = st.columns(4)
+    k1,k2,k3,k4 = st.columns(4, gap="medium")
     k1.metric("Total Processed", f"{m.get('total_processed',0):,}", "+5.2%")
     k2.metric("Accuracy",        f"{m.get('accuracy',0):.1f}%",     "+2.1%")
     k3.metric("Fraud Prevented", format_currency(m.get('fraud_prevented_usd',0)), "+12.3%")
     k4.metric("Avg Latency",     f"{m.get('avg_latency_ms',0):.0f}ms", "-8.5ms")
 
+    st.markdown('<div style="height:1.25rem"></div>', unsafe_allow_html=True)
     st.markdown("---")
+    st.markdown('<div style="height:0.25rem"></div>', unsafe_allow_html=True)
 
     # ── STATS ROW ────────────────────────────────────────────────
     st.markdown("**📈 Processing Statistics**")
-    s1,s2,s3,s4 = st.columns(4)
+    s1,s2,s3,s4 = st.columns(4, gap="medium")
     s1.metric("Approved",       format_number(m.get('total_approved',0)),  "+3.2%")
     s2.metric("Blocked",        format_number(m.get('total_blocked',0)),   "+15.8%")
     s3.metric("Pending",        format_number(m.get('total_pending',0)),   "-5.1%")
     s4.metric("Automation Rate",format_percentage(m.get('automation_rate',0)), "+2.3%")
 
+    st.markdown('<div style="height:0.25rem"></div>', unsafe_allow_html=True)
     st.markdown("---")
+    st.markdown('<div style="height:0.25rem"></div>', unsafe_allow_html=True)
 
     # ── CHARTS ───────────────────────────────────────────────────
     st.markdown("**📊 Transaction Analysis — 30 Days**")
-    ch1, ch2 = st.columns(2)
+    ch1, ch2 = st.columns(2, gap="large")
 
     with ch1:
         st.markdown("*Processing Volume*")
@@ -90,7 +94,7 @@ def render():
 
     # ── DETECTION PERF ───────────────────────────────────────────
     st.markdown("**🎯 Detection Performance**")
-    p1, p2 = st.columns(2)
+    p1, p2 = st.columns(2, gap="large")
 
     with p1:
         st.markdown("*Accuracy Trend (7 Days)*")
@@ -122,12 +126,12 @@ def render():
     # ── AGENT STATUS ─────────────────────────────────────────────
     st.markdown("**🤖 Agent Status**")
     total = ag.get('total',17); active = ag.get('active',15)
-    a1,a2,a3 = st.columns(3)
+    a1,a2,a3 = st.columns(3, gap="medium")
     a1.metric("Active Agents",   f"{active}/{total}", f"{active/total*100:.1f}%")
     a2.metric("Avg Confidence",  f"{ag.get('avg_confidence',0.94)*100:.1f}%", "+1.2%")
     a3.metric("Alerts (24h)",    str(ag.get('alerts_24h',23)), "+5")
 
-    t1,t2,t3,t4 = st.columns(4)
+    t1,t2,t3,t4 = st.columns(4, gap="medium")
     with t1: st.info("**Core Detection**\n8 agents")
     with t2: st.success("**ML Intelligence**\n3 agents")
     with t3: st.warning("**Merchant**\n3 agents")
@@ -149,7 +153,7 @@ def render():
 
     # ── SYSTEM HEALTH ────────────────────────────────────────────
     st.markdown("**⚡ System Health**")
-    h1,h2,h3,h4 = st.columns(4)
+    h1,h2,h3,h4 = st.columns(4, gap="medium")
     h1.metric("P50 Latency","187ms","-8ms")
     h2.metric("P95 Latency","534ms","-15ms")
     h3.metric("P99 Latency","1.2s","-200ms")

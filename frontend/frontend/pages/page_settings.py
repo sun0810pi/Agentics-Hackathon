@@ -19,10 +19,8 @@ def render():
         card_container,
         alert_box
     )
-    def logout():
-        for k in ["logged_in","user_email","user_name","user_role","access_token"]:
-            st.session_state[k] = False if k=="logged_in" else ""
-        st.session_state.page = "Overview"
+    from auth.login import logout
+    
     import logging
 
     logger = logging.getLogger(__name__)

@@ -37,10 +37,22 @@ section[data-testid="stMain"] { padding:0!important; margin:0!important; }
 }
 section.main>div:first-child,[data-testid="stMain"]>div:first-child { padding:0!important; margin:0!important; }
 
-/* ── Two-column layout ── */
-[data-testid="stHorizontalBlock"] {
+/* ── Two-column layout: ONLY outermost nav/content split gets gap:0 ── */
+/* Kill gap only on the top-level columns block */
+.block-container>[data-testid="stVerticalBlock"]>[data-testid="stHorizontalBlock"],
+.main>[data-testid="stVerticalBlock"]>[data-testid="stHorizontalBlock"],
+section.main [data-testid="stHorizontalBlock"]:first-of-type {
     gap:0!important; padding:0!important; margin:0!important; width:100%!important;
-    align-items:flex-start!important;  /* KEY: flex-start not stretch */
+    align-items:flex-start!important;
+}
+/* ALL horizontal blocks: flex-start alignment, no margin */
+[data-testid="stHorizontalBlock"] {
+    align-items:flex-start!important;
+    padding:0!important; margin:0!important; width:100%!important;
+}
+/* Inner metric rows GET a gap */
+[data-testid="column"]:last-of-type [data-testid="stHorizontalBlock"] {
+    gap:0.625rem!important;
 }
 [data-testid="stHorizontalBlock"]>div { padding:0!important; margin:0!important; }
 

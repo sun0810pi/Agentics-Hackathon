@@ -26,8 +26,7 @@ def card(col, label, value, delta=None, up=True, dark=True):
     d  = f'<div style="font-size:.78rem;color:{dc};margin-top:.35rem;font-weight:600;">{ar} {delta}</div>' if delta else ''
     # Outer wrapper: padding on sides creates the gap between cards
     # Since st.columns already exist, we just add padding on the div
-    html = f'''<div style="padding:0 5px;">
-  <div style="background:{C};border:1px solid {B};border-radius:11px;
+    html = f'''<div style="background:{C};border:1px solid {B};border-radius:11px;
     padding:1rem 1.1rem .9rem;position:relative;overflow:hidden;">
     <div style="position:absolute;top:0;left:0;right:0;height:2px;
       background:linear-gradient(90deg,#3b82f6,#06b6d4);opacity:.8;"></div>
@@ -36,7 +35,6 @@ def card(col, label, value, delta=None, up=True, dark=True):
     <div style="font-size:1.8rem;font-weight:700;color:{T};letter-spacing:-.02em;
       line-height:1.1;">{value}</div>
     {d}
-  </div>
 </div>'''
     col.markdown(html, unsafe_allow_html=True)
 
@@ -62,14 +60,6 @@ def render():
     data = _load()
     if not data["ok"]: st.error(f"❌ {data['error']}"); return
     m = data["m"]; ag = data["a"]; ts = data["ts"]
-
-    # Negative margin on container to offset card padding
-    st.markdown("""<style>
-    div[data-testid="stVerticalBlock"] div[data-testid="stHorizontalBlock"] {
-        margin-left: -5px !important;
-        margin-right: -5px !important;
-    }
-    </style>""", unsafe_allow_html=True)
 
     if not get_data_provider().backend_available:
         st.warning("⚠️ Backend unavailable — showing demo data.")

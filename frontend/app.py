@@ -93,64 +93,91 @@ PAGE_LABELS = {
 SHADOW_SM = f"2px 2px 0px {BLACK}"
 ACT_BG = "rgba(16,185,129,.1)" if IS_DARK else "rgba(16,185,129,.07)"
 
-# Nav button override CSS — portfolio style
+# Nav button CSS — tech-pill style from portfolio_v7 (white/black, hard shadow, monospace)
+# Dark mode: inverted (black bg, white text/border)
+PILL_BG     = G900 if IS_DARK else WHITE
+PILL_TEXT   = WHITE if IS_DARK else BLACK
+PILL_BOR    = G700 if IS_DARK else BLACK
+PILL_SHADOW = f"2px 2px 0px {'rgba(255,255,255,0.15)' if IS_DARK else 'rgba(0,0,0,1)'}"
+PILL_HOV_BG = WHITE if IS_DARK else BLACK
+PILL_HOV_TX = BLACK if IS_DARK else WHITE
+
 st.markdown(f"""<style>
 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
-/* All nav column buttons */
+/* ── Nav pills — exact tech-pill style from portfolio ── */
 [data-testid="column"]:first-of-type .stButton>button {{
-  font-family:'DM Sans',sans-serif!important;font-weight:500!important;
-  font-size:.82rem!important;text-align:left!important;justify-content:flex-start!important;
-  border-radius:0!important;border:2px solid transparent!important;
-  background:transparent!important;color:{TEXT2}!important;
-  padding:.5rem .875rem!important;transition:all .15s ease!important;
-  box-shadow:none!important;margin-bottom:2px!important;
+  font-family:'JetBrains Mono',monospace!important;
+  font-weight:500!important;
+  font-size:.75rem!important;
+  text-align:left!important;
+  justify-content:flex-start!important;
+  border-radius:0!important;
+  border:2px solid {PILL_BOR}!important;
+  background:{PILL_BG}!important;
+  color:{PILL_TEXT}!important;
+  padding:.5rem .875rem!important;
+  box-shadow:{PILL_SHADOW}!important;
+  transition:all .15s ease!important;
+  margin-bottom:3px!important;
+  cursor:pointer!important;
 }}
 [data-testid="column"]:first-of-type .stButton>button:hover {{
-  background:{ACT_BG}!important;border-color:{ACC}!important;
-  color:{ACC}!important;transform:none!important;
+  transform:translate(2px,2px)!important;
+  box-shadow:none!important;
+  background:{PILL_HOV_BG}!important;
+  color:{PILL_HOV_TX}!important;
+  border-color:{PILL_BOR}!important;
+}}
+[data-testid="column"]:first-of-type .stButton>button:active {{
+  transform:translate(2px,2px)!important;
+  box-shadow:none!important;
 }}
 
-/* Active nav button */
+/* ── Active nav button — BLACK fill (light) / WHITE fill (dark) ── */
 [data-testid="column"]:first-of-type .stButton>button[kind="primary"] {{
-  font-family:'Syne',sans-serif!important;font-weight:700!important;
-  background:{ACT_BG}!important;
-  border:2px solid {ACC}!important;
-  color:{ACC}!important;
-  box-shadow:2px 2px 0px rgba(16,185,129,0.25)!important;
+  font-family:'JetBrains Mono',monospace!important;
+  font-weight:700!important;
+  background:{BLACK if not IS_DARK else WHITE}!important;
+  color:{WHITE if not IS_DARK else BLACK}!important;
+  border:2px solid {BLACK if not IS_DARK else WHITE}!important;
+  box-shadow:none!important;
+  transform:translate(2px,2px)!important;
 }}
 [data-testid="column"]:first-of-type .stButton>button[kind="primary"]:hover {{
-  background:{ACT_BG}!important;transform:none!important;color:{ACC}!important;
+  background:{BLACK if not IS_DARK else WHITE}!important;
+  color:{WHITE if not IS_DARK else BLACK}!important;
+  transform:translate(2px,2px)!important;
+  box-shadow:none!important;
 }}
 
-/* Small utility row buttons (theme/lang) */
+/* ── Small utility buttons (theme ☀️🌙 / lang 🇬🇧🇻🇳) ── */
 [data-testid="column"]:first-of-type [data-testid="stColumns"] .stButton>button {{
-  font-size:.72rem!important;padding:.35rem .4rem!important;
-  border:2px solid {NAV_BOR}!important;background:{'rgba(255,255,255,.04)' if IS_DARK else G100}!important;
-  color:{TEXT2}!important;box-shadow:none!important;
+  font-family:'JetBrains Mono',monospace!important;
+  font-size:.7rem!important;padding:.35rem .4rem!important;
+  border:2px solid {PILL_BOR}!important;
+  background:{PILL_BG}!important;
+  color:{PILL_TEXT}!important;
+  box-shadow:{PILL_SHADOW}!important;
 }}
 [data-testid="column"]:first-of-type [data-testid="stColumns"] .stButton>button:hover {{
-  background:{ACC}!important;color:{BLACK}!important;border-color:{ACC}!important;
+  transform:translate(2px,2px)!important;box-shadow:none!important;
+  background:{PILL_HOV_BG}!important;color:{PILL_HOV_TX}!important;
 }}
 [data-testid="column"]:first-of-type [data-testid="stColumns"] .stButton>button[kind="primary"] {{
   background:{BLACK if not IS_DARK else WHITE}!important;
   color:{WHITE if not IS_DARK else BLACK}!important;
   border:2px solid {BLACK if not IS_DARK else WHITE}!important;
-  font-weight:700!important;
+  box-shadow:none!important;transform:translate(2px,2px)!important;
 }}
 [data-testid="column"]:first-of-type [data-testid="stColumns"] .stButton>button[kind="primary"]:hover {{
-  background:{BLACK if not IS_DARK else WHITE}!important;transform:none!important;
-}}
-
-/* Logout button */
-[data-testid="column"]:first-of-type .stButton>button:last-of-type:not([kind="primary"]) {{
-  border-color:{'rgba(255,255,255,.1)' if IS_DARK else G200}!important;
+  transform:translate(2px,2px)!important;box-shadow:none!important;
 }}
 
 [data-testid="column"]:first-of-type hr {{
   border:none!important;
   border-top:2px solid {NAV_BOR}!important;
-  margin:.75rem 0!important;
+  margin:.875rem 0!important;
 }}
 </style>""", unsafe_allow_html=True)
 

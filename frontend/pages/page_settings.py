@@ -5,14 +5,14 @@ def sp(h="1rem"):
     st.markdown(f'<div style="height:{h}"></div>', unsafe_allow_html=True)
 
 def section_card(title, icon, dark=True):
-    BG  = 'rgba(12,16,32,0.6)' if dark else '#ffffff'
-    BOR = 'rgba(59,130,246,0.14)' if dark else 'rgba(0,0,0,0.07)'
-    T   = '#f1f5f9' if dark else '#0f172a'
-    st.markdown(f'''<div style="background:{BG};border:1px solid {BOR};border-radius:12px;
-padding:1.1rem 1.25rem .25rem;margin-bottom:.75rem;position:relative;overflow:hidden;">
-<div style="position:absolute;top:0;left:0;right:0;height:2px;
-  background:linear-gradient(90deg,#3b82f6,#06b6d4);opacity:.6;"></div>
-<div style="font-size:.85rem;font-weight:700;color:{T};margin-bottom:.75rem;">{icon} {title}</div>
+    BG  = '#141414' if dark else '#ffffff'
+    BOR = '#262626'  if dark else '#0a0a0a'
+    T   = '#f5f5f5' if dark else '#0a0a0a'
+    SHD = '2px 2px 0px rgba(255,255,255,0.06)' if dark else '4px 4px 0px #0a0a0a'
+    st.markdown(f'''<div style="background:{BG};border:2px solid {BOR};border-radius:0;
+padding:1.1rem 1.25rem .25rem;margin-bottom:.875rem;position:relative;overflow:hidden;box-shadow:{SHD};">
+<div style="position:absolute;top:0;left:0;right:0;height:3px;background:#10b981;"></div>
+<div style="font-family:Syne,sans-serif;font-size:.85rem;font-weight:700;color:{T};margin-bottom:.75rem;">{icon} {title}</div>
 ''', unsafe_allow_html=True)
 
 def render():
@@ -23,11 +23,16 @@ def render():
     D   = IS_DARK
     T   = '#f1f5f9' if D else '#0f172a'
     T2  = '#94a3b8' if D else '#64748b'
-    BOR = 'rgba(59,130,246,0.13)' if D else 'rgba(0,0,0,0.07)'
+    BOR = '#262626' if D else '#e5e5e5'
     lang = st.session_state.get('language','en')
 
-    st.markdown(f'<div style="font-size:1.55rem;font-weight:700;color:{T};margin-bottom:3px;">⚙️ {t("settings")}</div>', unsafe_allow_html=True)
-    st.markdown(f'<div style="font-size:.82rem;color:{T2};margin-bottom:1.25rem;">App configuration & preferences</div>', unsafe_allow_html=True)
+    st.markdown(f"""<div style="margin-bottom:1.5rem;padding-bottom:1rem;border-bottom:2px solid {BOR};">
+<div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.35rem;">
+<span style="font-size:1.5rem;line-height:1;">⚙️</span>
+<h1 style="font-family:Syne,sans-serif;font-size:1.75rem;font-weight:800;color:{T};letter-spacing:-.03em;margin:0;line-height:1.1;">{t("settings")}</h1>
+</div>
+<p style="font-family:JetBrains Mono,monospace;font-size:.72rem;color:#10b981;letter-spacing:.06em;margin:0;text-transform:uppercase;">App configuration & preferences</p>
+</div>""", unsafe_allow_html=True)
 
     tab1, tab2, tab3, tab4 = st.tabs(["👤 Profile", "🎨 Appearance", "🔔 Notifications", "🔐 Security"])
 
@@ -42,7 +47,7 @@ def render():
             email = st.text_input("Email", value=st.session_state.get('user_email',''), disabled=True)
         with c2:
             role = st.session_state.get('user_role','viewer').title()
-            st.markdown(f'<div style="font-size:.72rem;color:{T2};text-transform:uppercase;font-weight:600;margin-bottom:.3rem;">Role</div><div style="background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:.65rem 1rem;font-size:.9rem;font-weight:600;color:#60a5fa;">{role}</div>', unsafe_allow_html=True)
+            st.markdown(f'<div style="font-family:JetBrains Mono,monospace;font-size:.62rem;color:{T2};text-transform:uppercase;font-weight:500;letter-spacing:.1em;margin-bottom:.3rem;">Role</div><div style="background:rgba(16,185,129,0.1);border:2px solid rgba(16,185,129,0.3);border-radius:0;padding:.55rem 1rem;font-family:Syne,sans-serif;font-size:.9rem;font-weight:700;color:#10b981;">{role}</div>', unsafe_allow_html=True)
             dept = st.text_input("Department", value="Finance Security")
 
         sp(".5rem")

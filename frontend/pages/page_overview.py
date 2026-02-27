@@ -40,8 +40,8 @@ def sp(h="1rem"):
     st.markdown(f'<div style="height:{h}"></div>', unsafe_allow_html=True)
 
 def hr(dark=True):
-    c = 'rgba(59,130,246,0.12)' if dark else 'rgba(0,0,0,0.07)'
-    st.markdown(f'<hr style="border:none;border-top:1px solid {c};margin:1.25rem 0 1rem;">', unsafe_allow_html=True)
+    c = '#262626' if dark else '#0a0a0a'
+    st.markdown(f'<hr style="border:none;border-top:2px solid {c};margin:1.25rem 0 1rem;">', unsafe_allow_html=True)
 
 def label(text, dark=True):
     c = '#64748b'
@@ -53,7 +53,7 @@ def render():
     TPL = 'plotly_dark' if D else 'plotly_white'
     T   = '#f1f5f9' if D else '#0f172a'
     T2  = '#94a3b8' if D else '#64748b'
-    BOR = 'rgba(59,130,246,0.12)' if D else 'rgba(0,0,0,0.07)'
+    BOR = '#262626' if D else '#e5e5e5'
 
     data = _load()
     if not data["ok"]: st.error(f"❌ {data['error']}"); return
@@ -64,8 +64,13 @@ def render():
         sp(".25rem")
 
     # Header
-    st.markdown(f'<div style="font-size:1.55rem;font-weight:700;letter-spacing:-.025em;color:{T};margin-bottom:3px;">📊 Dashboard Overview</div>', unsafe_allow_html=True)
-    st.markdown(f'<div style="font-size:.82rem;color:{T2};margin-bottom:1.1rem;">Real-time fraud detection · {datetime.now().strftime("%b %d %Y, %H:%M")}</div>', unsafe_allow_html=True)
+    st.markdown(f"""<div style="margin-bottom:1.5rem;padding-bottom:1rem;border-bottom:2px solid {BOR};">
+<div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.35rem;">
+<span style="font-size:1.5rem;line-height:1;">📊</span>
+<h1 style="font-family:Syne,sans-serif;font-size:1.75rem;font-weight:800;color:{T};letter-spacing:-.03em;margin:0;line-height:1.1;">Dashboard Overview</h1>
+</div>
+<p style="font-family:JetBrains Mono,monospace;font-size:.72rem;color:#10b981;letter-spacing:.06em;margin:0;text-transform:uppercase;">Real-time fraud detection · {datetime.now().strftime("%b %d %Y, %H:%M")}</p>
+</div>""", unsafe_allow_html=True)
 
     # ── KPI row ──────────────────────────────────────────────────
     label(t("kpi_section"))
@@ -118,8 +123,8 @@ def render():
         days = [(datetime.now()-timedelta(days=i)).strftime("%b %d") for i in range(6,-1,-1)]
         fig = go.Figure()
         fig.add_trace(go.Scatter(x=days, y=[95.2,96.1,97.3,96.8,97.6,98.1,98.3],
-            mode='lines+markers', line=dict(color='#3b82f6',width=2.5), marker=dict(size=6),
-            fill='tozeroy', fillcolor='rgba(59,130,246,0.08)'))
+            mode='lines+markers', line=dict(color='#10b981',width=2.5), marker=dict(size=6),
+            fill='tozeroy', fillcolor='rgba(16,185,129,0.06)'))
         fig.update_layout(template=TPL,height=270,margin=dict(l=0,r=0,t=8,b=0),
             paper_bgcolor='rgba(0,0,0,0)',plot_bgcolor='rgba(0,0,0,0)',
             yaxis=dict(range=[94,100],ticksuffix='%'),hovermode='x unified')
@@ -128,7 +133,7 @@ def render():
         st.markdown(f'<div style="font-size:.78rem;font-weight:600;color:{T2};margin-bottom:.3rem;">Fraud Types</div>', unsafe_allow_html=True)
         ft = {'Identity Theft':35,'Account Takeover':25,'Synthetic Identity':18,'Card Fraud':12,'Other':10}
         fig2 = go.Figure(data=[go.Pie(labels=list(ft.keys()),values=list(ft.values()),hole=0.42,
-            marker=dict(colors=['#3b82f6','#10b981','#f59e0b','#ef4444','#8b5cf6']))])
+            marker=dict(colors=['#10b981','#059669','#f59e0b','#ef4444','#8b5cf6']))])
         fig2.update_layout(template=TPL,height=270,margin=dict(l=0,r=0,t=8,b=0),
             paper_bgcolor='rgba(0,0,0,0)',plot_bgcolor='rgba(0,0,0,0)')
         st.plotly_chart(fig2, use_container_width=True)
@@ -143,14 +148,7 @@ def render():
     card(a1,"Active Agents",f"{active}/{total}",f"{active/total*100:.1f}%",True,D)
     card(a2,"Avg Confidence",f"{ag.get('avg_confidence',0.94)*100:.1f}%","+1.2%",True,D)
     card(a3,"Alerts (24h)",str(ag.get('alerts_24h',23)),"+5",True,D)
-    with a4:
-        st.markdown(f'''<div style="padding:0 5px;">
-<div style="background:{"rgba(16,185,129,0.1)" if D else "rgba(16,185,129,0.08)"};border:1px solid rgba(16,185,129,0.2);
-border-radius:11px;padding:1rem 1.1rem .9rem;">
-<div style="font-size:.62rem;font-weight:700;color:{T2};text-transform:uppercase;letter-spacing:.12em;margin-bottom:.6rem;">Tier Summary</div>
-<div style="font-size:.78rem;color:{T};line-height:1.8;">
-🔵 Core: 8 &nbsp;|&nbsp; 🟢 ML: 3<br>🟡 Merchant: 3 &nbsp;|&nbsp; 🔴 Security: 3
-</div></div></div>''', unsafe_allow_html=True)
+    card(a4, "Tier Summary", "17 total", "15 active", True, D)
 
     sp(".9rem")
     hr(D)

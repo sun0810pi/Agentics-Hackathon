@@ -19,8 +19,16 @@ def render():
     from utils.helpers import sanitize_filename
     import time
 
-    st.markdown('<h1 class="main-header">📄 Upload Invoice</h1>', unsafe_allow_html=True)
-    st.markdown('<p class="sub-header">Upload and analyze invoices</p>', unsafe_allow_html=True)
+    _D   = st.session_state.get('theme','dark') == 'dark'
+    _T   = '#f5f5f5' if _D else '#0a0a0a'
+    _BOR = '#262626' if _D else '#e5e5e5'
+    st.markdown(f"""<div style="margin-bottom:1.5rem;padding-bottom:1rem;border-bottom:2px solid {_BOR};">
+<div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.35rem;">
+<span style="font-size:1.5rem;line-height:1;">📄</span>
+<h1 style="font-family:Syne,sans-serif;font-size:1.75rem;font-weight:800;color:{_T};letter-spacing:-.03em;margin:0;line-height:1.1;">Upload Invoice</h1>
+</div>
+<p style="font-family:JetBrains Mono,monospace;font-size:.72rem;color:#10b981;letter-spacing:.06em;margin:0;text-transform:uppercase;">Upload and analyze invoices for fraud detection</p>
+</div>""", unsafe_allow_html=True)
 
     # Upload section
     st.markdown("### 📤 Upload File")

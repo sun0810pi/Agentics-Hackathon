@@ -1,385 +1,213 @@
 import streamlit as st
+import random
+import pandas as pd
+import plotly.graph_objects as go
 
-def gap(size="1rem"):
-    st.markdown(f'<div style="height:{size}"></div>', unsafe_allow_html=True)
 
-def section_header(icon, title, subtitle=None):
-    TEXT = '#f1f5f9' if st.session_state.get('theme','dark')=='dark' else '#0f172a'
-    TEXT2 = '#94a3b8' if st.session_state.get('theme','dark')=='dark' else '#64748b'
-    st.markdown(f"""<div style="margin:1.25rem 0 0.5rem;">
-  <div style="font-size:1.05rem;font-weight:700;color:{TEXT};display:flex;align-items:center;gap:.4rem;">{icon} {title}</div>
-  {f'<div style="font-size:.8rem;color:{TEXT2};margin-top:2px;">{subtitle}</div>' if subtitle else ''}
-</div>""", unsafe_allow_html=True)
+def _card(col, label, value, delta=None, up=True):
+    D   = st.session_state.get('theme', 'dark') == 'dark'
+    BG  = '#141414' if D else '#ffffff'
+    BOR = '#262626'  if D else '#0a0a0a'
+    T   = '#f5f5f5' if D else '#0a0a0a'
+    T2  = '#a3a3a3' if D else '#737373'
+    SHD = '2px 2px 0px rgba(255,255,255,0.08)' if D else '4px 4px 0px #0a0a0a'
+    dc  = '#10b981' if up else '#ef4444'
+    d   = f'<div style="font-size:.75rem;color:{dc};margin-top:.35rem;font-weight:600;">{"+" if up else ""}{delta}</div>' if delta else ''
+    col.markdown(
+        f'<div style="background:{BG};border:2px solid {BOR};border-radius:0;'
+        f'padding:1rem 1.1rem .9rem;position:relative;overflow:hidden;box-shadow:{SHD};">'
+        f'<div style="position:absolute;top:0;left:0;right:0;height:3px;background:#10b981;"></div>'
+        f'<div style="font-size:.6rem;color:{T2};text-transform:uppercase;letter-spacing:.12em;margin-bottom:.35rem;">{label}</div>'
+        f'<div style="font-size:1.85rem;font-weight:800;color:{T};line-height:1.1;">{value}</div>'
+        f'{d}</div>',
+        unsafe_allow_html=True
+    )
 
 
 def render():
-    from components.widgets import (
-        alert_box,
-        card_container,
-        timeline_item,
-        data_table,
-        empty_state,
-        progress_bar_animated
-    )
-    from components.metrics import metric_card_group, kpi_card
+    from components.widgets import alert_box, progress_bar_animated
     from services.data_provider import get_data_provider
-    from utils.helpers import format_number
     import logging
-    import random
-
     logger = logging.getLogger(__name__)
 
-    # Page header
-    _D   = st.session_state.get('theme','dark') == 'dark'
-    _T   = '#f5f5f5' if _D else '#0a0a0a'
-    _T2  = '#a3a3a3' if _D else '#737373'
-    _BOR = '#262626' if _D else '#e5e5e5'
-    st.markdown(f"""<div style="margin-bottom:1.5rem;padding-bottom:1rem;border-bottom:2px solid {_BOR};">
-<div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.35rem;">
-<span style="font-size:1.5rem;line-height:1;">📈</span>
-<h1 style="font-family:Syne,sans-serif;font-size:1.75rem;font-weight:800;color:{_T};letter-spacing:-.03em;margin:0;line-height:1.1;">Observability & Monitoring</h1>
-</div>
-<p style="font-family:JetBrains Mono,monospace;font-size:.72rem;color:#10b981;letter-spacing:.06em;margin:0;text-transform:uppercase;">SUBObservability & Monitoring</p>
-</div>""", unsafe_allow_html=True)
+    D   = st.session_state.get('theme', 'dark') == 'dark'
+    TPL = 'plotly_dark' if D else 'plotly_white'
+    T   = '#f5f5f5' if D else '#0a0a0a'
+    T2  = '#a3a3a3' if D else '#737373'
+    BOR = '#262626'  if D else '#e5e5e5'
+    BG2 = '#1a1a1a'  if D else '#f5f5f5'
 
-    # Check backend
+    # Page header
+    st.markdown(
+        f'<div style="margin-bottom:1.5rem;padding-bottom:1rem;border-bottom:2px solid {BOR};">'
+        f'<div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.35rem;">'
+        f'<span style="font-size:1.5rem;">📈</span>'
+        f'<h1 style="font-size:1.75rem;font-weight:800;color:{T};letter-spacing:-.03em;margin:0;">Observability & Monitoring</h1>'
+        f'</div>'
+        f'<p style="font-size:.72rem;color:#10b981;letter-spacing:.06em;margin:0;text-transform:uppercase;">'
+        f'Distributed tracing · CloudWatch metrics</p></div>',
+        unsafe_allow_html=True
+    )
+
     provider = get_data_provider()
     if not provider.backend_available:
         alert_box("⚠️ Backend unavailable. Showing demo observability data.", "warning")
 
     # Load traces
-    with st.spinner("Loading traces..."):
-        try:
-            traces = provider.get_xray_traces(limit=10)
-        except Exception as e:
-            logger.error(f"Error loading traces: {e}")
-            traces = []
+    try:
+        traces = provider.get_xray_traces(limit=10)
+    except Exception as e:
+        logger.error(f"Error loading traces: {e}")
+        traces = []
 
-    # System health overview
-    st.markdown("### 🏥 System Health")
+    # System health KPIs
+    st.markdown(f'<div style="font-size:.62rem;font-weight:600;color:{T2};text-transform:uppercase;'
+                f'letter-spacing:.14em;margin-bottom:.6rem;">SYSTEM HEALTH</div>', unsafe_allow_html=True)
+    k1, k2, k3, k4 = st.columns(4)
+    _card(k1, "System Uptime",     "99.95%",  "0.02%", True)
+    _card(k2, "Avg Response Time", "245ms",   "12ms",  True)
+    _card(k3, "Error Rate",        "0.15%",   "0.05%", True)
+    _card(k4, "Active Requests",   "42",      "5",     True)
 
-    col1, col2, col3, col4 = st.columns(4, gap="medium")
-
-    with col1:
-        kpi_card(
-            title="System Uptime",
-            value=99.95,
-            format_type='percentage',
-            delta=0.02,
-            target=99.9,
-            variant='success'
-        )
-
-    with col2:
-        kpi_card(
-            title="Avg Response Time",
-            value=245,
-            format_type='number',
-            delta=-12.5,
-            variant='primary'
-        )
-
-    with col3:
-        kpi_card(
-            title="Error Rate",
-            value=0.15,
-            format_type='percentage',
-            delta=-0.05,
-            variant='success'
-        )
-
-    with col4:
-        kpi_card(
-            title="Active Requests",
-            value=42,
-            format_type='number',
-            delta=5,
-            variant='primary'
-        )
-
-    st.divider()
+    st.markdown('<div style="height:.9rem"></div>', unsafe_allow_html=True)
+    st.markdown(f'<hr style="border:none;border-top:2px solid {BOR};margin:.5rem 0 1rem;">', unsafe_allow_html=True)
 
     # Performance metrics
-    st.markdown("### ⚡ Performance Metrics")
+    st.markdown(f'<div style="font-size:.62rem;font-weight:600;color:{T2};text-transform:uppercase;'
+                f'letter-spacing:.14em;margin-bottom:.6rem;">PERFORMANCE METRICS</div>', unsafe_allow_html=True)
+    p1, p2, p3, p4 = st.columns(4)
+    _card(p1, "P50 Latency", "187ms",   "8ms",   True)
+    _card(p2, "P95 Latency", "534ms",   "15ms",  True)
+    _card(p3, "P99 Latency", "1.2s",    "200ms", True)
+    _card(p4, "Throughput",  "450/min", "25/min",True)
 
-    metric_card_group([
-        {'title': 'P50 Latency', 'value': '187ms', 'delta': '-8ms'},
-        {'title': 'P95 Latency', 'value': '534ms', 'delta': '-15ms'},
-        {'title': 'P99 Latency', 'value': '1.2s', 'delta': '-200ms'},
-        {'title': 'Throughput', 'value': '450/min', 'delta': '+25/min'}
-    ])
+    st.markdown('<div style="height:.9rem"></div>', unsafe_allow_html=True)
+    st.markdown(f'<hr style="border:none;border-top:2px solid {BOR};margin:.5rem 0 1rem;">', unsafe_allow_html=True)
 
-    st.divider()
-
-    # X-Ray traces
-    st.markdown("### 🔍 Recent X-Ray Traces")
+    # X-Ray traces — NO st.expander (causes "par" rendering bug)
+    st.markdown(f'<div style="font-size:.62rem;font-weight:600;color:{T2};text-transform:uppercase;'
+                f'letter-spacing:.14em;margin-bottom:.75rem;">RECENT X-RAY TRACES</div>', unsafe_allow_html=True)
 
     if not traces:
-        empty_state(
-            message="No traces available",
-            icon="📊",
-            action_text="Refresh",
-            action_callback=lambda: st.rerun()
-        )
+        st.info("No traces available")
     else:
-        # Filter options
-        col1, col2, col3 = st.columns(3, gap="medium")
-
+        col1, col2, col3 = st.columns(3)
         with col1:
-            status_filter = st.selectbox(
-                "Status",
-                options=['All', 'SUCCESS', 'ERROR', 'TIMEOUT'],
-                index=0
-            )
-
+            status_filter = st.selectbox("STATUS", ['All', 'SUCCESS', 'ERROR'], index=0)
         with col2:
-            min_duration = st.number_input(
-                "Min Duration (ms)",
-                min_value=0,
-                value=0,
-                step=100
-            )
-
+            min_duration = st.number_input("MIN DURATION (MS)", min_value=0, value=0, step=100)
         with col3:
-            max_traces = st.slider(
-                "Show traces",
-                min_value=5,
-                max_value=50,
-                value=10
-            )
+            max_traces = st.slider("SHOW TRACES", min_value=5, max_value=50, value=10)
 
-        # Display traces
-        _trace_count = 0
+        st.markdown('<div style="height:.5rem"></div>', unsafe_allow_html=True)
+
         for i, trace in enumerate(traces[:max_traces]):
-            trace_id = trace.get('id', f'TRACE-{i}')
+            trace_id  = trace.get('id', f'TRACE-{i}')
             timestamp = trace.get('timestamp', '')
-            duration = trace.get('duration', 0)
-            status = trace.get('status', 'UNKNOWN')
-            segments = trace.get('segments', [])
+            duration  = trace.get('duration', 0)
+            status    = trace.get('status', 'UNKNOWN')
+            segments  = trace.get('segments', [])
 
-            # Apply filters
             if status_filter != 'All' and status != status_filter:
                 continue
             if duration < min_duration:
                 continue
 
-            _trace_count += 1
-            _D = st.session_state.get('theme','dark') == 'dark'
-            _ok = status == 'SUCCESS'
-            _status_icon = "✅" if _ok else "❌"
-            _ts = timestamp[:19].replace('T', ' ') if timestamp and len(timestamp) > 10 else str(timestamp)
-            _bor = '#262626' if _D else '#e5e5e5'
-            _bg  = '#141414' if _D else '#ffffff'
-            _t   = '#f5f5f5' if _D else '#0a0a0a'
-            _t2  = '#a3a3a3' if _D else '#737373'
-            _status_color = '#10b981' if _ok else '#ef4444'
+            ok  = status == 'SUCCESS'
+            ts  = timestamp[:19].replace('T', ' ') if len(timestamp) > 10 else timestamp
+            sc  = '#10b981' if ok else '#ef4444'
+            ico = 'OK' if ok else 'ERR'
+            rb  = '#1a2e1a' if (ok and D) else ('#2e1a1a' if (not ok and D) else ('#e8f5e9' if ok else '#fdecea'))
 
-            # Row display — no expander, use st.container
-            with st.container():
-                st.markdown(f'''<div style="background:{_bg};border:2px solid {_bor};
-padding:.65rem 1rem;margin-bottom:.35rem;display:flex;align-items:center;gap:.75rem;">
-  <span style="font-size:.9rem;line-height:1;flex-shrink:0;">{_status_icon}</span>
-  <code style="font-family:JetBrains Mono,monospace;font-size:.78rem;color:{_status_color};font-weight:600;flex-shrink:0;">{trace_id}</code>
-  <span style="font-family:JetBrains Mono,monospace;font-size:.72rem;color:{_t2};">{duration}ms</span>
-  <span style="font-family:JetBrains Mono,monospace;font-size:.65rem;color:{_t2};margin-left:auto;">{_ts}</span>
-</div>''', unsafe_allow_html=True)
-            variant = 'success' if _ok else 'danger'
-            _tog_key = f"_tog_{i}"
-            if _tog_key not in st.session_state:
-                st.session_state[_tog_key] = False
-            _btn_label = "▼ Hide details" if st.session_state[_tog_key] else "▶ Show details"
-            if st.button(_btn_label, key=f"trace_btn_{i}"):
-                st.session_state[_tog_key] = not st.session_state[_tog_key]
+            # Trace row — plain HTML, no expander
+            st.markdown(
+                f'<div style="background:{BG2};border:2px solid {BOR};border-left:4px solid {sc};'
+                f'padding:.6rem 1rem;margin-bottom:.25rem;display:flex;align-items:center;gap:.75rem;">'
+                f'<span style="font-size:.72rem;font-weight:700;color:{sc};background:{rb};'
+                f'padding:.1rem .4rem;border:1px solid {sc};">[{ico}]</span>'
+                f'<code style="font-size:.8rem;color:{sc};font-weight:600;flex-shrink:0;">{trace_id}</code>'
+                f'<span style="font-size:.75rem;color:{T2};">{duration}ms</span>'
+                f'<span style="font-size:.68rem;color:{T2};margin-left:auto;">{ts}</span>'
+                f'</div>',
+                unsafe_allow_html=True
+            )
+            # Details toggle via session_state button
+            tog_key = f"otog_{i}"
+            if tog_key not in st.session_state:
+                st.session_state[tog_key] = False
+            btn_txt = "▼ Hide" if st.session_state[tog_key] else "▶ Details"
+            if st.button(btn_txt, key=f"obtn_{i}"):
+                st.session_state[tog_key] = not st.session_state[tog_key]
                 st.rerun()
-            if st.session_state[_tog_key]:
-                with st.container():
-                    col1, col2, col3 = st.columns(3)
-                    with col1:
-                        st.metric("Duration", f"{duration}ms")
-                    with col2:
-                        st.metric("Segments", len(segments))
-                    with col3:
-                        st.metric("Status", status)
-                    if segments:
-                        st.markdown("**Segment Timeline**")
-                        for segment in segments:
-                            seg_name = segment.get('name', 'Unknown')
-                            seg_dur   = segment.get('duration', 0)
-                            seg_stat  = segment.get('status', 'OK')
-                            pct = (seg_dur / duration * 100) if duration > 0 else 0
-                            sc1, sc2 = st.columns([3, 1])
-                            with sc1:
-                                st.markdown(f"**{seg_name}** — {seg_dur}ms")
-                                progress_bar_animated(pct, 100, show_percentage=False,
-                                    color='success' if seg_stat == 'OK' else 'danger')
-                            with sc2:
-                                st.markdown(f"{pct:.1f}%")
-                    else:
-                        st.info("No segment data")
-                    http_method = trace.get('http_method', 'POST')
-                    http_status_code = trace.get('http_status', 200)
-                    url = trace.get('url', '/api/analyze')
-                    st.code(f"{http_method} {url} — HTTP {http_status_code}")
+            if st.session_state[tog_key]:
+                dc1, dc2, dc3 = st.columns(3)
+                dc1.metric("Duration", f"{duration}ms")
+                dc2.metric("Segments", len(segments))
+                dc3.metric("Status", status)
+                if segments:
+                    st.markdown(f'<div style="font-size:.75rem;color:{T2};margin:.5rem 0 .25rem;">Segments</div>',
+                                unsafe_allow_html=True)
+                    for seg in segments:
+                        sn  = seg.get('name', 'Unknown')
+                        sd  = seg.get('duration', 0)
+                        ss  = seg.get('status', 'OK')
+                        pct = (sd / duration * 100) if duration > 0 else 0
+                        sc1, sc2 = st.columns([3, 1])
+                        with sc1:
+                            st.markdown(f"**{sn}** — {sd}ms")
+                            progress_bar_animated(pct, 100, show_percentage=False,
+                                color='success' if ss == 'OK' else 'danger')
+                        with sc2:
+                            st.markdown(f"{pct:.1f}%")
+                hm = trace.get('http_method', 'POST')
+                hs = trace.get('http_status', 200)
+                hu = trace.get('url', '/api/analyze')
+                st.code(f"{hm} {hu}  HTTP {hs}")
+                st.markdown('<div style="height:.5rem"></div>', unsafe_allow_html=True)
 
-    st.divider()
+    st.markdown(f'<hr style="border:none;border-top:2px solid {BOR};margin:1rem 0;">', unsafe_allow_html=True)
 
-    # CloudWatch integration
-    st.markdown("### ☁️ CloudWatch Metrics")
-
+    # CloudWatch tabs
+    st.markdown(f'<div style="font-size:.62rem;font-weight:600;color:{T2};text-transform:uppercase;'
+                f'letter-spacing:.14em;margin-bottom:.75rem;">CLOUDWATCH METRICS</div>', unsafe_allow_html=True)
     tab1, tab2, tab3 = st.tabs(["API Gateway", "Lambda", "Database"])
+    times = pd.date_range(end=pd.Timestamp.now(), periods=12, freq='5min')
 
     with tab1:
-        with card_container("API Gateway Metrics", "🌐", variant='primary'):
-            st.markdown("**Request Metrics (Last 1 Hour)**")
-
-            col1, col2, col3 = st.columns(3, gap="medium")
-
-            with col1:
-                st.metric("Total Requests", "4,523", "+12%")
-
-            with col2:
-                st.metric("4xx Errors", "23", "-5%")
-
-            with col3:
-                st.metric("5xx Errors", "7", "-2")
-
-            st.markdown("---")
-
-            # Mock chart data
-            import pandas as pd
-            import plotly.graph_objects as go
-
-            times = pd.date_range(end=pd.Timestamp.now(), periods=12, freq='5T')
-            requests = [random.randint(350, 450) for _ in range(12)]
-
-            fig = go.Figure()
-            fig.add_trace(go.Scatter(
-                x=times,
-                y=requests,
-                mode='lines+markers',
-                name='Requests/5min',
-                line=dict(color='#4A9EFF', width=3)
-            ))
-
-            fig.update_layout(
-                title='Request Volume',
-                xaxis_title='Time',
-                yaxis_title='Requests',
-                height=300,
-                template='plotly_dark' if st.session_state.get('theme','dark')=='dark' else 'plotly_white' if st.session_state.get('theme') == 'dark' else 'plotly_white'
-            )
-
-            st.plotly_chart(fig, use_container_width=True)
+        c1, c2, c3 = st.columns(3)
+        c1.metric("Total Requests", "4,523", "+12%")
+        c2.metric("4xx Errors", "23", "-5%")
+        c3.metric("5xx Errors", "7", "-2")
+        st.markdown("---")
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=times, y=[random.randint(350, 450) for _ in range(12)],
+            mode='lines+markers', name='Requests/5min', line=dict(color='#10b981', width=2.5)))
+        fig.update_layout(template=TPL, height=280, margin=dict(l=0,r=0,t=8,b=0),
+            paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
+        st.plotly_chart(fig, use_container_width=True)
 
     with tab2:
-        with card_container("Lambda Metrics", "λ", variant='warning'):
-            st.markdown("**Function Performance (Last 1 Hour)**")
-
-            col1, col2, col3 = st.columns(3, gap="medium")
-
-            with col1:
-                st.metric("Invocations", "3,892", "+8%")
-
-            with col2:
-                st.metric("Avg Duration", "2.3s", "-200ms")
-
-            with col3:
-                st.metric("Errors", "12", "-3")
-
-            st.markdown("---")
-
-            # Mock duration chart
-            durations = [random.randint(1800, 2800) for _ in range(12)]
-
-            fig = go.Figure()
-            fig.add_trace(go.Scatter(
-                x=times,
-                y=durations,
-                mode='lines+markers',
-                name='Duration (ms)',
-                line=dict(color='#ffab00', width=3)
-            ))
-
-            fig.update_layout(
-                title='Function Duration',
-                xaxis_title='Time',
-                yaxis_title='Duration (ms)',
-                height=300,
-                template='plotly_dark' if st.session_state.get('theme','dark')=='dark' else 'plotly_white' if st.session_state.get('theme') == 'dark' else 'plotly_white'
-            )
-
-            st.plotly_chart(fig, use_container_width=True)
+        c1, c2, c3 = st.columns(3)
+        c1.metric("Invocations", "3,892", "+8%")
+        c2.metric("Avg Duration", "2.3s", "-200ms")
+        c3.metric("Errors", "12", "-3")
+        st.markdown("---")
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=times, y=[random.randint(1800, 2800) for _ in range(12)],
+            mode='lines+markers', name='Duration ms', line=dict(color='#f59e0b', width=2.5)))
+        fig.update_layout(template=TPL, height=280, margin=dict(l=0,r=0,t=8,b=0),
+            paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
+        st.plotly_chart(fig, use_container_width=True)
 
     with tab3:
-        with card_container("Database Metrics", "🗄️", variant='success'):
-            st.markdown("**RDS Performance (Last 1 Hour)**")
-
-            col1, col2, col3 = st.columns(3, gap="medium")
-
-            with col1:
-                st.metric("CPU Usage", "42%", "-8%")
-
-            with col2:
-                st.metric("Connections", "28", "+3")
-
-            with col3:
-                st.metric("Query Time", "15ms", "-2ms")
-
-            st.markdown("---")
-
-            # Mock connection chart
-            connections = [random.randint(20, 35) for _ in range(12)]
-
-            fig = go.Figure()
-            fig.add_trace(go.Scatter(
-                x=times,
-                y=connections,
-                mode='lines+markers',
-                name='Active Connections',
-                line=dict(color='#00d68f', width=3)
-            ))
-
-            fig.update_layout(
-                title='Database Connections',
-                xaxis_title='Time',
-                yaxis_title='Connections',
-                height=300,
-                template='plotly_dark' if st.session_state.get('theme','dark')=='dark' else 'plotly_white' if st.session_state.get('theme') == 'dark' else 'plotly_white'
-            )
-
-            st.plotly_chart(fig, use_container_width=True)
-
-    st.divider()
-
-    # Alerts & anomalies
-    st.markdown("### 🚨 Alerts & Anomalies")
-
-    with card_container("Recent Alerts", "⚠️", variant='warning'):
-        alerts = [
-            {
-                'title': 'High Latency Detected',
-                'description': 'P99 latency exceeded 2s threshold',
-                'timestamp': '5 minutes ago',
-                'severity': 'WARNING'
-            },
-            {
-                'title': 'Database Connection Pool Near Limit',
-                'description': '45/50 connections in use',
-                'timestamp': '15 minutes ago',
-                'severity': 'WARNING'
-            },
-            {
-                'title': 'Error Rate Spike',
-                'description': '5xx errors increased by 50%',
-                'timestamp': '1 hour ago',
-                'severity': 'HIGH'
-            }
-        ]
-
-        for alert in alerts:
-            timeline_item(
-                title=alert['title'],
-                description=alert['description'],
-                timestamp=alert['timestamp'],
-                status='warning' if alert['severity'] == 'WARNING' else 'error'
-            )
+        c1, c2, c3 = st.columns(3)
+        c1.metric("CPU Usage", "42%", "-8%")
+        c2.metric("Connections", "28", "+3")
+        c3.metric("Query Time", "15ms", "-2ms")
+        st.markdown("---")
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=times, y=[random.randint(20, 35) for _ in range(12)],
+            mode='lines+markers', name='Connections', line=dict(color='#059669', width=2.5)))
+        fig.update_layout(template=TPL, height=280, margin=dict(l=0,r=0,t=8,b=0),
+            paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
+        st.plotly_chart(fig, use_container_width=True)

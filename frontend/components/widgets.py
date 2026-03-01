@@ -107,40 +107,23 @@ def stat_card(
     variant: str = "primary",
     help_text: Optional[str] = None,
 ) -> None:
-    """
-    Compact stat card with icon, value, label, and optional delta.
-
-    Args:
-        label:          Card label (shown below value)
-        value:          Main value to display
-        icon:           Emoji icon (top-left)
-        delta:          Change string e.g. "+5.2%" — shown below value
-        delta_positive: True = green delta, False = red delta
-        variant:        Border/accent color theme
-        help_text:      Tooltip text shown on hover
-
-    Example:
-        stat_card("Invoices Today", "1,247", icon="📄", delta="+12%")
-    """
-    style     = _VARIANT_STYLES.get(variant, _VARIANT_STYLES["primary"])
-    delta_clr = "#00d68f" if delta_positive else "#ff5252"
-    delta_html = (
-        f'<div style="color:{delta_clr}; font-size:0.8rem; font-weight:700; ' f'margin-top:0.3rem;">{delta}</div>'
-        if delta else ""
-    )
-    tip = f' title="{help_text}"' if help_text else ""
-
-    st.markdown(
-        f"""
-        <div{tip} style="background: {style['bg']}; border: 1px solid {style['border']}44; border-top: 3px solid {style['border']}; border-radius: 10px; padding: 1rem 1.2rem; margin-bottom: 0.5rem; cursor: {'help' if help_text else 'default'};">
-            <div style="font-size:1.6rem; margin-bottom:0.3rem;">{icon}</div>
-            <div style="font-size:1.5rem; font-weight:800; line-height:1.2;">{value}</div>
-            <div style="font-size:0.8rem; opacity:0.7; margin-top:0.2rem;">{label}</div>
-            {delta_html}
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+    """Neo-brutalist stat card."""
+    D   = st.session_state.get('theme', 'dark') == 'dark'
+    BG  = '#141414' if D else '#ffffff'
+    BOR = '#262626'  if D else '#0a0a0a'
+    T   = '#f5f5f5' if D else '#0a0a0a'
+    T2  = '#a3a3a3' if D else '#737373'
+    SHD = '2px 2px 0px rgba(255,255,255,0.08)' if D else '4px 4px 0px #0a0a0a'
+    dc  = '#10b981' if delta_positive else '#ef4444'
+    d_html = f'<div style="font-size:.75rem;color:{dc};margin-top:.35rem;font-weight:600;">{delta}</div>' if delta else ''
+    st.markdown(f'''<div style="background:{BG};border:2px solid {BOR};border-radius:0;
+padding:1rem 1.1rem .9rem;position:relative;overflow:hidden;box-shadow:{SHD};">
+<div style="position:absolute;top:0;left:0;right:0;height:3px;background:#10b981;"></div>
+<div style="font-size:1.4rem;margin-bottom:.3rem;">{icon}</div>
+<div style="font-family:Syne,sans-serif;font-size:1.5rem;font-weight:800;color:{T};line-height:1.2;">{value}</div>
+<div style="font-family:JetBrains Mono,monospace;font-size:.6rem;color:{T2};text-transform:uppercase;letter-spacing:.1em;margin-top:.2rem;">{label}</div>
+{d_html}
+</div>''', unsafe_allow_html=True)
 
 
 # ── Animated progress bar ────────────────────────────────
@@ -200,35 +183,28 @@ def card_container(
     title: str,
     icon: str = "▪️",
     variant: str = "default",
-    padding: str = "1.2rem 1.5rem",
+    padding: str = "1rem 1.25rem",
 ):
-    """
-    Context manager: wraps content in a styled card.
+    """Neo-brutalist card container (context manager)."""
+    D   = st.session_state.get('theme', 'dark') == 'dark'
+    BG  = '#141414' if D else '#ffffff'
+    BOR = '#262626'  if D else '#0a0a0a'
+    T   = '#f5f5f5' if D else '#0a0a0a'
+    SHD = '2px 2px 0px rgba(255,255,255,0.06)' if D else '4px 4px 0px #0a0a0a'
+    # Accent line color by variant
+    ACC_MAP = {'primary':'#10b981','success':'#10b981','warning':'#f59e0b',
+               'danger':'#ef4444','info':'#a3a3a3','default':'#737373'}
+    ACC = ACC_MAP.get(variant, '#10b981')
 
-    Args:
-        title:   Card header text
-        icon:    Emoji shown beside title
-        variant: Border/accent color theme
-        padding: Inner padding (CSS string)
+    st.markdown(f'''<div style="background:{BG};border:2px solid {BOR};border-radius:0;
+padding:{padding};margin-bottom:1rem;position:relative;overflow:hidden;box-shadow:{SHD};">
+<div style="position:absolute;top:0;left:0;right:0;height:3px;background:{ACC};"></div>
+<div style="font-family:Syne,sans-serif;font-size:.9rem;font-weight:700;color:{T};
+  margin-bottom:.75rem;display:flex;align-items:center;gap:.45rem;">
+  <span>{icon}</span><span>{title}</span></div>
+''', unsafe_allow_html=True)
 
-    Example:
-        with card_container("Top Merchants", "🏆", variant='primary'):
-            st.write("content here")
-    """
-    style = _VARIANT_STYLES.get(variant, _VARIANT_STYLES["default"])
-
-    st.markdown(
-        f"""
-        <div style="background: {style['bg']}; border: 1px solid {style['border']}55; border-radius: 12px; padding: {padding}; margin-bottom: 1rem;">
-            <div style="font-size: 1rem; font-weight: 700; margin-bottom: 0.9rem; color: {style['border']}; display: flex; align-items: center; gap: 0.5rem;">
-                <span>{icon}</span>
-                <span>{title}</span>
-            </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    yield   # ← page content goes here
+    yield
 
     st.markdown("</div>", unsafe_allow_html=True)
 

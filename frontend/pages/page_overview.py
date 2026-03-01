@@ -163,10 +163,10 @@ def render():
 
     # Agent status — ag is always a list, never use .get() on it
     _label("AGENT STATUS")
-    _total  = len(ag) if ag else 17
-    _active = sum(1 for x in ag if x.get('status') == 'active') if ag else 15
-    _conf   = (sum(x.get('success_rate', 97) for x in ag) / _total) if ag else 97.4
-    _alerts = sum(x.get('errors', 0) for x in ag) if ag else 23
+    _total  = len(ag) if (ag and isinstance(ag, list)) else 17
+    _active = sum(1 for x in ag if isinstance(x, dict) and x.get('status') == 'active') if (ag and isinstance(ag, list)) else 15
+    _conf   = (sum(x.get('success_rate', 97) for x in ag if isinstance(x, dict)) / _total if _total > 0 else 97.4) if (ag and isinstance(ag, list)) else 97.4
+    _alerts = sum(x.get('errors', 0) for x in ag if isinstance(x, dict)) if (ag and isinstance(ag, list)) else 23
     a1, a2, a3, a4 = st.columns(4)
     _card(a1, "Active Agents",  f"{_active}/{_total}",  f"{_active/_total*100:.0f}%", True)
     _card(a2, "Avg Confidence", f"{_conf:.1f}%",         "1.2%",  True)

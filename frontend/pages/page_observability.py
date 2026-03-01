@@ -116,18 +116,20 @@ def render():
             ok  = status == 'SUCCESS'
             ts  = timestamp[:19].replace('T', ' ') if len(timestamp) > 10 else timestamp
             sc  = '#10b981' if ok else '#ef4444'
-            ico = 'OK' if ok else 'ERR'
+            ico = '✓' if ok else '✗'
             rb  = '#1a2e1a' if (ok and D) else ('#2e1a1a' if (not ok and D) else ('#e8f5e9' if ok else '#fdecea'))
 
-            # Trace row — plain HTML, no expander
+            # Trace row — fixed font rendering
             st.markdown(
                 f'<div style="background:{BG2};border:2px solid {BOR};border-left:4px solid {sc};'
-                f'padding:.6rem 1rem;margin-bottom:.25rem;display:flex;align-items:center;gap:.75rem;">'
-                f'<span style="font-size:.72rem;font-weight:700;color:{sc};background:{rb};'
-                f'padding:.1rem .4rem;border:1px solid {sc};">[{ico}]</span>'
-                f'<code style="font-size:.8rem;color:{sc};font-weight:600;flex-shrink:0;">{trace_id}</code>'
-                f'<span style="font-size:.75rem;color:{T2};">{duration}ms</span>'
-                f'<span style="font-size:.68rem;color:{T2};margin-left:auto;">{ts}</span>'
+                f'padding:.8rem 1rem;margin-bottom:.4rem;display:flex;align-items:center;gap:1rem;'
+                f'font-family:system-ui,-apple-system,sans-serif;">'
+                f'<span style="font-size:.75rem;font-weight:700;color:{sc};background:{rb};'
+                f'padding:.25rem .5rem;border-radius:4px;flex-shrink:0;">{ico}</span>'
+                f'<span style="font-family:\'JetBrains Mono\',\'Courier New\',monospace;font-size:.85rem;'
+                f'color:{T};font-weight:600;flex-shrink:0;letter-spacing:-.01em;">{trace_id}</span>'
+                f'<span style="font-size:.8rem;color:{T2};font-weight:500;">{duration}ms</span>'
+                f'<span style="font-size:.75rem;color:{T2};margin-left:auto;white-space:nowrap;">{ts}</span>'
                 f'</div>',
                 unsafe_allow_html=True
             )

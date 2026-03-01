@@ -149,6 +149,7 @@ def render():
             )
 
         # Display traces
+        _trace_count = 0
         for i, trace in enumerate(traces[:max_traces]):
             trace_id = trace.get('id', f'TRACE-{i}')
             timestamp = trace.get('timestamp', '')
@@ -159,69 +160,64 @@ def render():
             # Apply filters
             if status_filter != 'All' and status != status_filter:
                 continue
-
             if duration < min_duration:
                 continue
 
-            variant = 'success' if status == 'SUCCESS' else 'danger'
+            _trace_count += 1
+            _D = st.session_state.get('theme','dark') == 'dark'
+            _ok = status == 'SUCCESS'
+            _status_icon = "✅" if _ok else "❌"
+            _ts = timestamp[:19].replace('T', ' ') if timestamp and len(timestamp) > 10 else str(timestamp)
+            _bor = '#262626' if _D else '#e5e5e5'
+            _bg  = '#141414' if _D else '#ffffff'
+            _t   = '#f5f5f5' if _D else '#0a0a0a'
+            _t2  = '#a3a3a3' if _D else '#737373'
+            _status_color = '#10b981' if _ok else '#ef4444'
 
-            status_label = "OK" if status == 'SUCCESS' else "ERR"
-            ts_short = timestamp[:19].replace('T', ' ') if timestamp and len(timestamp) > 10 else str(timestamp)
-            with st.expander(
-                f"[{status_label}] {trace_id} | {duration}ms | {ts_short}",
-                expanded=False
-            ):
-                # Trace summary
-                col1, col2, col3 = st.columns(3, gap="medium")
-
-                with col1:
-                    st.metric("Total Duration", f"{duration}ms")
-
-                with col2:
-                    st.metric("Segments", len(segments))
-
-                with col3:
-                    st.metric("Status", status)
-
-                st.markdown("---")
-
-                # Segment breakdown
-                st.markdown("**Segment Timeline**")
-
-                if segments:
-                    for segment in segments:
-                        seg_name = segment.get('name', 'Unknown')
-                        seg_duration = segment.get('duration', 0)
-                        seg_status = segment.get('status', 'OK')
-
-                        # Calculate percentage of total
-                        percentage = (seg_duration / duration * 100) if duration > 0 else 0
-
-                        col1, col2 = st.columns([3, 1], gap="medium")
-
-                        with col1:
-                            st.markdown(f"**{seg_name}** - {seg_duration}ms")
-                            progress_bar_animated(
-                                percentage,
-                                100,
-                                show_percentage=False,
-                                color='success' if seg_status == 'OK' else 'danger'
-                            )
-
-                        with col2:
-                            st.markdown(f"{percentage:.1f}%")
-
-                else:
-                    st.info("No segment data available")
-
-                # HTTP details
-                http_method = trace.get('http_method', 'POST')
-                http_status = trace.get('http_status', 200)
-                url = trace.get('url', '/api/analyze')
-
-                st.markdown("---")
-                st.markdown("**Request Details**")
-                st.code(f"{http_method} {url} - HTTP {http_status}")
+            # Row display — no expander, use st.container
+            with st.container():
+                st.markdown(f'''<div style="background:{_bg};border:2px solid {_bor};
+padding:.65rem 1rem;margin-bottom:.35rem;display:flex;align-items:center;gap:.75rem;">
+  <span style="font-size:.9rem;line-height:1;flex-shrink:0;">{_status_icon}</span>
+  <code style="font-family:JetBrains Mono,monospace;font-size:.78rem;color:{_status_color};font-weight:600;flex-shrink:0;">{trace_id}</code>
+  <span style="font-family:JetBrains Mono,monospace;font-size:.72rem;color:{_t2};">{duration}ms</span>
+  <span style="font-family:JetBrains Mono,monospace;font-size:.65rem;color:{_t2};margin-left:auto;">{_ts}</span>
+</div>''', unsafe_allow_html=True)
+            variant = 'success' if _ok else 'danger'
+            if st.toggle(f"Details — {trace_id}", key=f"trace_tog_{i}", value=False):
+                    col1, col2, col3 = st.columns(3, gap="medium")
+                    with col1:
+                        st.metric("Total Duration", f"{duration}ms")
+                    with col2:
+                        st.metric("Segments", len(segments))
+                    with col3:
+                        st.metric("Status", status)
+                    st.markdown("---")
+                    if segments:
+                        st.markdown("**Segment Timeline**")
+                        for segment in segments:
+                            seg_name = segment.get('name', 'Unknown')
+                            seg_duration = segment.get('duration', 0)
+                            seg_status = segment.get('status', 'OK')
+                            percentage = (seg_duration / duration * 100) if duration > 0 else 0
+                            sc1, sc2 = st.columns([3, 1], gap="medium")
+                            with sc1:
+                                st.markdown(f"**{seg_name}** - {seg_duration}ms")
+                                progress_bar_animated(
+                                    percentage, 100,
+                                    show_percentage=False,
+                                    color='success' if seg_status == 'OK' else 'danger'
+                                )
+                            with sc2:
+                                st.markdown(f"{percentage:.1f}%")
+                    else:
+                        st.info("No segment data available")
+                    http_method = trace.get('http_method', 'POST')
+                    http_status_code = trace.get('http_status', 200)
+                    url = trace.get('url', '/api/analyze')
+                    st.markdown("---")
+                    st.markdown("**Request Details**")
+                    st.code(f"{http_method} {url} - HTTP {http_status_code}")
 
     st.divider()
 

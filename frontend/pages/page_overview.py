@@ -146,17 +146,28 @@ def render():
 
     # ── Agent status ─────────────────────────────────────────────
     label("🤖 Agent Status")
-    # ag is a list of agent dicts returned by get_agent_metrics()
-    _ag_list = ag if isinstance(ag, list) else []
-    total  = len(_ag_list) if _ag_list else 17
-    active = sum(1 for a in _ag_list if a.get('status') == 'active') if _ag_list else 15
-    avg_conf = sum(a.get('success_rate', 97) for a in _ag_list) / total if _ag_list else 97.0
-    alerts   = sum(a.get('errors', 0) for a in _ag_list) if _ag_list else 23
-    a1,a2,a3,a4 = st.columns(4)
-    card(a1,"Active Agents",f"{active}/{total}",f"{active/total*100:.1f}%",True,D)
-    card(a2,"Avg Confidence",f"{avg_conf:.1f}%","+1.2%",True,D)
-    card(a3,"Alerts (24h)",str(alerts),"+5",True,D)
-    card(a4,"Tier Summary",f"{total} total",f"{active} active",True,D)
+    try:
+        # ag may be a list of dicts OR a summary dict depending on backend
+        if isinstance(ag, list):
+            _agents = ag
+            _total  = len(_agents) if _agents else 17
+            _active = sum(1 for x in _agents if x.get('status') == 'active') if _agents else 15
+            _conf   = sum(x.get('success_rate', 97) for x in _agents) / max(_total, 1) if _agents else 97.0
+            _alerts = sum(x.get('errors', 0) for x in _agents) if _agents else 23
+        elif isinstance(ag, dict):
+            _total  = ag.get('total', 17)
+            _active = ag.get('active', 15)
+            _conf   = ag.get('avg_confidence', 0.97) * 100
+            _alerts = ag.get('alerts_24h', 23)
+        else:
+            _total, _active, _conf, _alerts = 17, 15, 97.0, 23
+        a1,a2,a3,a4 = st.columns(4)
+        card(a1,"Active Agents",f"{_active}/{_total}",f"{_active/_total*100:.1f}%",True,D)
+        card(a2,"Avg Confidence",f"{_conf:.1f}%","+1.2%",True,D)
+        card(a3,"Alerts (24h)",str(_alerts),"+5",True,D)
+        card(a4,"Tier Summary",f"{_total} total",f"{_active} active",True,D)
+    except Exception as _e:
+        st.error(f"Agent status unavailable: {_e}")
 
     sp(".9rem")
     hr(D)

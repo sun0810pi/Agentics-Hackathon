@@ -184,40 +184,42 @@ padding:.65rem 1rem;margin-bottom:.35rem;display:flex;align-items:center;gap:.75
   <span style="font-family:JetBrains Mono,monospace;font-size:.65rem;color:{_t2};margin-left:auto;">{_ts}</span>
 </div>''', unsafe_allow_html=True)
             variant = 'success' if _ok else 'danger'
-            if st.toggle(f"Details — {trace_id}", key=f"trace_tog_{i}", value=False):
-                    col1, col2, col3 = st.columns(3, gap="medium")
+            _tog_key = f"_tog_{i}"
+            if _tog_key not in st.session_state:
+                st.session_state[_tog_key] = False
+            _btn_label = "▼ Hide details" if st.session_state[_tog_key] else "▶ Show details"
+            if st.button(_btn_label, key=f"trace_btn_{i}"):
+                st.session_state[_tog_key] = not st.session_state[_tog_key]
+                st.rerun()
+            if st.session_state[_tog_key]:
+                with st.container():
+                    col1, col2, col3 = st.columns(3)
                     with col1:
-                        st.metric("Total Duration", f"{duration}ms")
+                        st.metric("Duration", f"{duration}ms")
                     with col2:
                         st.metric("Segments", len(segments))
                     with col3:
                         st.metric("Status", status)
-                    st.markdown("---")
                     if segments:
                         st.markdown("**Segment Timeline**")
                         for segment in segments:
                             seg_name = segment.get('name', 'Unknown')
-                            seg_duration = segment.get('duration', 0)
-                            seg_status = segment.get('status', 'OK')
-                            percentage = (seg_duration / duration * 100) if duration > 0 else 0
-                            sc1, sc2 = st.columns([3, 1], gap="medium")
+                            seg_dur   = segment.get('duration', 0)
+                            seg_stat  = segment.get('status', 'OK')
+                            pct = (seg_dur / duration * 100) if duration > 0 else 0
+                            sc1, sc2 = st.columns([3, 1])
                             with sc1:
-                                st.markdown(f"**{seg_name}** - {seg_duration}ms")
-                                progress_bar_animated(
-                                    percentage, 100,
-                                    show_percentage=False,
-                                    color='success' if seg_status == 'OK' else 'danger'
-                                )
+                                st.markdown(f"**{seg_name}** — {seg_dur}ms")
+                                progress_bar_animated(pct, 100, show_percentage=False,
+                                    color='success' if seg_stat == 'OK' else 'danger')
                             with sc2:
-                                st.markdown(f"{percentage:.1f}%")
+                                st.markdown(f"{pct:.1f}%")
                     else:
-                        st.info("No segment data available")
+                        st.info("No segment data")
                     http_method = trace.get('http_method', 'POST')
                     http_status_code = trace.get('http_status', 200)
                     url = trace.get('url', '/api/analyze')
-                    st.markdown("---")
-                    st.markdown("**Request Details**")
-                    st.code(f"{http_method} {url} - HTTP {http_status_code}")
+                    st.code(f"{http_method} {url} — HTTP {http_status_code}")
 
     st.divider()
 

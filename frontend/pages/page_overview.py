@@ -6,7 +6,6 @@ import plotly.graph_objects as go
 from datetime import datetime, timedelta
 import pandas as pd
 
-@st.cache_data(ttl=60)
 def _load():
     try:
         m  = get_dashboard_metrics()

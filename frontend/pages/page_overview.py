@@ -143,12 +143,17 @@ def render():
 
     # ── Agent status ─────────────────────────────────────────────
     label("🤖 Agent Status")
-    total=ag.get('total',17); active=ag.get('active',15)
+    # ag is a list of agent dicts returned by get_agent_metrics()
+    _ag_list = ag if isinstance(ag, list) else []
+    total  = len(_ag_list) if _ag_list else 17
+    active = sum(1 for a in _ag_list if a.get('status') == 'active') if _ag_list else 15
+    avg_conf = sum(a.get('success_rate', 97) for a in _ag_list) / total if _ag_list else 97.0
+    alerts   = sum(a.get('errors', 0) for a in _ag_list) if _ag_list else 23
     a1,a2,a3,a4 = st.columns(4)
     card(a1,"Active Agents",f"{active}/{total}",f"{active/total*100:.1f}%",True,D)
-    card(a2,"Avg Confidence",f"{ag.get('avg_confidence',0.94)*100:.1f}%","+1.2%",True,D)
-    card(a3,"Alerts (24h)",str(ag.get('alerts_24h',23)),"+5",True,D)
-    card(a4, "Tier Summary", "17 total", "15 active", True, D)
+    card(a2,"Avg Confidence",f"{avg_conf:.1f}%","+1.2%",True,D)
+    card(a3,"Alerts (24h)",str(alerts),"+5",True,D)
+    card(a4,"Tier Summary",f"{total} total",f"{active} active",True,D)
 
     sp(".9rem")
     hr(D)

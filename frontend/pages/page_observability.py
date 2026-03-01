@@ -165,8 +165,10 @@ def render():
 
             variant = 'success' if status == 'SUCCESS' else 'danger'
 
+            status_label = "OK" if status == 'SUCCESS' else "ERR"
+            ts_short = timestamp.replace('T', ' ').split('.')[0] if timestamp else ''
             with st.expander(
-                f"{'✅' if status == 'SUCCESS' else '❌'} {trace_id} - {duration}ms - {timestamp}",
+                f"[{status_label}]  {trace_id}  —  {duration}ms  —  {ts_short}",
                 expanded=False
             ):
                 # Trace summary

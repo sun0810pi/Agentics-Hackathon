@@ -6,6 +6,35 @@ from config import config
 from utils.constants import *
 
 
+# ── Fallback agent catalog (used when config.AGENTS not defined) ──────────
+_AGENTS_FALLBACK = {
+    0:  {'name': 'InvoiceValidator',      'tier': 'Core Detection',   'description': 'Validates invoice structure'},
+    1:  {'name': 'VendorVerifier',        'tier': 'Core Detection',   'description': 'Verifies vendor legitimacy'},
+    2:  {'name': 'DuplicateDetector',     'tier': 'Core Detection',   'description': 'Detects duplicate invoices'},
+    3:  {'name': 'AmountAnalyzer',        'tier': 'Core Detection',   'description': 'Analyzes amount anomalies'},
+    4:  {'name': 'PatternMatcher',        'tier': 'Core Detection',   'description': 'Matches fraud patterns'},
+    5:  {'name': 'TimingAnalyzer',        'tier': 'Core Detection',   'description': 'Analyzes submission timing'},
+    6:  {'name': 'GeoLocationChecker',   'tier': 'Core Detection',   'description': 'Checks geographic data'},
+    7:  {'name': 'ComplianceChecker',    'tier': 'Core Detection',   'description': 'Ensures regulatory compliance'},
+    8:  {'name': 'MLRiskScorer',          'tier': 'ML Intelligence',  'description': 'ML-based risk scoring'},
+    9:  {'name': 'AnomalyDetector',       'tier': 'ML Intelligence',  'description': 'Detects statistical anomalies'},
+    10: {'name': 'BehaviorAnalyzer',      'tier': 'ML Intelligence',  'description': 'Analyzes behavioral patterns'},
+    11: {'name': 'MerchantProfiler',      'tier': 'Merchant Success', 'description': 'Profiles merchant behavior'},
+    12: {'name': 'TransactionAnalyzer',   'tier': 'Merchant Success', 'description': 'Analyzes transaction history'},
+    13: {'name': 'RiskAggregator',        'tier': 'Merchant Success', 'description': 'Aggregates risk signals'},
+    14: {'name': 'ThreatIntelligence',    'tier': 'Security',         'description': 'Threat intelligence lookup'},
+    15: {'name': 'IdentityVerifier',      'tier': 'Security',         'description': 'Identity verification'},
+    16: {'name': 'FraudNetworkMapper',    'tier': 'Security',         'description': 'Maps fraud networks'},
+}
+
+def _get_agents():
+    try:
+        from config import config
+        return config.AGENTS
+    except AttributeError:
+        return _AGENTS_FALLBACK
+
+
 class DemoDataGenerator:
     """
     Generates realistic demo data for testing and presentation
@@ -297,7 +326,7 @@ class DemoDataGenerator:
         """
         agents = []
         
-        for agent_id, agent_config in config.AGENTS.items():
+        for agent_id, agent_config in _get_agents().items():
             # Generate realistic metrics
             uptime = round(random.uniform(98.5, 99.99), 2)
             processed = random.randint(5000, 15000)
@@ -502,7 +531,7 @@ class DemoDataGenerator:
         agent_results = []
         total_duration = 0
         
-        for agent_id, agent_config in config.AGENTS.items():
+        for agent_id, agent_config in _get_agents().items():
             duration = random.randint(50, 300)
             total_duration += duration
             

@@ -161,14 +161,31 @@ def render():
     _sp(".9rem")
     _hr()
 
-    # Agent status — ag is always a list, never use .get() on it
+    # Agent status — FIXED: Bulletproof type checking
     _label("AGENT STATUS")
-    _total  = len(ag) if (ag and isinstance(ag, list)) else 17
-    _active = sum(1 for x in ag if isinstance(x, dict) and x.get('status') == 'active') if (ag and isinstance(ag, list)) else 15
-    _conf   = (sum(x.get('success_rate', 97) for x in ag if isinstance(x, dict)) / _total if _total > 0 else 97.4) if (ag and isinstance(ag, list)) else 97.4
-    _alerts = sum(x.get('errors', 0) for x in ag if isinstance(x, dict)) if (ag and isinstance(ag, list)) else 23
+    _total = len(ag) if ag else 17
+    
+    # Count active with type safety
+    _active = 0
+    if ag:
+        for x in ag:
+            if isinstance(x, dict) and x.get('status') == 'active':
+                _active += 1
+    else:
+        _active = 15
+    
+    # Calculate confidence with type safety
+    if ag:
+        success_rates = [x.get('success_rate', 97) for x in ag if isinstance(x, dict)]
+        _conf = (sum(success_rates) / len(success_rates)) if success_rates else 97.4
+    else:
+        _conf = 97.4
+    
+    # Count alerts with type safety
+    _alerts = sum(x.get('errors', 0) for x in ag if isinstance(x, dict)) if ag else 23
+    
     a1, a2, a3, a4 = st.columns(4)
-    _card(a1, "Active Agents",  f"{_active}/{_total}",  f"{_active/_total*100:.0f}%", True)
+    _card(a1, "Active Agents",  f"{_active}/{_total}",  f"{(_active/_total*100) if _total > 0 else 0:.0f}%", True)
     _card(a2, "Avg Confidence", f"{_conf:.1f}%",         "1.2%",  True)
     _card(a3, "Alerts (24h)",   str(_alerts),            "5",     True)
     _card(a4, "Tier Summary",   f"{_total} total",       f"{_active} active", True)

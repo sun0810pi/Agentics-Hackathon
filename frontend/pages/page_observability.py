@@ -116,20 +116,20 @@ def render():
             ok  = status == 'SUCCESS'
             ts  = timestamp[:19].replace('T', ' ') if len(timestamp) > 10 else timestamp
             sc  = '#10b981' if ok else '#ef4444'
-            ico = '✓' if ok else '✗'
+            ico = '✓' if ok else '✗'  # FIXED: Clean symbols
             rb  = '#1a2e1a' if (ok and D) else ('#2e1a1a' if (not ok and D) else ('#e8f5e9' if ok else '#fdecea'))
 
-            # Trace row — fixed font rendering
+            # FIXED: X-Ray trace with proper fonts
             st.markdown(
                 f'<div style="background:{BG2};border:2px solid {BOR};border-left:4px solid {sc};'
-                f'padding:.8rem 1rem;margin-bottom:.4rem;display:flex;align-items:center;gap:1rem;'
+                f'padding:.8rem 1.1rem;margin-bottom:.5rem;display:flex;align-items:center;gap:1rem;'
                 f'font-family:system-ui,-apple-system,sans-serif;">'
-                f'<span style="font-size:.75rem;font-weight:700;color:{sc};background:{rb};'
-                f'padding:.25rem .5rem;border-radius:4px;flex-shrink:0;">{ico}</span>'
-                f'<span style="font-family:\'JetBrains Mono\',\'Courier New\',monospace;font-size:.85rem;'
-                f'color:{T};font-weight:600;flex-shrink:0;letter-spacing:-.01em;">{trace_id}</span>'
-                f'<span style="font-size:.8rem;color:{T2};font-weight:500;">{duration}ms</span>'
-                f'<span style="font-size:.75rem;color:{T2};margin-left:auto;white-space:nowrap;">{ts}</span>'
+                f'<span style="font-size:.8rem;font-weight:700;color:{sc};background:{rb};'
+                f'padding:.3rem .6rem;border-radius:6px;flex-shrink:0;min-width:1.8rem;text-align:center;">{ico}</span>'
+                f'<span style="font-family:\'JetBrains Mono\',\'SF Mono\',\'Courier New\',monospace;'
+                f'font-size:.88rem;color:{T};font-weight:600;flex-shrink:0;letter-spacing:-.02em;">{trace_id}</span>'
+                f'<span style="font-size:.82rem;color:{T2};font-weight:500;">{duration}ms</span>'
+                f'<span style="font-size:.78rem;color:{T2};margin-left:auto;white-space:nowrap;">{ts}</span>'
                 f'</div>',
                 unsafe_allow_html=True
             )

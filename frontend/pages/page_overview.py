@@ -12,6 +12,9 @@ def _load():
         m  = get_dashboard_metrics()
         a  = get_agent_metrics()
         ts = get_data_provider().get_time_series(days=30)
+        # Normalise: agent metrics is always a list
+        if not isinstance(a, list):
+            a = []
         return {"ok": True, "m": m, "a": a, "ts": ts}
     except Exception as e:
         return {"ok": False, "error": str(e)}
